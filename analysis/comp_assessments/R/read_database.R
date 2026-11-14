@@ -32,7 +32,13 @@
 # Keep only the most recently read database in memory for repeated lookups.
 if (!exists(".saio_read_cache", inherits = FALSE)) .saio_read_cache <- new.env(parent = emptyenv())
 
-read_database <- function(saio_repo = .saio_repo(), revision = "HEAD") {
+# Preserve the data and cache key used for the current 28-stock comparison.
+.saio_comparison_revision <- "c36cc22df29dc0efb9a96b7e2500caf4bec36c86"
+
+read_database <- function(saio_repo = .saio_repo(), revision = NULL) {
+  if (is.null(revision)) {
+    revision <- if (missing(saio_repo)) .saio_comparison_revision else "HEAD"
+  }
   commit <- .saio_commit(saio_repo, revision)
   repo <- normalizePath(saio_repo, winslash = "/", mustWork = TRUE)
   if (identical(repo, .saio_read_cache$repo) && identical(commit, .saio_read_cache$data$commit)) {

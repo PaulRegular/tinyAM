@@ -1,4 +1,4 @@
-# Run from the tinyAM repository root. Commit any intended SAIO data changes first.
+# Run from the tinyAM repository root. Use the pinned SAIO comparison snapshot.
 root <- file.path("analysis", "comp_assessments")
 translation_tier <- "curated"
 timeout <- 20 * 60 # Seconds per assessment; Inf removes the hard deadline.

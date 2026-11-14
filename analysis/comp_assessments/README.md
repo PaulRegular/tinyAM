@@ -26,14 +26,14 @@ definitions still need a reviewed conversion. Neither status counts as a fit.
 
 ## 1. Read local SAIO data
 
-Both tiers read the five database tables directly from the current commit of your local SAIO checkout. Update or commit data in SAIO before rerunning an analysis. [SAIO source curation and validation](https://github.com/PaulRegular/saio)
+Both tiers default to the five SAIO tables used for the current 28-stock comparison at `c36cc22df29dc0efb9a96b7e2500caf4bec36c86`. The pin remains fixed as SAIO expands. [SAIO source curation and validation](https://github.com/PaulRegular/saio)
 
 ```r
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 ```
 
-Run from the tinyAM repository root. By default the reader looks for `saio` next to the primary tinyAM checkout, including when you work from a linked worktree. For another checkout, set `SAIO_REPO` or pass its path as `saio_repo` to `read_database()`. The reader uses committed Git data and locally available Git LFS objects. It ignores uncommitted edits and performs no network requests or checkout changes. Parsed tables are reused within the R session for the same repository and commit.
+Run from the tinyAM repository root. By default the reader looks for `saio` next to the primary tinyAM checkout, including when you work from a linked worktree. Set `SAIO_REPO` to change the location used by the pinned analysis. For exploratory reads, pass `revision = "HEAD"` explicitly or supply a checkout as `saio_repo`. An explicitly supplied checkout defaults to its own HEAD. The reader uses committed Git data and locally available Git LFS objects. It ignores uncommitted edits and performs no network requests or checkout changes. Parsed tables are reused within the R session for the same repository and commit.
 
 To reproduce an earlier analysis, pass the recorded SHA as `revision` to `read_database()`. That commit and its table data must be available locally. If Git LFS objects are missing, run `git lfs fetch origin <sha>` from the SAIO checkout. Pass the returned `database` to the fitting and overview scripts to use the same revision throughout.
 

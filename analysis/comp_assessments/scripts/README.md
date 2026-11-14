@@ -2,7 +2,7 @@
 
 Run these scripts from the tinyAM repository root in RStudio.
 
-The scripts read committed tables directly from a local SAIO checkout. They use its current commit by default. Configure the checkout path with `SAIO_REPO`, or pass `saio_repo` and optionally `revision` to `read_database()` when supplying the database explicitly. [Analysis workflow](../README.md#1-read-local-saio-data)
+The scripts read committed tables directly from a local SAIO checkout. The batch analysis defaults to the fixed 28-stock SAIO revision. Set `SAIO_REPO` to locate the checkout with that revision. For exploratory reads, pass a revision or an explicit `saio_repo` to `read_database()`. An explicitly supplied checkout defaults to its own HEAD. [Analysis workflow](../README.md#1-read-local-saio-data)
 
 1. `run_stock.R` chooses a stock and tier, fits its recipe, and previews the supplied fit independently.
 2. `run_all.R` reads the database once, configures `future::plan(future::multisession, workers = 10)`, fits and checkpoints the batch, then renders dashboards and overview figures in separate sections.

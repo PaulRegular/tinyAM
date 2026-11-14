@@ -39,7 +39,7 @@ assessment_translations <- function(tier = NULL) {
 }
 
 .assessment_cache_key <- function(database = NULL) {
-  if (is.null(database)) return(.saio_commit())
+  if (is.null(database)) return(.saio_commit(revision = .saio_comparison_revision))
   key <- if (is.null(database$database_key)) database$commit else database$database_key
   if (!is.character(key) || length(key) != 1L || is.na(key) ||
       !grepl("^[[:xdigit:]]{40}$", key)) {

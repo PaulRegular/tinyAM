@@ -2,7 +2,7 @@ source("analysis/comp_assessments/R/run_assessment.R")
 registry <- assessment_translations()
 stopifnot(all(file.exists(registry$script)),
   !anyDuplicated(paste(registry$assessment_id, registry$tier)),
-  nrow(assessment_translations("curated")) == 40L)
+  nrow(assessment_translations("curated")) == 41L)
 
 local({
   original_wd <- getwd()
@@ -88,6 +88,16 @@ local({
     identical(read_database(saio_repo = "data_repo", revision = revision), pinned),
     identical(read_database(saio_repo = "data_repo", revision = "HEAD~1"), pinned),
     !dir.exists(file.path(relative_root, "cache", "saio")))
+  # A comparison with a fixed release continues using it after SAIO HEAD moves.
+  comparison_reader <- new.env()
+  sys.source(file.path(relative_root, "R", "read_database.R"), envir = comparison_reader)
+  stopifnot(identical(comparison_reader$.saio_comparison_revision,
+    "c36cc22df29dc0efb9a96b7e2500caf4bec36c86"))
+  comparison_reader$.saio_comparison_revision <- revision
+  comparison_reader$.saio_repo <- function() "data_repo"
+  stopifnot(identical(comparison_reader$read_database(), pinned),
+    identical(comparison_reader$read_database(revision = "HEAD"), current))
+
   invalid <- tryCatch(read_database(saio_repo = "data_repo", revision = "missing-ref"),
     error = identity)
   stopifnot(inherits(invalid, "error"))
