@@ -129,7 +129,7 @@ conclusion <- if (!nrow(exact_result)) {
 } else if (!nrow(sampling_result)) {
   "The controlled recovery comparison evaluates the value of zeros when the model describes sampling. The SimSurvey assessment comparison remains incomplete."
 } else {
-  "Monitoring effort and age aggregation affect where zeros occur. Assessments should check whether their occurrence model describes the sampling program before using zeros as evidence about mortality."
+  "The controlled gains did not translate into a consistent improvement under SimSurvey monitoring. Assessments should check whether their occurrence model describes the sampling program and whether results are robust to the observation family before using zeros as evidence about mortality."
 }
 ```
 
@@ -470,6 +470,26 @@ if (length(fits) && any(fit_status$success)) {
       geom_point() + facet_grid(component ~ label_scenario(scenario)) +
       labs(x = "Predicted zero frequency", y = "Observed zero frequency", size = "Rows") +
       coord_fixed(xlim = c(0, 1), ylim = c(0, 1))
+  }
+}
+```
+
+```{r magnitude, fig.cap="Observed and fitted arithmetic means among positive records, grouped by fitted positive mean. Each point compares the same age-year rows. The dashed line marks agreement. SimSurvey can produce positive magnitudes whose sampling behaviour differs from the PLD lognormal model."}
+if (exists("calibration") && nrow(calibration) && "log_pred_positive" %in% names(calibration)) {
+  sizes <- calibration |>
+    filter(family == "pld_lognormal", resolution == 14L, is.finite(obs), obs > 0) |>
+    mutate(positive_mean = exp(log_pred_positive + sd^2 / 2)) |>
+    filter(is.finite(positive_mean), positive_mean > 0) |>
+    group_by(scenario, component) |>
+    mutate(bin = ntile(positive_mean, 6)) |>
+    group_by(scenario, component, bin) |>
+    summarise(predicted = mean(positive_mean), observed = mean(obs), n = n(), .groups = "drop")
+  if (nrow(sizes)) {
+    ggplot(sizes, aes(predicted, observed, size = n)) + geom_abline(linetype = 2) +
+      geom_point() + facet_grid(component ~ label_scenario(scenario), scales = "free") +
+      scale_x_log10() + scale_y_log10() +
+      labs(x = "Fitted positive mean (thousand fish)",
+        y = "Observed positive mean (thousand fish)", size = "Rows")
   }
 }
 ```

@@ -5,6 +5,8 @@ output: rmarkdown::html_document
 
 ```{r setup, include=FALSE}
 library(tinyAM)
+study_report <- Sys.getenv("TINYAM_PLD_STUDY_REPORT", unset =
+  "https://github.com/PaulRegular/tinyAM/blob/main/analysis/formula_expansion/pld_validation_report.Rmd")
 guide_root <- Sys.getenv("TINYAM_GUIDE_ROOT")
 source_files <- if (nzchar(guide_root)) {
   c(list.files(file.path(guide_root, "R"), "[.]R$", full.names = TRUE),
@@ -139,7 +141,9 @@ par(old)
 vis_tam(Lognormal = ncam, PLD = ncam_pld)
 ```
 
-This comparison measures sensitivity to the observation assumption. The
-[simulation study and report source](https://github.com/PaulRegular/tinyAM/blob/main/analysis/formula_expansion/pld_validation_report.Rmd)
-compare fitted and known population histories under controlled observation
-models and SimSurvey monitoring.
+This comparison measures sensitivity to the observation assumption. PLD
+improved mortality recovery under controlled sampling. In the SimSurvey
+experiment the results varied by effort, and some fits passed numerical
+checks with implausible biomass estimates. Check the stock trajectories
+alongside the numerical diagnostics and zero calibration.
+[Simulation study](`r study_report`)
