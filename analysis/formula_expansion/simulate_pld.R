@@ -78,16 +78,25 @@ if (phase %in% c("controlled", "sampling", "sampling_fit")) {
     generating_sources <- c(generating_sources, shared_source)
     pld_check_allocate_lengths()
   }
+  simsurvey_sources <- unname(tools::md5sum(sort(list.files(file.path(sim, "R"),
+    "[.]R$", full.names = TRUE))))
+  fishery_cache <- Sys.getenv("TINYAM_PLD_FISHERY_CACHE")
+  fishery_provenance <- NULL
+  if (phase != "controlled" && nzchar(fishery_cache)) {
+    fishery_cache <- normalizePath(fishery_cache, winslash = "/", mustWork = TRUE)
+    pld_check_fishery_cache(fishery_cache, grid, n, revision, simsurvey_sources)
+    fishery_provenance <- tools::md5sum(file.path(fishery_cache, "sampling-manifest.rds"))
+  }
   generator <- if (phase == "controlled") pld_controlled_inputs else {
-    function(id) pld_simsurvey_inputs(id, grid, file.path(out, sprintf("history-%02d", id)))
+    function(id) pld_simsurvey_inputs(id, grid, file.path(out, sprintf("history-%02d", id)),
+      fishery_cache = if (nzchar(fishery_cache)) file.path(fishery_cache, sprintf("history-%02d", id)))
   }
   input_phase <- if (phase == "controlled") phase else "sampling"
   manifest <- file.path(out, paste0(input_phase, "-manifest.rds"))
   generation <- list(n = n, grid = grid, revision = revision,
-    generator = tools::md5sum(generating_sources),
-    simsurvey = unname(tools::md5sum(sort(list.files(file.path(sim, "R"),
-      "[.]R$", full.names = TRUE)))),
+    generator = tools::md5sum(generating_sources), simsurvey = simsurvey_sources,
     R = as.character(getRversion()), data_table = as.character(packageVersion("data.table")))
+  if (!is.null(fishery_provenance)) generation$fishery_cache <- fishery_provenance
   # Starting the fit-and-render workflow after a pure generation run can
   # change this driver while retaining the same simulation implementation.
   if (file.exists(manifest)) {
@@ -117,8 +126,8 @@ if (phase %in% c("controlled", "sampling", "sampling_fit")) {
       pld_fit_input(file, out, pld_checkpoint)
       # Render in a clean process so knitr never changes simulation RNG or
       # package versions for the next history.
-      plot_dir <- Sys.getenv("TINYAM_PLD_REPORT_DIR", unset = out)
-      if (dir.exists(plot_dir)) {
+      plot_dir <- Sys.getenv("TINYAM_PLD_REPORT_DIR")
+      if (nzchar(plot_dir) && dir.exists(plot_dir)) {
         extra_dir <- if (identical(normalizePath(plot_dir), normalizePath(out))) "" else out
         report <- withr::with_envvar(c(TINYAM_PLD_REPORT_EXTRA = extra_dir),
           suppressWarnings(system2(file.path(R.home("bin"), "Rscript"),

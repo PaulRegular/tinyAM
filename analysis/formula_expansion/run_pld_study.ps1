@@ -1,15 +1,21 @@
 param(
   [Parameter(Mandatory)][string] $Rscript,
   [Parameter(Mandatory)][string] $SimSurveySource,
-  [string] $Results = 'analysis/formula_expansion/results/pld-sim-final',
-  [string] $ReportResults = 'analysis/formula_expansion/results/pld-study-grid40',
+  [string] $Results = 'analysis/formula_expansion/results/pld-cod-zero-sim',
+  [string] $ReportResults = '',
+  [string] $FisheryCache = '',
   [int] $Replicates = 24,
   [int] $Grid = 40
 )
 $ErrorActionPreference = 'Stop'
 $rscriptPath = (Resolve-Path -LiteralPath $Rscript).Path
 $env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
-$env:TINYAM_PLD_REPORT_DIR = (New-Item -ItemType Directory -Path $ReportResults -Force).FullName
+$env:TINYAM_PLD_REPORT_DIR = if ($ReportResults) {
+  (New-Item -ItemType Directory -Path $ReportResults -Force).FullName
+} else { '' }
+$env:TINYAM_PLD_FISHERY_CACHE = if ($FisheryCache) {
+  (Resolve-Path -LiteralPath $FisheryCache).Path
+} else { '' }
 $directory = (New-Item -ItemType Directory -Path $Results -Force).FullName
 $archive = Join-Path $directory 'supervisor'
 New-Item -ItemType Directory -Force -Path $archive | Out-Null

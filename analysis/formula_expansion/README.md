@@ -75,12 +75,23 @@ fitting attempt. The data manifest records the simulation sources. The
 fit manifest allows reuse of generated inputs with explicit provenance
 when the fitter changes.
 
+Use the Northern cod comparison in the report to check the simulated zero
+rates at ages 2–14+. Standard effort was calibrated using observation
+frequencies before fitting the models. The three effort levels use the same
+population histories and realized removals. Use a fresh results directory
+if the original monitoring experiment is already cached.
+
 The optional `sampling_fit` stage generates and fits one SimSurvey history
-at a time and refreshes the report after each history. Use
+at a time. Use
 `TINYAM_PLD_REPORT_DIR` to place the combined report with an already completed
-controlled run. On Windows, `run_pld_study.ps1` starts this stage with one
-below-normal R worker and records CPU time and working memory. The launcher
-inherits the caller's R library and Pandoc settings.
+controlled run and refresh it after each history. Set
+`TINYAM_PLD_REPORT_EXTRA` to the SimSurvey results directory when rendering
+the report separately from the controlled results directory. Set
+`TINYAM_PLD_FISHERY_CACHE` to reuse a verified set of realized removals when
+changing only observation settings. On Windows, `run_pld_study.ps1`
+starts this stage with one below-normal R worker and records CPU time and
+working memory. The launcher inherits the caller's R library and Pandoc
+settings.
 
 ## Gillnet and RV observation error
 

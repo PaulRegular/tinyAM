@@ -1,14 +1,20 @@
 # Simulation and fit helpers for simulate_pld.R. SimSurvey is an analysis dependency.
 pld_simsurvey_revision <- "29a1b03350c274f88dac108fb95f9446eac79233"
 pld_effort <- data.frame(effort = c("low", "standard", "high"),
-  sets_per_1000 = c(1, 2, 4), operation_coverage = c(0.15, 0.30, 0.60))
+  sets_per_1000 = c(1, 2, 4), operation_coverage = c(0.25, 0.50, 1))
+# Calibrate monitoring, not demographic or harvest processes, to the broad
+# Northern cod zero frequencies on ages 2-14+. Preserve the low/high effort
+# contrast and keep unsampled cells missing.
+pld_rv_tow_area <- 0.0018
+pld_fishing <- list(f_full = 0.06, peak = 7.7, width = 2.5, gear_amount = 1200L,
+  duration = 24L, capture_q = 0.02, capacity = 150L)
 pld_y50 <- c(catch = 1.5, index = 100)
 pld_sd <- c(catch = 0.25, index = 0.35)
 
 pld_m <- function(year) stats::approx(c(1, 5, 9, 12, 16, 20),
   c(0.25, 0.25, 0.60, 0.60, 0.25, 0.25), xout = year)$y
 
-pld_f <- function(age) 0.06 * exp(-0.5 * ((age - 7.7) / 2.5)^2)
+pld_f <- function(age) with(pld_fishing, f_full * exp(-0.5 * ((age - peak) / width)^2))
 pld_q <- function(age) stats::plogis(2 * (age - 3))
 
 pld_seeds <- function(id) {
@@ -79,6 +85,29 @@ pld_sampling_summary <- function(obs, kind) {
   }))
 }
 
+pld_cod_observation_rows <- function(data) {
+  do.call(rbind, lapply(c("catch", "index"), function(component) {
+    d <- data[[component]]
+    d <- d[d$age >= 2 & d$year %in% 1983:2025, ]
+    d <- pld_pool(d, 14L)
+    data.frame(year = d$year, age = d$age, obs = d$obs, component = component,
+      effort = "Northern cod", history = NA_integer_, plus_age = 14L)
+  }))
+}
+
+pld_sim_observation_rows <- function(histories, plus_age = 14L) {
+  do.call(rbind, lapply(histories, function(h) {
+    do.call(rbind, lapply(names(h$series), function(effort) {
+      s <- h$series[[effort]]
+      do.call(rbind, lapply(c("catch", "index"), function(component) {
+        d <- pld_pool(s$observations[[paste0("native_", component)]], plus_age)
+        data.frame(year = d$year, age = d$age, obs = d$obs, component = component,
+          effort = effort, history = h$id, plus_age = plus_age)
+      }))
+    }))
+  }))
+}
+
 pld_effective_mortality <- function(reference) {
   reference <- as.data.frame(reference)
   transform(reference, M_reference = pld_m(year), M_realized = Z - F_realized)
@@ -143,13 +172,14 @@ pld_check_allocate_lengths <- function() {
   })
 }
 
-pld_monitor_rv_year <- function(snapshot, set_density, seed) {
+pld_monitor_rv_year <- function(snapshot, set_density, seed, tow_area = pld_rv_tow_area) {
   withr::with_seed(seed, {
-    sets <- SimSurvey::sim_sets(snapshot, set_den = set_density / 1000)
+    trawl_dim <- c(1.5, tow_area / 1.5)
+    sets <- SimSurvey::sim_sets(snapshot, set_den = set_density / 1000, trawl_dim = trawl_dim)
     # Sampling is without replacement and survey-wide stratum coverage is
     # needed to interpret a zero as an encounter outcome.
     stopifnot(max(sets$cell_sets) == 1, all(sets$strat_sets <= sets$strat_cells),
-      all(sets$strat_sets >= 2))
+      all(sets$strat_sets >= 2), all(abs(sets$tow_area - tow_area) < 1e-14))
     survey <- SimSurvey::sim_survey(snapshot, custom_sets = sets, q = SimSurvey::sim_logistic(),
       lengths_cap = 100, ages_cap = 3, age_length_group = 3,
       age_space_group = "set", maturity_sampling = "none", light = FALSE)
@@ -158,20 +188,54 @@ pld_monitor_rv_year <- function(snapshot, set_density, seed) {
     # summarized by set, while full_setdet needs set metadata for this year.
     captured <- as.data.frame(survey$full_setdet)
     captured$year <- rep(snapshot$years, nrow(captured))
+    # This counts all captured ages before any length and age subsampling.
+    captured$expanded <- with(captured, n * strat_area / (strat_sets * tow_area))
     list(index = estimated$age_strat, coverage = estimated$survey_coverage,
-      caught = stats::aggregate(captured["n"], captured[c("year", "age")], sum),
+      caught = stats::aggregate(captured[c("n", "expanded")], captured[c("year", "age")], sum),
       sampling = survey$samp_totals)
   })
 }
 
-pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
+pld_remonitor_catch <- function(pop, truth, spec, probability, seed) {
+  spec$sampling_coverage <- probability
+  control <- getFromNamespace(".fishery_controls", "SimSurvey")(spec, pop, "Gillnet")
+  monitor <- getFromNamespace(".monitor_fisheries", "SimSurvey")
+  weights <- setNames(pop$sim_weight(pop$lengths), pop$lengths)
+  monitored <- withr::with_seed(seed,
+    monitor(data.table::copy(truth), list(Gillnet = control), pop$years, pop, weights))
+  monitored$configurations <- list(Gillnet = spec)
+  fished <- pop
+  fished$fishery <- monitored
+  fished$replicates <- 1L
+  SimSurvey::run_catch(fished)$fishery
+}
+
+pld_check_fishery_cache <- function(cache, grid_n, n, revision, source_set) {
+  manifest <- readRDS(file.path(cache, "sampling-manifest.rds"))
+  # The alternate revision changes README and DESCRIPTION only.
+  accepted <- c(pld_simsurvey_revision, "bb4a06d8fef8f4eb74ecfa179d6dc831f589e5fe")
+  stopifnot(manifest$grid == grid_n, manifest$n >= n,
+    all(c(manifest$revision, revision) %in% accepted),
+    identical(manifest$simsurvey, source_set))
+  for (i in seq_len(n)) {
+    stage <- file.path(cache, sprintf("history-%02d", i), sprintf("fishery-year%02d.rds", 1:20))
+    run <- file.path(cache, sprintf("sampling-%02d.rds", i))
+    if (!all(file.exists(c(stage, run))) || !isTRUE(readRDS(run)$ok)) {
+      stop("Original fishery operations are incomplete for history ", i, ".")
+    }
+  }
+  invisible(NULL)
+}
+
+pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
+    effort = pld_effort, tow_area = pld_rv_tow_area, fishery_cache = NULL) {
   seeds <- pld_seeds(id)
   history <- pld_demography(seeds[["population"]])
   grid <- SimSurvey::make_grid(res = rep(280 / grid_n, 2L))
   cells <- as.data.frame(grid)
   frame_cells <- with(cells, table(strat))
   cell_area <- abs(prod(stars::st_res(grid)))
-  high <- pmax(2, round(as.numeric(frame_cells) * cell_area * max(pld_effort$sets_per_1000) / 1000))
+  high <- pmax(2, round(as.numeric(frame_cells) * cell_area * max(effort$sets_per_1000) / 1000))
   if (any(high > frame_cells)) stop("The grid cannot support high-effort sampling without replacement.")
   # Reuse the prior study's balanced rounding; avoid adding spatially varying
   # changes to our prespecified cohort totals through independent rounding.
@@ -186,10 +250,11 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
   flush.console()
 
   # A single set of fishery operations supplies all effort comparisons.
-  spec <- SimSurvey::sim_fishery(target = 0.06, target_type = "F_full",
-    selectivity = function(age) pld_f(age) / 0.06,
-    catch_model = SimSurvey::sim_capture(q = 0.02, capacity_per_gear = 150),
-    gear_amount = 1200, duration = 24, gear_unit = "net", time_unit = "hour",
+  spec <- SimSurvey::sim_fishery(target = pld_fishing$f_full, target_type = "F_full",
+    selectivity = function(age) pld_f(age) / pld_fishing$f_full,
+    catch_model = SimSurvey::sim_capture(q = pld_fishing$capture_q, capacity_per_gear = pld_fishing$capacity),
+    gear_amount = pld_fishing$gear_amount, duration = pld_fishing$duration,
+    gear_unit = "net", time_unit = "hour",
     sampling_coverage = 0, reporting_cv = 0.05, lengths_cap = 150,
     ages_cap = 150, age_sampling = "random", maturity_sampling = "none", light = FALSE)
   simulate_fisheries <- pld_fishery_simulator()
@@ -205,6 +270,12 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
     value
   }
   fishery_years <- lapply(pop$years, function(year) within_draw("fishery", year, function() {
+    # The seed, grid, demography and harvesting settings must match when
+    # reusing realized operations in the calibration pilot.
+    if (!is.null(fishery_cache)) {
+      known <- file.path(fishery_cache, sprintf("fishery-year%02d.rds", year))
+      if (file.exists(known)) return(readRDS(known))
+    }
     snapshot <- oe_snapshot(pop, year)
     annual <- withr::with_seed(seeds[["fishery"]] + year,
       simulate_fisheries(snapshot, Gillnet = spec))$fishery
@@ -239,31 +310,28 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
   cat("  History", id, "fishery removals allocated. Starting monitoring.\n")
   flush.console()
   reference <- pld_effective_mortality(truth$reference)
-  stopifnot(isTRUE(all.equal(reference$F_reference, pld_f(reference$age))))
+  expected <- data.frame(year = rep(pop$years, each = length(pop$ages)),
+    age = rep(pop$ages, times = length(pop$years)), N = as.numeric(pop$N), Z = as.numeric(pop$Z))
+  stopifnot(identical(reference[c("year", "age")], expected[c("year", "age")]),
+    isTRUE(all.equal(reference$N, expected$N, tolerance = 0)),
+    isTRUE(all.equal(reference$Z, expected$Z, tolerance = 0)),
+    isTRUE(all.equal(reference$F_reference, pld_f(reference$age), tolerance = 1e-12)),
+    all(truth$setdet$gear_amount == pld_fishing$gear_amount),
+    all(truth$setdet$duration == pld_fishing$duration))
+  if (!is.null(fishery_cache)) {
+    old <- file.path(dirname(fishery_cache), sprintf("sampling-%02d.rds", id))
+    prior <- readRDS(old)$value
+    stopifnot(identical(prior$seeds, seeds), identical(prior$reference, reference))
+  }
   # A pinned internal adapter reapplies SimSurvey monitoring to the same
   # operations. The exported sim_fisheries() would draw new removals.
-  fishery_controls <- getFromNamespace(".fishery_controls", "SimSurvey")
-  monitor <- getFromNamespace(".monitor_fisheries", "SimSurvey")
-  make_cfg <- function(probability) {
-    spec$sampling_coverage <- probability
-    list(Gillnet = fishery_controls(spec, pop, "Gillnet"))
-  }
-  stock_lengths <- pop$lengths
-  weight_at_length <- setNames(pop$sim_weight(stock_lengths), stock_lengths)
-  series <- lapply(seq_len(nrow(pld_effort)), function(i) {
-    current <- pld_effort[i, ]
+  series <- lapply(seq_len(nrow(effort)), function(i) {
+    current <- effort[i, ]
     cat("  History", id, current$effort, "monitoring.\n")
     flush.console()
-    config <- make_cfg(current$operation_coverage)
-    monitored <- withr::with_seed(seeds[["catch_monitoring"]] + i,
-      monitor(data.table::copy(truth), config,
-        pop$years, pop, weight_at_length))
-    spec$sampling_coverage <- current$operation_coverage
-    monitored$configurations <- list(Gillnet = spec)
-    fished <- pop
-    fished$fishery <- monitored
-    fished$replicates <- 1L
-    catch_est <- SimSurvey::run_catch(fished)$fishery
+    index <- match(current$effort, pld_effort$effort)
+    catch_est <- pld_remonitor_catch(pop, truth, spec, current$operation_coverage,
+      seeds[["catch_monitoring"]] + index)
     # Do not append NA results to the original capture table and re-expand.
     catch_rows <- catch_est$catch_estimates$catch_at_age
     catch <- pld_count(catch_rows, catch_rows$n_hat / 1000, "catch")
@@ -271,7 +339,7 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
 
     rv <- lapply(pop$years, function(year) within_draw(paste0("rv-", current$effort), year, function() {
       pld_monitor_rv_year(oe_snapshot(pop, year), current$sets_per_1000,
-        seeds[["rv"]] + 30L * i + year)
+        seeds[["rv"]] + 30L * index + year, tow_area)
     }))
     rv_table <- function(name) as.data.frame(data.table::rbindlist(lapply(rv, `[[`, name)))
     rv_rows <- rv_table("index")
@@ -298,7 +366,9 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL) {
   })
   oldest <- nrow(pop$N)
   survivor <- as.numeric(pop$N[oldest, ] * exp(-pop$Z[oldest, ]))
-  list(id = id, seeds = seeds, series = setNames(series, pld_effort$effort),
+  list(id = id, seeds = seeds, series = setNames(series, effort$effort),
+    design = list(grid_n = grid_n, effort = effort, rv_tow_area = tow_area, fishing = pld_fishing,
+      rv_curve = c(slope = 2, midpoint = 3)),
     annual = pld_annual_truth(pop$years, pop$ages, pop$N, biology),
     reference = reference, annual_fishery = as.data.frame(truth$annual),
     oldest = data.frame(year = pop$years, survivor = survivor,
