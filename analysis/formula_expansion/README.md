@@ -23,6 +23,7 @@ Full studies are explicit analyses, not routine CI tests.
 | F/M mean effects | `simulate_mean_effects.R` | `mean_effects_report.Rmd` |
 | Observation SD effects | `simulate_sd_effects.R`, `sd_validation.R` | `sd_effects_report.Rmd` |
 | RV observation covariance | `benchmark_rv_covariance.R` | [RV covariance benchmark](rv_covariance_benchmark.md) |
+| Poisson-link delta and mortality recovery | `simulate_pld.R`, `pld_validation.R`, `pld_validation_fit.R` | [PLD validation report](pld_validation_report.Rmd) |
 | Recruitment recovery | `simulate_recruitment.R`, `recruitment_validation.R` | `recruitment_report.Rmd` |
 | Recruitment self-/cross-tests | `simulate_recruitment_cross.R`, `recruitment_cross_validation.R` | `recruitment_cross_report.Rmd` |
 | BH noise and parent-SSB contrast | `simulate_recruitment_noise.R` | `recruitment_cross_report.Rmd` |
@@ -52,6 +53,34 @@ study; its defaults are 100 isolated, 30 full and 20 stress replicates.
 tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
+
+## Poisson-link delta and a mortality pulse
+
+Use the SimSurvey source at [29a1b03](https://github.com/PaulRegular/SimSurvey/commit/29a1b03350c274f88dac108fb95f9446eac79233)
+or [bb4a06d](https://github.com/PaulRegular/SimSurvey/commit/bb4a06d8fef8f4eb74ecfa179d6dc831f589e5fe),
+which has the same simulation code. Point `TINYAM_PLD_SIMSURVEY` at the checkout
+or its extracted source archive. Run these commands from the tinyAM root.
+
+```sh
+Rscript analysis/formula_expansion/simulate_pld.R controlled 24 40
+Rscript analysis/formula_expansion/simulate_pld.R sampling 24 40
+Rscript analysis/formula_expansion/simulate_pld.R fit 24 40
+Rscript analysis/formula_expansion/simulate_pld.R report 24 40
+```
+
+Use one replicate to check the workflow before launching the study. An
+optional fourth argument selects a different ignored results directory.
+Stages run sequentially and retain one checkpoint per generating and
+fitting attempt. The data manifest records the simulation sources. The
+fit manifest allows reuse of generated inputs with explicit provenance
+when the fitter changes.
+
+The optional `sampling_fit` stage generates and fits one SimSurvey history
+at a time and refreshes the report after each history. Use
+`TINYAM_PLD_REPORT_DIR` to place the combined report with an already completed
+controlled run. On Windows, `run_pld_study.ps1` starts this stage with one
+below-normal R worker and records CPU time and working memory. The launcher
+inherits the caller's R library and Pandoc settings.
 
 ## Gillnet and RV observation error
 
