@@ -153,22 +153,25 @@ This report includes `r n_sampling` of the 24 planned histories and
 to this copy. Diagnostics and scores use the simulated observations provided
 to each fit. There is no held-out prediction experiment.
 
-For a predicted arithmetic mean \(\mu\), the model gives a zero probability
+For a predicted arithmetic mean \(\widetilde Y\), the probability that the
+observed value \(Y\) is zero is
 \[
-p_0 = 2^{-\mu/y_{50}} .
+p_0 = P(Y=0) = 2^{-\widetilde Y/\widetilde Y_{50}} .
 \]
-The positive component has arithmetic mean \(\mu/(1-p_0)\) and log-SD
-\(\sigma\). Its log median is \(\log\{\mu/(1-p_0)\}-\sigma^2/2\). The
+The half-detection level \(\widetilde Y_{50}\) has the same units as the
+observations. The positive component has arithmetic mean
+\(\widetilde Y/(1-p_0)\) and log-SD \(\sigma\). Its log median is
+\(\log\{\widetilde Y/(1-p_0)\}-\sigma^2/2\). The
 legacy lognormal uses the population prediction as the median and omits
 zeros. The fits therefore differ both in their treatment of zeros and in how
 they interpret a positive number. The exact simulation also compares two
-fits with fixed true \(y_{50}\) and the same positive density. Omitting just
+fits with fixed true \(\widetilde Y_{50}\) and the same positive density. Omitting just
 the detection contribution from one fit isolates the direct information
 from occurrence.
 
 ## What was simulated?
 
-Natural mortality increased from 0.25 to 0.60 per year during years 5–9,
+Natural mortality increased from 0.25 to 0.60 per year during years 5-9,
 stayed high through year 12, and returned to 0.25 by year 16. Fishing was
 held at a reference peak F of 0.06 with a normal-shaped age curve (peak 7.7,
 width 2.5 years). Recruitment used SimSurvey defaults and separate random
@@ -234,6 +237,37 @@ if (length(sampling)) {
 } else show_not_ready()
 ```
 
+```{r observations-by-year, fig.width=9, fig.height=7.5, fig.cap="Recorded catch and survey outcomes by year and age for the first completed SimSurvey history, shown at three monitoring effort levels. Native ages retain a separate row for each age. In the 14+ panels the top row contains ages 14-20. Catch-grid placeholders above the pooled age are omitted."}
+if (length(sampling)) {
+  first <- sampling[[which.min(vapply(sampling, `[[`, numeric(1), "id"))]]$series
+  recorded <- bind_rows(lapply(names(first), function(effort) {
+    stream <- first[[effort]]
+    pooled <- stream$data[[1L]]
+    native <- stream$observations
+    bind_rows(
+      transmute(native$native_catch, year, age, obs, component = "Gillnet", ages = "Native"),
+      transmute(native$native_index, year, age, obs, component = "RV", ages = "Native"),
+      transmute(filter(pooled$catch, age <= 14), year, age, obs, component = "Gillnet", ages = "14+"),
+      transmute(pooled$index, year, age, obs, component = "RV", ages = "14+")
+    ) |> mutate(effort = effort)
+  }))
+  recorded |>
+    mutate(outcome = factor(case_when(is.na(obs) ~ "Missing", obs == 0 ~ "Zero",
+      TRUE ~ "Positive"), levels = c("Positive", "Zero", "Missing")),
+      panel = factor(paste(component, ages, sep = " / "),
+        levels = c("Gillnet / Native", "Gillnet / 14+", "RV / Native", "RV / 14+"))) |>
+    ggplot(aes(year, age, fill = outcome)) +
+    geom_tile(colour = "white", linewidth = .15) +
+    facet_grid(panel ~ label_scenario(effort), scales = "free_y") +
+    scale_fill_manual(values = c(Positive = "#CFE5EC", Zero = "#AD421B", Missing = "#70757C"),
+      drop = FALSE) +
+    scale_x_continuous(breaks = c(1, 5, 10, 15, 20), expand = c(0, .5)) +
+    scale_y_continuous(breaks = c(1, 5, 10, 14, 20), expand = c(0, .5)) +
+    labs(x = "Year", y = "Age", fill = "Observation") +
+    theme(legend.position = "bottom", panel.grid = element_blank())
+}
+```
+
 ```{r support, results='asis'}
 if (length(sampling)) {
   support <- bind_rows(lapply(sampling, function(x) {
@@ -264,7 +298,7 @@ if (length(sampling)) {
 }
 ```
 
-Age 14+ sums the records at ages 14–20 before fitting. A positive value
+Age 14+ sums the records at ages 14-20 before fitting. A positive value
 therefore can include an age that had no recorded fish, even with PLD.
 Comparison with age 20+ changes both the number of zero cells and the time
 fish can remain in the terminal age. The 14+ model also uses age-14 mortality
@@ -272,19 +306,72 @@ and catchability throughout the bin. SimSurvey applies the native curves
 and lets fish exit at age 20. The two resolutions cannot be compared by
 information criteria.
 
+```{r plus-selectivity, fig.cap="Percent difference between effective age-14+ selectivity or catchability and the generating value at age 14. Each line is one completed history. Zero marks the age-14 value. The panels have different vertical scales because the survey logistic curve is nearly flat at these ages."}
+if (length(sampling)) {
+  plus_selectivity <- bind_rows(lapply(sampling, function(x) {
+    ages <- filter(x$reference, age >= 14L)
+    # Baranov catch is linear in F at the prescribed Z; use each native age's
+    # abundance and year-specific fraction exposed to fishing as weights.
+    ages |>
+      mutate(catch_weight = N * (-expm1(-Z)) / Z,
+        q = stats::plogis(2 * (age - 3))) |>
+      group_by(year) |>
+      summarise(Gillnet = weighted.mean(selectivity, catch_weight) / selectivity[age == 14L],
+        RV = weighted.mean(q, N) / q[age == 14L], .groups = "drop") |>
+      mutate(history = x$id)
+  })) |>
+    tidyr::pivot_longer(c(Gillnet, RV), names_to = "program", values_to = "ratio")
+  ggplot(plus_selectivity, aes(year, 100 * (ratio - 1), group = history)) +
+    geom_hline(yintercept = 0, linetype = 2) + geom_line(alpha = .55, colour = "#126782") +
+    facet_wrap(~program, scales = "free_y") +
+    labs(x = "Year", y = "Difference from the age-14 value (%)")
+}
+```
+
+```{r plus-selectivity-summary, results='asis'}
+if (length(sampling)) {
+  ranges <- plus_selectivity |>
+    group_by(program) |>
+    summarise(minimum = min(ratio), maximum = max(ratio), .groups = "drop")
+  gillnet <- filter(ranges, program == "Gillnet")
+  rv <- filter(ranges, program == "RV")
+  cat(sprintf("Effective Gillnet selectivity was %.1f-%.1f%% of age-14 selectivity. Effective RV catchability exceeded age-14 catchability by %.2g-%.2g%%.",
+    100 * gillnet$minimum, 100 * gillnet$maximum,
+    100 * (rv$minimum - 1), 100 * (rv$maximum - 1)))
+}
+```
+
+The catch summary weights native selectivity by \(N_a(1-e^{-Z_a})/Z_a\).
+At the simulator's prescribed \(Z_a\), that choice reproduces the total
+reference Baranov catch for ages 14-20. Survey catchability is weighted by
+abundance at the start of the year, when the survey takes place. The
+comparison uses generating curves and simulated abundances, with no
+assumption about which ages appeared in a particular sample.
+
 ### How did target and realized mortality differ?
 
-```{r mortality-truth, fig.cap="Prescribed M and median realized M across SimSurvey histories at selected ages. Fishing follows an annual quota target derived from reference F, so catches can alter how the simulator assigns Z to fishing and other deaths."}
+```{r mortality-truth, fig.cap="Prescribed and realized F and M trajectories averaged over ages 5-10 using the simulated abundance at age. Thin lines show individual histories. Thick lines show the median of each trajectory. Each panel has its own vertical scale."}
 if (length(sampling)) {
-  reference <- bind_rows(lapply(sampling, `[[`, "reference"))
-  reference |>
-    filter(age %in% c(2L, 5L, 8L, 12L, 14L, 20L)) |>
-    group_by(year, age) |>
-    summarise(reference = first(M_reference), realized = median(M_realized, na.rm = TRUE),
-      .groups = "drop") |>
-    ggplot(aes(year)) + geom_line(aes(y = reference), linetype = 2) +
-    geom_line(aes(y = realized, colour = factor(age))) +
-    labs(x = "Year", y = "Natural mortality (per year)", colour = "Age")
+  audit <- bind_rows(lapply(sampling, function(x) mutate(x$reference, history = x$id))) |>
+    filter(age %in% 5:10, is.finite(M_realized)) |>
+    group_by(history, year) |>
+    summarise(M_ref = weighted.mean(M_reference, N),
+      M_real = weighted.mean(M_realized, N), F_ref = weighted.mean(F_reference, N),
+      F_real = weighted.mean(F_realized, N), .groups = "drop")
+  rates <- audit |>
+    tidyr::pivot_longer(c(F_ref, F_real, M_ref, M_real), names_to = c("parameter", "source"),
+      names_sep = "_", values_to = "rate") |>
+    mutate(parameter = recode(parameter, F = "Fishing mortality (F)", M = "Natural mortality (M)"),
+      source = factor(source, levels = c("ref", "real"), labels = c("Prescribed", "Realized")))
+  medians <- rates |>
+    group_by(parameter, source, year) |>
+    summarise(rate = median(rate), .groups = "drop")
+  ggplot(rates, aes(year, rate, colour = source, linetype = source)) +
+    geom_line(aes(group = interaction(history, source)), alpha = .25) +
+    geom_line(data = medians, linewidth = .9) + facet_wrap(~parameter, scales = "free_y") +
+    scale_colour_manual(values = c(Prescribed = "#383838", Realized = "#126782")) +
+    scale_linetype_manual(values = c(Prescribed = "dashed", Realized = "solid")) +
+    labs(x = "Year", y = "Abundance-weighted rate (per year)", colour = NULL, linetype = NULL)
 }
 ```
 
@@ -292,20 +379,14 @@ if (length(sampling)) {
 if (length(sampling)) {
   ledger <- bind_rows(lapply(sampling, `[[`, "annual_fishery"))
   last <- bind_rows(lapply(sampling, `[[`, "oldest"))
-  audit <- bind_rows(lapply(sampling, function(x) mutate(x$reference, history = x$id))) |>
-    filter(age %in% 5:10, is.finite(M_realized)) |>
-    group_by(history, year) |>
-    summarise(M_ref = weighted.mean(M_reference, N),
-      M_real = weighted.mean(M_realized, N), F_ref = weighted.mean(F_reference, N),
-      F_real = weighted.mean(F_realized, N), .groups = "drop")
   pulses <- audit |>
     group_by(history) |>
     summarise(realized = mean(M_real[year %in% 9:12]) -
       mean(M_real[year %in% c(1:4, 17:20)]), .groups = "drop")
-  cat(sprintf("There were %d positive target shortfalls in %d fishery-years. The largest absolute annual difference between reference and realized M averaged over ages 5–10 was %.3f per year. The greatest year-end loss beyond age 20 across these histories was %.3f%% of beginning-of-year abundance.",
+  cat(sprintf("There were %d positive target shortfalls in %d fishery-years. The largest absolute annual difference between reference and realized M averaged over ages 5-10 was %.3f per year. The greatest year-end loss beyond age 20 across these histories was %.3f%% of beginning-of-year abundance.",
     sum(ledger$shortfall > 0), nrow(ledger), max(abs(audit$M_real - audit$M_ref)),
     100 * max(last$proportion)))
-  cat(sprintf(" The mean abundance-weighted rates across ages 5–10 were %.3f reference F and %.3f realized F, and %.3f reference M and %.3f realized M, per year.",
+  cat(sprintf(" The mean abundance-weighted rates across ages 5-10 were %.3f reference F and %.3f realized F, and %.3f reference M and %.3f realized M, per year.",
     mean(audit$F_ref), mean(audit$F_real), mean(audit$M_ref), mean(audit$M_real)))
   cat(sprintf(" Across these histories the realized weighted M pulse ranged from %.3f to %.3f per year, compared with the prescribed 0.350. Recovery scores use the prescribed mortality and fishing curves that generate the cohort trajectories.",
     min(pulses$realized), max(pulses$realized)))
@@ -430,7 +511,7 @@ if (nrow(annual)) {
 } else show_not_ready()
 ```
 
-```{r pulse, fig.cap="Pulse-height and timing errors for successful fits. Height is mean M in years 9–12 minus mean M in years 1–4 and 17–20. Timing is the year averaged by positive departures above baseline, with no timing estimate when there are no such departures."}
+```{r pulse, fig.cap="Pulse-height and timing errors for successful fits. Height is mean M in years 9-12 minus mean M in years 1-4 and 17-20. Timing is the year averaged by positive departures above baseline, with no timing estimate when there are no such departures."}
 if (nrow(pulse)) {
   p <- filter(pulse, resolution == 14L, model %in% arms[1:4])
   ggplot(p, aes(height_error, center_error, colour = model)) + geom_hline(yintercept = 0, linetype = 2) +
