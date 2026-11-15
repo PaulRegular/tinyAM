@@ -204,7 +204,7 @@ plot_resid <- function(
   } else if (kind == "bubbles") {
     d$kind <- as.character(htmltools::htmlEscape(d$.residual_source))
     p <- do.call(plot_bubbles, c(list(data = d, res = ~.residual_value,
-      y = y, ylab = ylab, title = if (is.null(title)) label else title), args))
+      y = y, ylab = ylab, title = if (is.null(title)) "" else title), args))
   } else {
     d$.residual_hover <- paste0(htmltools::htmlEscape(d$.residual_source), ": ", signif(d$.residual_value, 4))
     if (is.null(args$text)) args$text <- ~.residual_hover
@@ -216,7 +216,7 @@ plot_resid <- function(
   if (!nrow(d)) p$x$data <- list()
   p$x$layout$xaxis$title <- if (kind == "bubbles") "Year" else xlab
   p$x$layout$yaxis$title <- if (kind == "bubbles") ylab else label
-  if (kind == "bubbles") p$x$layout$title <- if (is.null(title)) label else title
+  if (kind == "bubbles") p$x$layout$title <- if (is.null(title)) "" else title
   p$x$layout$annotations <- .residual_plot_annotations(selected$status, type)
   list(data = p$x$data, layout = p$x$layout, status = selected$status)
 }
@@ -299,6 +299,7 @@ plot_resid <- function(
   if (type == "osa") selectors <- seq_along(types)
   config <- list(views = views, frames = frame$levels, frameLabel = frame$label, view = initial_view,
     automatic = type == "auto", defaultViews = default_views,
+    compactHeader = kind == "bubbles" && is.null(title),
     selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
     showSelector = length(selectors) > 1L && (type != "osa" ||
       any(available$residual_type == "osa") || any(available$has_pld)))

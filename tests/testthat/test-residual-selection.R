@@ -90,6 +90,10 @@ test_that("residual views preserve custom hover, scalar inputs and process bubbl
   traces <- Filter(function(trace) length(trace$x), residual_config(p)$views[[1]]$cells[[1]]$data)
   expect_identical(traces[[1]]$hovertemplate, "Custom: %{text}")
   expect_match(traces[[1]]$text, "custom", fixed = TRUE)
+  expect_true(residual_config(plot_bubbles(d))$compactHeader)
+  titled <- residual_config(plot_bubbles(d, title = "Catch residuals"))
+  expect_false(titled$compactHeader)
+  expect_identical(titled$views[[2]]$cells[[1]]$layout$title, "Catch residuals")
   expect_match(residual_config(plot_bubbles(d))$views[[2]]$cells[[1]]$layout$annotations[[1]]$text,
     "method unspecified", fixed = TRUE)
   d$osa_res <- NA_real_

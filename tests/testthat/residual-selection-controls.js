@@ -58,7 +58,8 @@ function widget(options = config) {
   assert.deepEqual(model.children.map(option => option.textContent), ['A', 'B']);
   assert.equal(residual.value, '1');
   assert.equal(model.value, '0');
-  assert.equal(a.layout.margin.t, 85);
+  assert.equal(a.layout.margin.t, 60);
+  assert.equal(a.layout.title, '');
 
   model.choose(1);
   assert.equal(residual.value, '0'); // Auto uses the next model's default.
@@ -110,7 +111,7 @@ function widget(options = config) {
   assert.deepEqual(single.data[0].x, [2000]);
   assert.deepEqual(single.data[0].customdata, ['one']);
   assert.equal(single.childElementCount, 0);
-  assert.equal(single.layout.margin.t, 60);
+  assert.equal(single.layout.margin.t, 35);
 
   const delta = widget(configs.pld);
   await finish(delta);

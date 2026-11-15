@@ -10,8 +10,9 @@ function(el, x, config) {
   var pending = false;
   var controls = document.createElement('div');
   controls.className = 'tam-residual-controls';
-  controls.style.cssText = 'position:absolute;top:26px;left:8px;right:8px;z-index:5;' +
+  controls.style.cssText = 'position:absolute;left:8px;right:8px;z-index:5;' +
     'display:flex;gap:.8em;align-items:center;pointer-events:none;';
+  controls.style.top = config.compactHeader ? '8px' : '26px';
 
   function select(label, name, values, labels, selected, change) {
     var field = document.createElement('label');
@@ -78,9 +79,11 @@ function(el, x, config) {
       });
       if (trace.marker && trace.marker.size !== undefined) trace.marker.size = array(trace.marker.size);
     });
+    var top = controls.childElementCount ? 85 : 60;
+    if (config.compactHeader) top -= 25;
     var layout = Object.assign({}, x.layout, cell.layout, {
       autosize: true, margin: Object.assign({}, cell.layout.margin,
-        {t: controls.childElementCount ? 85 : 60})
+        {t: top})
     });
     function finished() {
       drawing = false;
