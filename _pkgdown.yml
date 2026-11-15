@@ -50,6 +50,8 @@ reference:
   - cut_int
   - prepare_tam
   - make_par
+- title: Model families
+- contents:
   - observation_families
 - title: Specify model formulas
 - contents:
