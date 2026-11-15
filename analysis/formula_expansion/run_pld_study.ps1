@@ -1,14 +1,9 @@
 param(
   [Parameter(Mandatory)][string] $Rscript,
   [Parameter(Mandatory)][string] $SimSurveySource,
-  [ValidateSet('calibration','controlled','sampling','sampling_fit','fit','report')]
-  [string] $Phase = 'sampling',
-  [string] $Results = 'analysis/formula_expansion/results/pld-30yr-simsurvey',
-  [string] $Calibration = 'analysis/formula_expansion/results/pld-30yr-calibration',
-  [string] $ReportResults = '',
-  [string] $FisheryCache = '',
-  [int] $Replicates = 24,
-  [int] $Grid = 40
+  [ValidateSet('audit','spatial')]
+  [string] $Phase = 'spatial',
+  [string] $Results = 'analysis/formula_expansion/results/pld-whole-area'
 )
 $ErrorActionPreference = 'Stop'
 $rscriptPath = (Resolve-Path -LiteralPath $Rscript).Path
@@ -17,13 +12,6 @@ $rtermPath = @((Join-Path $rBin 'Rterm.exe'), (Join-Path $rBin 'x64/Rterm.exe'))
   Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (!$rtermPath) { throw 'Cannot find Rterm.exe beside the supplied Rscript installation.' }
 $env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
-$env:TINYAM_PLD_CALIBRATION = $Calibration
-$env:TINYAM_PLD_REPORT_DIR = if ($ReportResults) {
-  (New-Item -ItemType Directory -Path $ReportResults -Force).FullName
-} else { '' }
-$env:TINYAM_PLD_FISHERY_CACHE = if ($FisheryCache) {
-  (Resolve-Path -LiteralPath $FisheryCache).Path
-} else { '' }
 $directory = (New-Item -ItemType Directory -Path $Results -Force).FullName
 $archive = Join-Path $directory 'supervisor'
 New-Item -ItemType Directory -Force -Path $archive | Out-Null
@@ -32,7 +20,7 @@ $resources = Join-Path $archive "resources-$stamp.csv"
 $launch = @{
   FilePath = $rtermPath
   ArgumentList = @('--vanilla', '--slave', '--file=analysis/formula_expansion/simulate_pld.R',
-    '--args', $Phase, $Replicates, $Grid, ('"{0}"' -f $directory))
+    '--args', $Phase, ('"{0}"' -f $directory))
   WindowStyle = 'Hidden'
   WorkingDirectory = (Get-Location).Path
   PassThru = $true
@@ -42,6 +30,7 @@ $launch = @{
 $worker = Start-Process @launch
 try { $worker.PriorityClass = 'BelowNormal' } catch { Write-Warning $_.Exception.Message }
 $clock = [System.Diagnostics.Stopwatch]::StartNew()
+$lowMemoryChecks = 0
 $node = Get-Command node.exe -ErrorAction SilentlyContinue
 $nodeMetrics = @'
 const os = require("node:os");
@@ -89,6 +78,14 @@ try {
       worker_working_set_mib = [math]::Round($worker.WorkingSet64 / 1MB, 1)
       worker_peak_mib = [math]::Round($worker.PeakWorkingSet64 / 1MB, 1)
     } | Export-Csv -LiteralPath $resources -Append -NoTypeInformation
+    if ($null -ne $available -and $available -lt 2048) {
+      $lowMemoryChecks++
+    } else {
+      $lowMemoryChecks = 0
+    }
+    if ($lowMemoryChecks -ge 2) {
+      throw 'Study paused after two checks below 2 GiB available memory. Resume with the same command when memory is available.'
+    }
     Start-Sleep -Seconds 15
   }
 } finally {

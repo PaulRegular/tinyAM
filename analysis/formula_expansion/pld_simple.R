@@ -1,5 +1,5 @@
 # Controlled experiment for the information in sampled zeros.
-# Run from the tinyAM root with simulate_pld_simple.R.
+# Run from the tinyAM root with simulate_pld.R.
 pld_simple_ages <- 1:14
 pld_simple_years <- 1:30
 pld_simple_weak <- c(5:7, 16:18)
