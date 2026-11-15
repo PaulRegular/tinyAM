@@ -1,7 +1,10 @@
 param(
   [Parameter(Mandatory)][string] $Rscript,
   [Parameter(Mandatory)][string] $SimSurveySource,
-  [string] $Results = 'analysis/formula_expansion/results/pld-cod-zero-sim',
+  [ValidateSet('calibration','controlled','sampling','sampling_fit','fit','report')]
+  [string] $Phase = 'sampling',
+  [string] $Results = 'analysis/formula_expansion/results/pld-30yr-simsurvey',
+  [string] $Calibration = 'analysis/formula_expansion/results/pld-30yr-calibration',
   [string] $ReportResults = '',
   [string] $FisheryCache = '',
   [int] $Replicates = 24,
@@ -9,7 +12,12 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $rscriptPath = (Resolve-Path -LiteralPath $Rscript).Path
+$rBin = Split-Path -Parent $rscriptPath
+$rtermPath = @((Join-Path $rBin 'Rterm.exe'), (Join-Path $rBin 'x64/Rterm.exe')) |
+  Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+if (!$rtermPath) { throw 'Cannot find Rterm.exe beside the supplied Rscript installation.' }
 $env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
+$env:TINYAM_PLD_CALIBRATION = $Calibration
 $env:TINYAM_PLD_REPORT_DIR = if ($ReportResults) {
   (New-Item -ItemType Directory -Path $ReportResults -Force).FullName
 } else { '' }
@@ -22,9 +30,9 @@ New-Item -ItemType Directory -Force -Path $archive | Out-Null
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $resources = Join-Path $archive "resources-$stamp.csv"
 $launch = @{
-  FilePath = $rscriptPath
-  ArgumentList = @('--vanilla', 'analysis/formula_expansion/simulate_pld.R',
-    'sampling_fit', $Replicates, $Grid, ('"{0}"' -f $directory))
+  FilePath = $rtermPath
+  ArgumentList = @('--vanilla', '--slave', '--file=analysis/formula_expansion/simulate_pld.R',
+    '--args', $Phase, $Replicates, $Grid, ('"{0}"' -f $directory))
   WindowStyle = 'Hidden'
   WorkingDirectory = (Get-Location).Path
   PassThru = $true
@@ -34,18 +42,49 @@ $launch = @{
 $worker = Start-Process @launch
 try { $worker.PriorityClass = 'BelowNormal' } catch { Write-Warning $_.Exception.Message }
 $clock = [System.Diagnostics.Stopwatch]::StartNew()
+$node = Get-Command node.exe -ErrorAction SilentlyContinue
+$nodeMetrics = @'
+const os = require("node:os");
+function ticks() {
+  let idle = 0;
+  let total = 0;
+  for (const cpu of os.cpus()) {
+    idle += cpu.times.idle;
+    total += Object.values(cpu.times).reduce((sum, ticks) => sum + ticks);
+  }
+  return {idle, total};
+}
+const start = ticks();
+setTimeout(() => {
+  const end = ticks();
+  const used = 1 - (end.idle - start.idle) / (end.total - start.total);
+  console.log(JSON.stringify({memory: os.freemem() / 2 ** 20, cpu: 100 * used}));
+}, 500);
+'@
 try {
   while (!$worker.HasExited) {
     $worker.Refresh()
     if ($worker.HasExited) { break }
-    $memory = Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory -ErrorAction SilentlyContinue
-    $cpu = Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -ErrorAction SilentlyContinue |
-      Where-Object Name -EQ '_Total' | Select-Object -First 1
+    $available = $null
+    $processor = $null
+    try {
+      $memory = Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory -ErrorAction Stop
+      $cpu = Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -ErrorAction Stop |
+        Where-Object Name -EQ '_Total' | Select-Object -First 1
+      $available = $memory.AvailableMBytes
+      $processor = $cpu.PercentProcessorTime
+    } catch {
+      if ($node) {
+        $system = & $node.Source -e $nodeMetrics | ConvertFrom-Json
+        $available = $system.memory
+        $processor = $system.cpu
+      }
+    }
     [pscustomobject]@{
       time = Get-Date -Format o
       elapsed_seconds = $clock.Elapsed.TotalSeconds
-      system_available_mib = $memory.AvailableMBytes
-      system_cpu_percent = $cpu.PercentProcessorTime
+      system_available_mib = $available
+      system_cpu_percent = $processor
       worker_cpu_seconds = $worker.TotalProcessorTime.TotalSeconds
       worker_working_set_mib = [math]::Round($worker.WorkingSet64 / 1MB, 1)
       worker_peak_mib = [math]::Round($worker.PeakWorkingSet64 / 1MB, 1)

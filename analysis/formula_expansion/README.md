@@ -54,7 +54,7 @@ tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
 
-## Poisson-link delta and a mortality pulse
+## Poisson-link delta and mortality recovery
 
 Use the SimSurvey source at [29a1b03](https://github.com/PaulRegular/SimSurvey/commit/29a1b03350c274f88dac108fb95f9446eac79233)
 or [bb4a06d](https://github.com/PaulRegular/SimSurvey/commit/bb4a06d8fef8f4eb74ecfa179d6dc831f589e5fe),
@@ -62,10 +62,10 @@ which has the same simulation code. Point `TINYAM_PLD_SIMSURVEY` at the checkout
 or its extracted source archive. Run these commands from the tinyAM root.
 
 ```sh
-Rscript analysis/formula_expansion/simulate_pld.R controlled 24 40
-Rscript analysis/formula_expansion/simulate_pld.R sampling 24 40
-Rscript analysis/formula_expansion/simulate_pld.R fit 24 40
-Rscript analysis/formula_expansion/simulate_pld.R report 24 40
+Rscript analysis/formula_expansion/simulate_pld.R calibration 6 40 analysis/formula_expansion/results/pld-30yr-calibration
+Rscript analysis/formula_expansion/simulate_pld.R sampling 24 40 analysis/formula_expansion/results/pld-30yr-simsurvey
+Rscript analysis/formula_expansion/simulate_pld.R fit 24 40 analysis/formula_expansion/results/pld-30yr-simsurvey
+Rscript analysis/formula_expansion/simulate_pld.R report 24 40 analysis/formula_expansion/results/pld-30yr-simsurvey
 ```
 
 Use one replicate to check the workflow before launching the study. An
@@ -75,23 +75,36 @@ fitting attempt. The data manifest records the simulation sources. The
 fit manifest allows reuse of generated inputs with explicit provenance
 when the fitter changes.
 
-Use the Northern cod comparison in the report to check the simulated zero
-rates at ages 2–14+. Standard effort was calibrated using observation
-frequencies before fitting the models. The three effort levels use the same
-population histories and realized removals. Use a fresh results directory
-if the original monitoring experiment is already cached.
+The 30-year histories combine an early fishing pulse with a later increase
+in natural mortality. The three monitoring effort levels share population
+histories and realized removals. Use the Northern cod comparison in the
+report to check zero frequencies at ages 2–14+ under the retained monitoring
+settings. Six separate standard-effort histories estimate each program's
+half-detection scale from occurrence and known observation targets for the
+fixed-scale comparison. They use population identifiers 101–106, separate
+from the main study's 1–24, and keep an individual input hash in the fit
+manifest. Set `TINYAM_PLD_CALIBRATION` to their directory if using a different
+location. Keep these outputs separate from the original 20-year experiment.
 
 The optional `sampling_fit` stage generates and fits one SimSurvey history
 at a time. Use
-`TINYAM_PLD_REPORT_DIR` to place the combined report with an already completed
-controlled run and refresh it after each history. Set
-`TINYAM_PLD_REPORT_EXTRA` to the SimSurvey results directory when rendering
-the report separately from the controlled results directory. Set
-`TINYAM_PLD_FISHERY_CACHE` to reuse a verified set of realized removals when
-changing only observation settings. On Windows, `run_pld_study.ps1`
-starts this stage with one below-normal R worker and records CPU time and
-working memory. The launcher inherits the caller's R library and Pandoc
-settings.
+`TINYAM_PLD_REPORT_DIR` to refresh a report after each history. An optional
+`controlled` run exercises exact-PLD and multinomial generation. Use the
+same `fit` stage in a separate directory to fit those simulations.
+Set `TINYAM_PLD_FISHERY_CACHE` to reuse verified removals for the same
+population and F schedule when changing only observation settings. On Windows,
+`run_pld_study.ps1` can start each stage with one below-normal R worker and
+records CPU time and working memory. The launcher inherits the caller's R
+library and Pandoc settings.
+
+The main run uses a private, pinned SimSurvey adapter that updates cell-by-age
+counts after each fishing operation. It skips terminal allocation of remaining
+deaths by cell and length because subsequent age–year abundance and mortality
+come from the supplied population. Monitoring is drawn separately from the
+same retained removals. On six calibration snapshots spanning 5–183 operations,
+the adapter matched raw operations, age–length catches, mortality references,
+biological samples, and monitored estimates exactly for the same seeds. The
+calibration histories retain their original-engine manifests.
 
 ## Gillnet and RV observation error
 

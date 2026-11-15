@@ -1,967 +1,898 @@
 ---
-title: "Do recorded zeros help recover a natural-mortality pulse?"
+title: "Can sampled zeros help recover natural mortality and older cod?"
 output:
   html_document:
     toc: true
     toc_depth: 2
 params:
-  results: "results/pld-grid40-n24"
+  results: "results/pld-30yr-simsurvey"
   extra_results: ""
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
-  fig.width = 8, fig.height = 4.6, dpi = 120)
+  fig.width = 8, fig.height = 4.3, dpi = 125)
 library(ggplot2)
 library(dplyr)
 source("pld_validation.R", local = TRUE)
 load("../../data/cod_obs.rda")
-root <- normalizePath(params$results, mustWork = TRUE)
-roots <- if (nzchar(params$extra_results)) {
-  c(root, normalizePath(params$extra_results, mustWork = TRUE))
-} else root
-arms <- c("Lognormal", "Survey PLD", "Catch PLD", "Both PLD",
-  "Fixed detection", "No occurrence")
-scenario_labels <- c(exact = "Exact PLD", multinomial = "Varying age samples",
-  low = "Low effort", standard = "Standard effort", high = "High effort")
+
+roots <- normalizePath(c(params$results, if (nzchar(params$extra_results)) params$extra_results),
+  mustWork = TRUE)
 read_runs <- function(pattern) {
-  files <- unlist(lapply(roots, list.files, pattern = pattern, full.names = TRUE), use.names = FALSE)
-  # The latest result from extra_results takes precedence over pilots.
+  files <- unlist(lapply(roots, list.files, pattern = pattern, full.names = TRUE),
+    use.names = FALSE)
   files <- files[!duplicated(basename(files), fromLast = TRUE)]
   setNames(lapply(files, readRDS), sub("[.]rds$", "", basename(files)))
 }
 inputs <- read_runs("^(controlled|sampling)-[0-9]+[.]rds$")
 fits <- read_runs("^fit-(controlled|sampling)-[0-9]+-.*[.]rds$")
-fit_status <- bind_rows(lapply(names(fits), function(name) {
-  a <- fits[[name]]
-  keys <- strsplit(sub("^fit-", "", name), "-", fixed = TRUE)[[1]]
-  data.frame(attempt = name, design = keys[1], history = as.integer(keys[2]),
-    scenario = keys[3], resolution = as.integer(sub("a", "", keys[4])),
-    model = arms[as.integer(sub("model", "", keys[5]))],
-    success = isTRUE(a$value$converged), warnings = length(a$warnings),
-    error = a$error, elapsed = a$elapsed)
-}))
-if (!length(fits)) {
-  fit_status <- data.frame(attempt = character(), design = character(), history = integer(),
-    scenario = character(), resolution = integer(), model = character(),
-    success = logical(), warnings = integer(), error = character(), elapsed = numeric())
-}
-summarise_fit <- function(name) {
-  if (!length(fits)) return(data.frame())
-  bind_rows(lapply(seq_len(nrow(fit_status)), function(i) {
+sampling_inputs <- inputs[startsWith(names(inputs), "sampling-")]
+sampling <- lapply(Filter(function(x) isTRUE(x$ok), sampling_inputs), "[[", "value")
+n_controlled <- sum(vapply(inputs[startsWith(names(inputs), "controlled-")],
+  function(x) isTRUE(x$ok), logical(1)))
+
+arms <- c("Lognormal", "Survey PLD", "Catch PLD", "Both PLD",
+  "Fixed detection", "No occurrence")
+scenarios <- c(low = "Low", standard = "Standard", high = "High",
+  exact = "Exact PLD", multinomial = "Variable age samples")
+arm_palette <- c("#353535", "#126782", "#C44C27", "#258375", "#72529D", "#8C6F35")
+names(arm_palette) <- arms
+scenario_label <- function(x) factor(unname(scenarios[x]), levels = scenarios)
+theme_set(theme_bw(base_size = 11) + theme(panel.grid.minor = element_blank()))
+
+fit_status <- bind_rows(data.frame(attempt = character(), design = character(),
+  history = integer(), scenario = character(), resolution = integer(), model = character(),
+  success = logical(), error = character(), warnings = integer()), lapply(names(fits), function(name) {
+    record <- fits[[name]]
+    keys <- strsplit(sub("^fit-", "", name), "-", fixed = TRUE)[[1L]]
+    data.frame(attempt = name, design = keys[1L], history = as.integer(keys[2L]),
+      scenario = keys[3L], resolution = as.integer(sub("^a", "", keys[4L])),
+      model = arms[as.integer(sub("^model", "", keys[5L]))],
+      success = isTRUE(record$value$converged), error = record$error,
+      warnings = length(record$warnings))
+  }))
+keys <- c("design", "scenario", "resolution", "history", "model")
+fit_table <- function(name) {
+  bind_rows(lapply(which(fit_status$success), function(i) {
     row <- fit_status[i, ]
-    if (!row$success) return(NULL)
-    table <- fits[[row$attempt]]$value$metric[[name]]
-    cbind(row[c("design", "scenario", "history", "resolution", "model")], table)
+    d <- fits[[row$attempt]]$value$metric[[name]]
+    if (!is.null(d) && nrow(d)) cbind(row[keys], d, row.names = NULL)
   }))
 }
-annual <- summarise_fit("annual")
-scale_check <- data.frame()
-if (nrow(annual)) {
-  annual <- mutate(annual, log_error = log(est / truth),
-    covered = if_else(is.finite(lwr) & is.finite(upr), truth >= lwr & truth <= upr, NA))
-  scale_check <- annual |>
+
+annual <- fit_table("annual")
+age_abundance <- fit_table("population_age")
+pulse <- fit_table("pulse")
+scale <- if (nrow(annual)) {
+  annual |>
     filter(quantity == "ssb") |>
-    group_by(design, scenario, resolution, history, model) |>
+    group_by(across(all_of(keys))) |>
     summarise(ssb_ratio = median(est / truth), .groups = "drop") |>
-    mutate(outside_scale = !is.finite(ssb_ratio) | ssb_ratio < 0.1 | ssb_ratio > 10)
-  annual <- left_join(annual, select(scale_check, -ssb_ratio),
-    by = c("design", "scenario", "resolution", "history", "model"))
-}
-pulse <- summarise_fit("pulse")
-if (nrow(pulse)) {
-  pulse <- mutate(pulse, height_error = height - height_truth,
-    center_error = center - center_truth) |>
-    left_join(select(scale_check, -ssb_ratio),
-      by = c("design", "scenario", "resolution", "history", "model"))
-}
-paired <- if (nrow(annual)) {
-  key <- group_by(annual, design, scenario, resolution, model, history, quantity)
-  metric <- summarise(key, mae = mean(abs(log_error)),
-    mean_error = mean(log_error), coverage = mean(covered, na.rm = TRUE),
-    finite_intervals = sum(!is.na(covered)), .groups = "drop")
-  base <- filter(metric, model == "Lognormal") |>
-    select(design, scenario, resolution, history, quantity, baseline = mae)
-  inner_join(filter(metric, model %in% arms[2:4]), base,
-    by = c("design", "scenario", "resolution", "history", "quantity")) |>
-    mutate(difference = mae - baseline)
-} else data.frame()
-main <- filter(fit_status, resolution == 14L, model %in% arms[1:4])
-successful <- sum(main$success)
-n_controlled <- sum(startsWith(names(inputs), "controlled-") & vapply(inputs, `[[`, FALSE, "ok"))
-n_sampling <- sum(startsWith(names(inputs), "sampling-") & vapply(inputs, `[[`, FALSE, "ok"))
-n_input_failures <- sum(!vapply(inputs, `[[`, FALSE, "ok"))
-sampling <- lapply(inputs[startsWith(names(inputs), "sampling-")], function(x) x$value)
-sampling <- Filter(Negate(is.null), sampling)
-design <- if (length(sampling)) sampling[[1L]]$design else NULL
-uses_cod_benchmark <- !is.null(design)
-if (is.null(design)) {
-  design <- list(effort = data.frame(sets_per_1000 = c(1, 2, 4),
-    operation_coverage = c(.15, .30, .60)), rv_tow_area = .03)
-}
-completed_sampling_fits <- sum(fit_status$design == "sampling")
-sampling_target_fits <- 24L * 3L * 4L + 8L * 4L
-sampling_complete <- n_sampling == 24L && completed_sampling_fits == sampling_target_fits
-show_not_ready <- function() knitr::asis_output("No successful fits are available for this comparison.")
-label_scenario <- function(x) factor(unname(scenario_labels[x]), levels = scenario_labels)
-theme_set(theme_bw(base_size = 11))
-compare_height <- function(which_scenario, first = "Lognormal", second = "Both PLD") {
-  if (!nrow(pulse)) return(data.frame())
-  on_case <- filter(pulse, scenario == which_scenario, resolution == 14L)
-  one <- filter(on_case, model == first) |> select(history, baseline = height_error)
-  two <- filter(on_case, model == second) |> select(history, alternative = height_error)
-  inner_join(one, two, by = "history") |>
-    mutate(across(c(baseline, alternative), abs), difference = alternative - baseline)
-}
-paired_interval <- function(x) {
-  if (nrow(x) < 2L) return(rep(NA_real_, 2L))
-  se <- sd(x$difference) / sqrt(nrow(x))
-  mean(x$difference) + c(-1, 1) * qt(.975, nrow(x) - 1L) * se
-}
-paired_sentence <- function(x, description) {
-  if (!nrow(x)) return("")
-  bounds <- paired_interval(x)
-  effect <- if (all(is.finite(bounds))) {
-    sprintf(" (paired change %+.3f, 95%% Monte Carlo interval [%+.3f, %+.3f])",
-      mean(x$difference), bounds[1L], bounds[2L])
-  } else ""
-  label <- if (nrow(x) == 1L) paste("For one paired successful", description, "history") else {
-    sprintf("Across %d paired successful %s histories", nrow(x), description)
-  }
-  sprintf("%s, mean absolute pulse-height error was %.3f versus %.3f per year%s.",
-    label, mean(x$baseline), mean(x$alternative), effect)
-}
-exact_result <- compare_height("exact")
-sampling_result <- compare_height("standard")
-exact_sentence <- paired_sentence(exact_result, "exact PLD")
-sampling_sentence <- paired_sentence(sampling_result, "standard-effort SimSurvey")
-multinomial_sentence <- paired_sentence(compare_height("multinomial"), "variable-effort multinomial")
-ablation_sentence <- paired_sentence(compare_height("exact", "No occurrence", "Fixed detection"),
-  "fixed-scale exact PLD")
-conclusion <- if (!nrow(exact_result)) {
-  "Assessment recovery remains untested in these outputs."
-} else if (!nrow(sampling_result)) {
-  "The controlled recovery comparison evaluates the value of zeros when the model describes sampling. The SimSurvey assessment comparison remains incomplete."
+    mutate(scale_flag = !is.finite(ssb_ratio) | ssb_ratio < 0.1 | ssb_ratio > 10)
 } else {
-  delta <- paired_interval(sampling_result)
-  if (all(is.finite(delta)) && delta[2L] < 0) {
-    "The standard-effort SimSurvey comparison also favoured PLD on the histories where both models passed the numerical checks."
-  } else if (all(is.finite(delta)) && delta[1L] > 0) {
-    "The standard-effort SimSurvey comparison favoured the positive-only model on the histories where both models passed the numerical checks."
-  } else {
-    "The standard-effort SimSurvey comparison gave limited evidence that PLD changed mortality recovery. The result applies to the simulated mortality pulse and monitoring designs."
+  mutate(fit_status[FALSE, keys], ssb_ratio = numeric(), scale_flag = logical())
+}
+planned_main <- 24L * 10L
+attempted_main <- sum(fit_status$design == "sampling" & fit_status$resolution == 14L)
+passed_main <- sum(fit_status$design == "sampling" & fit_status$resolution == 14L & fit_status$success)
+failed_inputs <- sum(!vapply(sampling_inputs, function(x) isTRUE(x$ok), logical(1)))
+study_complete <- length(sampling_inputs) == 24L &&
+  attempted_main == length(sampling) * 10L
+
+pulse_metrics <- if (nrow(pulse)) {
+  bind_rows(
+    transmute(pulse, across(all_of(keys)), metric = "M pulse height", est = height, truth = height_truth),
+    transmute(pulse, across(all_of(keys)), metric = "Early F increase", est = F_height, truth = F_height_truth),
+    transmute(pulse, across(all_of(keys)), metric = "Late F", est = F_late, truth = F_late_truth),
+    transmute(pulse, across(all_of(keys)), metric = "Late M", est = M_late, truth = M_late_truth)
+  ) |> mutate(signed = est - truth, absolute = abs(signed))
+} else data.frame()
+older <- if (nrow(age_abundance)) {
+  d <- filter(age_abundance, resolution == 14L, year %in% 16:23, age %in% 10:14)
+  tail <- filter(d, age == 14L) |> mutate(metric = "Ages 14+")
+  before_tail <- filter(d, age %in% 10:13) |>
+    group_by(across(all_of(c(keys, "year")))) |>
+    filter(n_distinct(age) == 4L) |>
+    summarise(est = sum(est), truth = sum(truth), .groups = "drop") |>
+    mutate(metric = "Ages 10–13")
+  bind_rows(tail, before_tail) |>
+    filter(is.finite(est), est > 0, is.finite(truth), truth > 0) |>
+    mutate(log_ratio = log(est / truth)) |>
+    group_by(across(all_of(c(keys, "metric")))) |>
+    summarise(signed = mean(log_ratio), absolute = mean(abs(log_ratio)), years = n(),
+      .groups = "drop") |>
+    filter(years == length(16:23))
+} else data.frame()
+
+# Use the same history, monitoring data and age resolution for each comparison.
+pair_models <- function(data, first, second, name) {
+  if (!nrow(data)) return(data.frame())
+  pair_keys <- c("design", "scenario", "resolution", "history", "metric")
+  flagged <- left_join(data, select(scale, all_of(keys), scale_flag), by = keys)
+  base <- filter(flagged, model == first) |>
+    select(all_of(pair_keys), base = absolute, base_flag = scale_flag)
+  filter(flagged, model == second) |>
+    select(all_of(pair_keys), alternative = absolute, alt_flag = scale_flag) |>
+    inner_join(base, by = pair_keys) |>
+    filter(is.finite(base), is.finite(alternative)) |>
+    mutate(change = alternative - base, comparison = name,
+      scale_flag = base_flag | alt_flag)
+}
+comparisons <- function(data) {
+  bind_rows(
+    pair_models(data, "Lognormal", "Both PLD", "Both PLD"),
+    pair_models(data, "Lognormal", "Survey PLD", "Survey PLD"),
+    pair_models(data, "Lognormal", "Catch PLD", "Catch PLD"),
+    pair_models(data, "No occurrence", "Fixed detection", "Occurrence added")
+  )
+}
+pulse_pairs <- comparisons(pulse_metrics)
+older_pairs <- comparisons(older)
+prescribed_pairs <- if (nrow(pulse_metrics)) {
+  prescribed_m <- filter(pulse_metrics, design == "sampling", metric == "M pulse height") |>
+    mutate(truth = 0.35, signed = est - truth, absolute = abs(signed))
+  comparisons(prescribed_m)
+} else data.frame()
+paired_mean <- function(x) if (length(x)) mean(x) else NA_real_
+paired_ci <- function(x) {
+  if (length(x) < 2L) return(c(NA_real_, NA_real_))
+  mean(x) + c(-1, 1) * qt(0.975, length(x) - 1L) * sd(x) / sqrt(length(x))
+}
+pair_summary <- function(d) {
+  d |>
+    group_by(design, scenario, resolution, metric, comparison) |>
+    summarise(pairs = n(), unflagged = sum(!scale_flag),
+      baseline_error = mean(base), alternative_error = mean(alternative),
+      lower = paired_ci(change)[1L], upper = paired_ci(change)[2L],
+      unflagged_change = paired_mean(change[!scale_flag]), difference = mean(change),
+      .groups = "drop") |>
+    mutate(evidence = if_else(pairs < 12L, "Descriptive, fewer than 12 pairs", "At least 12 pairs"),
+      effort = scenario_label(scenario))
+}
+pair_sentence <- function(d, target, label, unit) {
+  if (!nrow(d)) return("")
+  s <- filter(pair_summary(d), scenario == "standard", metric == target,
+    comparison == label, resolution == 14L)
+  if (!nrow(s)) return("")
+  sprintf("For %d common numerical %s pairs at standard effort (%d within the tenfold SSB scale check), mean absolute %s was %.3f versus %.3f%s.%s",
+    s$pairs, if (label == "Occurrence added") "ablation" else "lognormal/PLD",
+    s$unflagged, if (target == "M pulse height") "M pulse-height error" else "age-14+ log-abundance error",
+    s$baseline_error, s$alternative_error, unit,
+    if (s$pairs < 12L) " This comparison is descriptive." else "")
+}
+m_sentence <- pair_sentence(pulse_pairs, "M pulse height", "Both PLD", " per year")
+n_sentence <- pair_sentence(older_pairs, "Ages 14+", "Both PLD", "")
+ablation_sentence <- pair_sentence(pulse_pairs, "M pulse height", "Occurrence added", " per year")
+ablation_abundance <- pair_sentence(older_pairs, "Ages 14+", "Occurrence added", "")
+
+read_primary_result <- function(d, target, label) {
+  if (!nrow(d)) return(data.frame())
+  filter(pair_summary(d), scenario == "standard", metric == target,
+    comparison == label, resolution == 14L)
+}
+evidence_sentence <- function(d, target, quantity) {
+  s <- read_primary_result(d, target, "Both PLD")
+  if (!nrow(s)) {
+    wording <- if (study_complete) {
+      "No common successful fits supported the %s comparison."
+    } else {
+      "The %s comparison awaits common successful fits."
+    }
+    return(sprintf(wording, quantity))
   }
+  if (s$pairs < 12L) {
+    return(sprintf("The %s comparison has too few common numerical pairs for a firm conclusion.", quantity))
+  }
+  if (s$upper < 0) {
+    out <- sprintf("At standard effort, both-stream PLD reduced %s error on the common numerical pairs.", quantity)
+  } else if (s$lower > 0) {
+    out <- sprintf("At standard effort, both-stream PLD increased %s error on the common numerical pairs.", quantity)
+  } else {
+    out <- sprintf("At standard effort, the paired interval for %s included no change in error.", quantity)
+  }
+  if (is.finite(s$unflagged_change) && sign(s$unflagged_change) != sign(s$difference)) {
+    out <- paste(out, "The mean change reversed direction in the unflagged pairs.")
+  }
+  out
+}
+m_evidence <- evidence_sentence(pulse_pairs, "M pulse height", "M pulse-height")
+n_evidence <- evidence_sentence(older_pairs, "Ages 14+", "age-14+ abundance")
+primary_evidence <- if (nzchar(m_sentence) || nzchar(n_sentence)) {
+  paste(m_evidence, n_evidence)
+} else if (study_complete) {
+  "No common successful fits supported either primary comparison."
+} else {
+  "The mortality and older-fish comparisons await common successful fits."
+}
+abstract_results <- paste(Filter(nzchar, c(m_sentence, n_sentence, ablation_sentence,
+  primary_evidence)), collapse = " ")
+
+plot_paired <- function(d, axis_label) {
+  pair_summary(d) |>
+    ggplot(aes(difference, comparison, shape = evidence, size = pairs)) +
+    geom_vline(xintercept = 0, linetype = 2, colour = "grey45") +
+    geom_errorbar(aes(xmin = lower, xmax = upper), orientation = "y",
+      width = 0.12, linewidth = 0.45, na.rm = TRUE) +
+    geom_point(colour = "#126782") +
+    facet_grid(metric ~ effort, scales = "free_x") +
+    scale_shape_manual(values = c("Descriptive, fewer than 12 pairs" = 1, "At least 12 pairs" = 16)) +
+    labs(x = axis_label, y = NULL, size = "Paired histories", shape = NULL) +
+    theme(legend.position = "bottom")
 }
 ```
 
 ## Abstract
 
-Catch and survey indices can contain zeros when fish are present but none
-appear in a sample. Excluding those records may remove information about weak
-cohorts, especially when high mortality leaves few older fish. We tested a
-Poisson-link delta lognormal model that uses the predicted observation to
-explain both detection and the size of a positive record. We compared it with
-the positive-only lognormal using exact PLD draws, age samples with varying
-effort, and whole-area Gillnet and RV monitoring in SimSurvey. All scenarios
-used the same prescribed natural-mortality pulse.
-`r if (uses_cod_benchmark) "We used Northern cod's recorded zero frequencies to calibrate standard SimSurvey monitoring."`
-This report includes
-`r n_controlled` controlled and `r n_sampling` SimSurvey histories, and
-`r successful` of `r nrow(main)` checkpointed main 14+ attempts passed numerical
-checks.
-`r exact_sentence` `r multinomial_sentence` `r sampling_sentence` `r conclusion`
+At low abundance a survey or catch sample can record zero even though fish
+remain in the stock. Excluding these records can discard evidence that
+older fish have become scarce. We asked whether retaining zeros improved
+estimates of older cod and a late increase in natural mortality. We
+simulated 30 years of fishing and survey monitoring inspired by Northern
+cod, with fishing declining before natural mortality rose. We fitted the
+same observations with the positive-only lognormal and a Poisson-link
+delta lognormal (PLD) that uses zeros and positives. A fixed-detection
+comparison isolated the information in recording fish or recording zero
+while holding the positive likelihood fixed. This report includes
+`r length(sampling)` of 24 planned SimSurvey histories and
+`r n_controlled` controlled `r ngettext(n_controlled, "history", "histories")`.
+Of the `r attempted_main` checkpointed
+SimSurvey fits, `r passed_main` passed numerical checks. `r abstract_results`
 
-## Why can a zero help?
+## How the experiment isolates the effect of zeros
 
-The SimSurvey run is `r if (sampling_complete) "complete" else "in progress"`.
-This report includes `r n_sampling` of the 24 planned histories and
-`r completed_sampling_fits` of `r sampling_target_fits` planned fit attempts
-to this copy. Diagnostics and scores use the simulated observations provided
-to each fit. There is no held-out prediction experiment.
+For a predicted arithmetic mean \(\widetilde Y\) and half-detection level
+\(\widetilde Y_{50}\), PLD assigns probability of zero
 
-For a predicted arithmetic mean \(\widetilde Y\), the probability that the
-observed value \(Y\) is zero is
 \[
-p_0 = P(Y=0) = 2^{-\widetilde Y/\widetilde Y_{50}} .
+p_0 = 2^{-\widetilde Y/\widetilde Y_{50}} .
 \]
-The half-detection level \(\widetilde Y_{50}\) has the same units as the
-observations. The positive component has arithmetic mean
-\(\widetilde Y/(1-p_0)\) and log-SD \(\sigma\). Its log median is
-\(\log\{\widetilde Y/(1-p_0)\}-\sigma^2/2\). The
-legacy lognormal uses the population prediction as the median and omits
-zeros. The fits therefore differ both in their treatment of zeros and in how
-they interpret a positive number. The exact simulation also compares two
-fits with fixed true \(\widetilde Y_{50}\) and the same positive density. Omitting just
-the detection contribution from one fit isolates the direct information
-from occurrence.
 
-## What was simulated?
+The corresponding lognormal mean on the log scale among positive records
+is \(\log\{\widetilde Y/(1-p_0)\}-\sigma^2/2\), where \(\sigma\) is the
+observation log-SD. The ordinary lognormal fits positive records and uses
+\(\log(\widetilde Y)\) on that scale. Switching between these families
+changes both the treatment of zeros and the positive likelihood. A separate
+comparison fixes the two half-detection levels from independent calibration
+histories and removes the Bernoulli contributions for zeros and positives
+from one fit. Both fits keep the same positive density. The exact PLD
+control fixes those levels at their true values and repeats the comparison.
+[Thorson (2018)](https://doi.org/10.1139/cjfas-2017-0266)
 
-Natural mortality increased from 0.25 to 0.60 per year during years 5-9,
-stayed high through year 12, and returned to 0.25 by year 16. Fishing was
-held at a reference peak F of 0.06 with a normal-shaped age curve (peak 7.7,
-width 2.5 years). Recruitment used SimSurvey defaults and separate random
-streams for each history. Coverage extended to the whole simulation grid.
-RV catchability rose with age using SimSurvey's default logistic curve.
-TinyAM estimated both curves and one shared annual AR(1) M state across
-ages, with exact cohort survival and random-walk recruitment. The same
-settings and default optimization controls were used across observation
-models.
+The SimSurvey design has no single true half-detection level. Its
+calibration relates recorded zeros to the simulated whole-area survey
+index and realized removals, using six independent histories at standard
+effort. These histories supply no recovery measures. The controlled
+likelihood tests use exact PLD draws and multinomial age samples, which
+introduce varying sample size and dependence through a shared sample
+total. Fit comparisons use the same observations and starting rules
+within each history. We estimate a normal-shaped age pattern and a separate
+annual scale for F, an age-shared AR(1) process for M, a recruitment random
+walk and exact cohort transitions. The survey catchability curve is logistic
+in age. Cohort initialization uses exponential survival in the assessment.
+The calibration plots use fitted data. The stock recovery comparisons use
+known simulation truth.
 
-SimSurvey's default maturity depends on length. To preserve its expected
-mature biomass in tinyAM, maturity at age was calculated as expected
-mature weight divided by expected stock weight at age.
+The standard-effort SimSurvey fits include lognormal, survey-only PLD,
+catch-only PLD, PLD for both, and the fixed-detection pair. Low and high
+effort compare lognormal with PLD for both. The run has checkpointed
+`r attempted_main` of `r planned_main` planned fits and `r failed_inputs`
+failed input histories. `r if (study_complete) "All planned histories have been attempted." else "The run is in progress."`
 
-The controlled PLD simulation drew independent observations from the fitted
-family. The age-sampling scenario drew multinomial samples within each
-year and expanded each sample to the known total. It preserved the same
-expected value at each age and introduced a shared total, correlated
-age estimates, and changing sample sizes. The sample-size multiplier
-cycled through 0.5, 1, 2 and 1 independently of the mortality phases.
-At age 14+ the controlled simulation used the fitted model's plus-group
-survival from year 2.
-
-In the SimSurvey runs, all three effort levels reused the same realized
-fishery catches. The Gillnet program monitored
-`r paste(scales::percent(design$effort$operation_coverage, accuracy = 1), collapse = ", ")` of operations
-and aged up to 150 fish per monitored operation at random. Each simulated
-operation represented a bundle of 1,200 nets. This makes operation-level
-resampling practical. It also makes the sampling unit a cluster and
-reduces the number of sampling opportunities compared with small sets. The RV survey
-sampled `r paste(design$effort$sets_per_1000, collapse = ", ")` sets per
-1,000 square kilometres, with at least two sets per stratum. Each tow swept
-`r format(design$rv_tow_area, digits = 3, scientific = FALSE)` square kilometres.
-It measured up to 100 lengths per set and aged up to three fish
-per 3-cm group and set. Age-length key estimation and stratified expansion
-produce the observed index. Missing coverage and unsupported age estimates
-were recorded as missing. Both programs retained supported zeros. [SimSurvey
-methods](https://doi.org/10.1371/journal.pone.0232822)
-
-```{r calibration-design, results='asis'}
-if (uses_cod_benchmark) {
-  cat(paste("We calibrated the standard monitoring effort to the fraction of observed ages",
-    "recorded as zero in Northern cod. We changed the share of fishing operations",
-    "monitored and the area swept per RV tow. The survey estimator expands catches",
-    "by the inverse of swept area, so reducing the footprint lowers rare-age",
-    "encounters while preserving the whole-area index target before age subsampling.",
-    "The biological histories, prescribed mortality, selectivity and calendar of",
-    "sampling effort were held fixed. The cod case guides the overall prevalence of",
-    "zeros. Its age and year patterns also reflect stock and monitoring histories",
-    "that differ from this experiment. The RV footprint is an effective sampling",
-    "setting. The first study used 0.03 square kilometres per tow. The calibrated",
-    "study explores fewer encounters per tow at the same number of stations.",
-    "We piloted four footprints across three histories spanning low to high",
-    "recruitment and compared fishery coverage settings by replaying existing",
-    "operations. We selected the final settings from these observation patterns",
-    "before fitting the assessment models. The original standard-effort",
-    "simulation recorded about 15% catch zeros and 2% RV zeros at ages 2-14+.",
-    sep = " "))
+```{r fixed-detection, results='asis'}
+calibrated <- filter(fit_status, design == "sampling", scenario == "standard",
+  model == "Fixed detection")
+values <- Filter(Negate(is.null), lapply(fits[calibrated$attempt], function(r) {
+  r$value$calibration
+}))
+if (length(values)) {
+  y50 <- values[[1L]]
+  stopifnot(all(vapply(values, identical, logical(1), y50)))
+  cat(sprintf("The independent calibration fixed the Gillnet and RV half-detection levels at %.3g and %.3g thousand fish.",
+    y50[["catch"]], y50[["index"]]))
 }
 ```
 
-```{r swept-area-audit, results='asis'}
-if (uses_cod_benchmark) {
-  survey_audit <- bind_rows(lapply(sampling, function(history) {
-    bind_rows(lapply(history$series, function(program) {
-      target <- filter(program$expected_index, age >= 2L)
-      caught <- filter(program$survey_caught, age >= 2L)
-      data.frame(effort = program$effort$effort, target = sum(target$mu),
-        expanded = sum(caught$expanded) / 1000)
-    }))
-  }))
-  ratios <- survey_audit |>
-    group_by(effort) |>
-    summarise(ratio = sum(expanded) / sum(target), .groups = "drop")
-  standard <- filter(ratios, effort == "standard")$ratio
-  if (length(standard) && standard > 0) {
-    cat(sprintf("Before length and age subsampling, expanding the catches with their exact ages gave %.1f%% of the known total RV index at standard effort (simulated ages 2-20, summed over years and histories). This checks the swept-area adjustment against the known abundance times catchability.",
-      100 * standard))
-  }
+## What F and M did the simulator generate?
+
+Fully selected F was 0.06 per year through year 4, increased to 0.22 by
+year 8, stayed there through year 10, then fell to 0.06 by year 13 and to
+0.035 by year 20. Natural mortality M remained 0.25 through year 13,
+increased to 0.60 by year 16, stayed there through year 19, then fell to
+0.40 by year 24. Both late rates held through year 30. Rates were
+interpolated between those years. The survey
+sampled the population at the start of each year. Fish lost to mortality
+that year affect later cohorts and survey observations.
+
+The cohort calculation uses the prescribed total mortality \(Z=F+M\).
+SimSurvey allocates catches across the fishing grounds under this
+mortality budget. A fishery that meets its total target can still have a
+different catch-at-age pattern. The realized \(F\) is calculated from
+allocated catch at age using the Baranov equation, and realized \(M\)
+is the difference between prescribed \(Z\) and realized \(F\).
+[SimSurvey methods](https://doi.org/10.1371/journal.pone.0232822)
+[Pinned fishery implementation](https://github.com/PaulRegular/SimSurvey/blob/29a1b03350c274f88dac108fb95f9446eac79233/R/fishery_engine.R)
+
+```{r mortality, fig.cap="Prescribed and realized mortality averaged over ages 5–10 using the same simulated abundance weights. Thin lines represent individual histories. Thicker lines show medians. Grey bands mark the early fishing peak and the later natural mortality plateau."}
+reference <- bind_rows(lapply(sampling, function(x) mutate(x$reference, history = x$id)))
+audit <- data.frame()
+if (nrow(reference)) {
+  audit <- reference |>
+    filter(age %in% 5:10, is.finite(F_realized), is.finite(M_realized), N > 0) |>
+    group_by(history, year) |>
+    summarise(F_prescribed = weighted.mean(F_reference, N),
+      F_realized = weighted.mean(F_realized, N),
+      M_prescribed = weighted.mean(M_reference, N),
+      M_realized = weighted.mean(M_realized, N),
+      Z_prescribed = weighted.mean(Z, N), .groups = "drop") |>
+    mutate(Z_realized = F_realized + M_realized)
+  rates <- tidyr::pivot_longer(audit, -c(history, year), names_to = c("rate", "source"),
+    names_sep = "_", values_to = "value")
+  medians <- rates |>
+    group_by(year, rate, source) |>
+    summarise(value = median(value), .groups = "drop")
+  ggplot(rates, aes(year, value, colour = source, linetype = source)) +
+    annotate("rect", xmin = 8, xmax = 10, ymin = -Inf, ymax = Inf, alpha = .09) +
+    annotate("rect", xmin = 16, xmax = 19, ymin = -Inf, ymax = Inf, alpha = .09) +
+    geom_line(aes(group = interaction(history, source)), alpha = .22) +
+    geom_line(data = medians, linewidth = .9) +
+    facet_wrap(~rate, nrow = 1, scales = "free_y") +
+    scale_colour_manual(values = c(prescribed = "#353535", realized = "#126782")) +
+    scale_linetype_manual(values = c(prescribed = "dashed", realized = "solid")) +
+    labs(x = "Simulation year", y = "Abundance-weighted rate (per year)",
+      colour = NULL, linetype = NULL)
 }
 ```
 
-The study used a private copy of the pinned SimSurvey fisheries routine
-that batches the multinomial allocation of lengths to cells. It retains the
-same sampling law and cell-age totals while changing random-number order.
-The recorded catches, operation controls and estimator come from SimSurvey.
-[Pinned fishery source](https://github.com/PaulRegular/SimSurvey/blob/29a1b03350c274f88dac108fb95f9446eac79233/R/fishery_engine.R)
+```{r mortality-numbers, results='asis'}
+if (nrow(audit)) {
+  realised_height <- audit |>
+    group_by(history) |>
+    summarise(height = mean(M_realized[year %in% 16:19]) -
+      mean(M_realized[year %in% 1:10]), .groups = "drop")
+  ledger <- bind_rows(lapply(sampling, "[[", "annual_fishery"))
+  cat(sprintf("The realized M pulse ranged from %.3f to %.3f per year across histories. The prescribed pulse was 0.350 per year. There were %d positive catch target shortfalls across %d fishery-years.",
+    min(realised_height$height), max(realised_height$height), sum(ledger$shortfall > 0), nrow(ledger)))
+}
+```
 
-### Where did the zeros occur?
+## How often did monitoring report zeros?
 
-The Northern cod benchmark uses commercial catch and Fall 2J3KL RV
-observations from 1983-2025. Comparisons use ages 2-14+ in both data sets.
-The simulated fits also use age 1. A recorded zero counts as an observation.
-Years or ages with missing records are excluded from the zero frequency.
+The Gillnet program monitored 25%, 50%, or 100% of the same realized
+fishing operations, with up to 150 fish aged per sampled operation.
+The RV survey sampled one, two, or four tows per 1,000 square kilometres,
+with at least two per stratum. Tow swept area was 0.0018 square kilometres.
+The stratified estimate expands catches by swept area to preserve the
+whole-area index target. Fewer encounters can still change the frequency
+of zeros and the support for estimating age composition. Gillnet age-at-catch
+estimates require monitoring support. Unsampled or unsupported records
+remain missing.
 
-```{r cod-zero-benchmark, fig.width=9, fig.cap="Zero frequency by modeled age in SimSurvey and the Northern cod example. The black line shows Northern cod in 1983-2025, ages 2-14+. Each coloured line averages over the available observations from the simulated histories at one sampling effort. In both data sets, age 14 includes ages 14-20 and missing observations are excluded from the denominator."}
-# Keep the observation keys when summing across age groups with differing
-# formula covariates.
-cod_inputs <- lapply(cod_obs[c("catch", "index")], function(x) x[c("year", "age", "obs")])
-cod <- pld_cod_observation_rows(cod_inputs)
+```{r zeros, fig.cap="Zero frequency at the age resolution of the Northern cod example. Only sampled rows with either a zero or positive value enter the denominator. The final tick pools ages 14–20. The dashed line shows Northern cod."}
+zero_rows <- data.frame()
 if (length(sampling)) {
-  comparable_zeros <- bind_rows(cod, filter(pld_sim_observation_rows(sampling), age >= 2L)) |>
+  zero_rows <- bind_rows(pld_cod_observation_rows(cod_obs),
+    filter(pld_sim_observation_rows(sampling), age >= 2L)) |>
     mutate(program = recode(component, catch = "Commercial catch", index = "RV index"),
       effort = factor(effort, levels = c("Northern cod", "low", "standard", "high"),
-        labels = c("Northern cod", "Low effort", "Standard effort", "High effort")))
-  comparable_zeros |>
+        labels = c("Northern cod", "Low", "Standard", "High")))
+  zero_rows |>
     group_by(program, effort, age) |>
-    summarise(zero = mean(obs == 0, na.rm = TRUE), .groups = "drop") |>
-    ggplot(aes(age, zero, colour = effort, linetype = effort)) +
-    geom_line(linewidth = .7) + geom_point(size = 1.4) +
-    facet_wrap(~program) + scale_y_continuous(labels = scales::label_percent()) +
-    scale_x_continuous(breaks = c(2, 4, 6, 8, 10, 12, 14),
-      labels = c("2", "4", "6", "8", "10", "12", "14+")) +
-    scale_colour_manual(values = c("Northern cod" = "#333333", "Low effort" = "#C44C27",
-      "Standard effort" = "#126782", "High effort" = "#258375")) +
-    scale_linetype_manual(values = c("Northern cod" = "dashed", "Low effort" = "solid",
-      "Standard effort" = "solid", "High effort" = "solid")) +
-    labs(x = "Age", y = "Fraction recorded as zero", colour = NULL, linetype = NULL) +
+    summarise(frequency = mean(obs == 0, na.rm = TRUE), .groups = "drop") |>
+    ggplot(aes(age, frequency, colour = effort, linetype = effort)) +
+    geom_line(linewidth = .7) + geom_point(size = 1.3) + facet_wrap(~program) +
+    scale_y_continuous(labels = scales::label_percent()) +
+    scale_x_continuous(breaks = seq(2, 14, 2), labels = c(seq(2, 12, 2), "14+")) +
+    scale_colour_manual(values = c("Northern cod" = "#353535", Low = "#C44C27",
+      Standard = "#126782", High = "#258375")) +
+    scale_linetype_manual(values = c("Northern cod" = "dashed", Low = "solid",
+      Standard = "solid", High = "solid")) +
+    labs(x = "Modeled age", y = "Observed zero frequency", colour = NULL, linetype = NULL) +
     theme(legend.position = "bottom")
 }
 ```
 
-```{r cod-zero-benchmark-totals, results='asis'}
-if (length(sampling)) {
-  zero_support <- bind_rows(
-    mutate(comparable_zeros, age_range = "Ages 2–14+"),
-    mutate(filter(comparable_zeros, age >= 10L), age_range = "Ages 10–14+")
-  ) |>
-    group_by(program, effort, age_range) |>
-    summarise(observed = sum(!is.na(obs)), zeros = sum(obs == 0, na.rm = TRUE),
-      .groups = "drop") |>
-    mutate(age_range = factor(age_range, levels = c("Ages 2–14+", "Ages 10–14+")),
-      rate = sprintf("%.1f%% (%d/%d)", 100 * zeros / observed, zeros, observed)) |>
-    arrange(age_range) |>
-    select(program, effort, age_range, rate) |>
-    tidyr::pivot_wider(names_from = age_range, values_from = rate) |>
-    arrange(program, effort)
-  print(knitr::kable(zero_support,
-    col.names = c("Program", "Data", "Ages 2–14+", "Ages 10–14+")))
+```{r zero-support, results='asis'}
+if (nrow(zero_rows)) {
+  support <- bind_rows(mutate(zero_rows, ages = "2–14+"),
+    mutate(filter(zero_rows, age >= 10L), ages = "10–14+")) |>
+    group_by(program, effort, ages) |>
+    summarise(zeros = sum(obs == 0, na.rm = TRUE),
+      sampled = sum(is.finite(obs)), missing = sum(is.na(obs)),
+      rate = scales::percent(zeros / sampled, accuracy = 0.1), .groups = "drop")
+  print(knitr::kable(support, col.names = c("Program", "Effort", "Ages",
+    "Zeros", "Sampled", "Missing", "Zero rate")))
 }
 ```
 
-The commercial catch and survey have different age patterns. Northern cod
-catch includes many zeros at age 2 and few in the middle of the age range.
-The RV survey zeros occur at older ages. The same overall percentage can
-therefore imply different information about the cohorts affected by the
-mortality increase.
+Northern cod's unsurveyed years contribute no zeros. The Northern cod
+comparison gives an empirical reference for the frequency of zeros. A
+similar fraction can arise from different age and year patterns.
 
-```{r zeros, fig.cap="Observed zero fraction by native age in the whole-area monitoring runs. Only supported observations are in the denominator. Dotted line marks the start of the 14+ bin."}
+### When and at what ages did zeros occur?
+
+For SimSurvey, years 1–4 precede the fishing increase, years 5–13 cover the
+fishing increase and decline, years 14–23 cover the rise and decline in
+natural mortality, and years 24–30 are the late period. The Northern cod
+panels use observed calendar periods. Their timing describes the data
+available for the example and does not assign a cause to historical zeros.
+
+```{r zeros-by-phase, fig.width=9, fig.height=7.8, fig.cap="Fraction of sampled age-year cells recorded as zero by phase or calendar period. Each tile has its own denominator. Grey marks cells with no sampled observations. Age 14+ pools native ages 14–20."}
+phase_support <- data.frame()
+if (nrow(zero_rows)) {
+  phase_support <- zero_rows |>
+    mutate(period = case_when(
+      effort == "Northern cod" & year <= 1991L ~ "1983–91",
+      effort == "Northern cod" & year <= 1997L ~ "1992–97",
+      effort == "Northern cod" & year <= 2015L ~ "1998–2015",
+      effort == "Northern cod" ~ "2016–25",
+      year <= 4L ~ "1–4",
+      year <= 13L ~ "5–13",
+      year <= 23L ~ "14–23",
+      TRUE ~ "24–30"
+    ),
+    period = factor(period, levels = c("1983–91", "1992–97", "1998–2015", "2016–25",
+      "1–4", "5–13", "14–23", "24–30"))) |>
+    group_by(effort, program, period, age) |>
+    summarise(zeros = sum(obs == 0, na.rm = TRUE), sampled = sum(is.finite(obs)),
+      missing = sum(is.na(obs)), .groups = "drop") |>
+    mutate(frequency = if_else(sampled > 0L, zeros / sampled, NA_real_))
+  ggplot(phase_support, aes(period, age, fill = frequency)) +
+    geom_tile(colour = "white", linewidth = .23) +
+    facet_wrap(vars(effort, program), ncol = 2, scales = "free_x") +
+    scale_y_continuous(breaks = c(2, 6, 10, 14), labels = c("2", "6", "10", "14+")) +
+    scale_fill_viridis_c(option = "C", direction = -1, limits = c(0, 1),
+      labels = scales::label_percent(), na.value = "#C6C9CB") +
+    labs(x = "Calendar period or simulation years", y = "Modeled age", fill = "Zero frequency") +
+    theme(panel.grid = element_blank(), legend.position = "bottom")
+}
+```
+
+```{r phase-support, results='asis'}
+if (nrow(phase_support)) {
+  denominator <- filter(phase_support, age == 14L) |>
+    transmute(program, effort, period, zeros, sampled, missing)
+  print(knitr::kable(denominator,
+    col.names = c("Program", "Effort", "Period", "Zeros", "Sampled", "Missing"),
+    caption = "Age-14+ observation counts underlying the last row of each panel."))
+}
+```
+
+
+### What does the 14+ group represent?
+
+The simulated population has a separate abundance at ages 14 through 20.
+The fitted assessment combines those ages into one group. The true 14+
+abundance is their sum at the beginning of each year. Fish surviving the
+oldest native age leave the operating population. In the assessment, terminal
+survivors remain in the plus group. The distinction can matter when older
+fish accumulate. The fitted 14+ mortality and catchability also apply
+across ages whose native selectivities differ.
+
+```{r pooled-zeros, results='asis'}
 if (length(sampling)) {
-  native <- bind_rows(lapply(sampling, function(x) {
-    bind_rows(lapply(names(x$series), function(effort) {
-      z <- x$series[[effort]]$observations
-      bind_rows(mutate(z$native_catch, component = "Gillnet"), mutate(z$native_index, component = "RV")) |>
-        mutate(effort = effort)
+  cod_tail <- bind_rows(lapply(c("catch", "index"), function(component) {
+    cod_obs[[component]] |>
+      filter(year %in% 1983:2025, age %in% 14:20) |>
+      transmute(year, age, obs, component = component, history = NA_integer_,
+        effort = "Northern cod")
+  }))
+  simulated_tail <- bind_rows(lapply(sampling, function(h) {
+    bind_rows(lapply(names(h$series), function(e) {
+      raw <- h$series[[e]]$observations
+      bind_rows(transmute(raw$native_catch, year, age, obs, component = "catch"),
+        transmute(raw$native_index, year, age, obs, component = "index")) |>
+        filter(age %in% 14:20) |>
+        mutate(history = h$id, effort = e)
     }))
   }))
-  native |>
-    group_by(component, effort, age) |>
-    summarise(zero = mean(obs == 0, na.rm = TRUE), missing = mean(is.na(obs)),
-      .groups = "drop") |>
-    ggplot(aes(age, zero, colour = label_scenario(effort))) +
-    geom_vline(xintercept = 14, linetype = 3) + geom_line() +
-    facet_wrap(~component) + labs(x = "Native age", y = "Fraction recorded as zero", colour = "Effort")
-} else show_not_ready()
-```
-
-```{r observations-by-year, fig.width=9, fig.height=7.5, fig.cap="Recorded catch and survey outcomes by year and age for the first completed SimSurvey history, shown at three monitoring effort levels. Native ages retain a separate row for each age. In the 14+ panels the top row contains ages 14-20. Catch-grid placeholders above the pooled age are omitted."}
-if (length(sampling)) {
-  first <- sampling[[which.min(vapply(sampling, `[[`, numeric(1), "id"))]]$series
-  recorded <- bind_rows(lapply(names(first), function(effort) {
-    stream <- first[[effort]]
-    pooled <- stream$data[[1L]]
-    native <- stream$observations
-    bind_rows(
-      transmute(native$native_catch, year, age, obs, component = "Gillnet", ages = "Native"),
-      transmute(native$native_index, year, age, obs, component = "RV", ages = "Native"),
-      transmute(filter(pooled$catch, age <= 14), year, age, obs, component = "Gillnet", ages = "14+"),
-      transmute(pooled$index, year, age, obs, component = "RV", ages = "14+")
-    ) |> mutate(effort = effort)
-  }))
-  recorded |>
-    mutate(outcome = factor(case_when(is.na(obs) ~ "Missing", obs == 0 ~ "Zero",
-      TRUE ~ "Positive"), levels = c("Positive", "Zero", "Missing")),
-      panel = factor(paste(component, ages, sep = " / "),
-        levels = c("Gillnet / Native", "Gillnet / 14+", "RV / Native", "RV / 14+"))) |>
-    ggplot(aes(year, age, fill = outcome)) +
-    geom_tile(colour = "white", linewidth = .15) +
-    facet_grid(panel ~ label_scenario(effort), scales = "free_y") +
-    scale_fill_manual(values = c(Positive = "#CFE5EC", Zero = "#AD421B", Missing = "#70757C"),
-      drop = FALSE) +
-    scale_x_continuous(breaks = c(1, 5, 10, 15, 20), expand = c(0, .5)) +
-    scale_y_continuous(breaks = c(1, 5, 10, 14, 20), expand = c(0, .5)) +
-    labs(x = "Year", y = "Age", fill = "Observation") +
-    theme(legend.position = "bottom", panel.grid = element_blank())
+  pool_summary <- bind_rows(cod_tail, simulated_tail) |>
+    group_by(component, effort, history, year) |>
+    summarise(complete = n_distinct(age) == 7L && all(is.finite(obs)),
+      positive = complete && sum(obs) > 0,
+      n_zero = sum(obs == 0, na.rm = TRUE), .groups = "drop") |>
+    group_by(component, effort) |>
+    summarise(native_zeros = sum(n_zero[complete]), absorbed = sum(n_zero[positive]),
+      positive_with_zeros = sum(positive & n_zero > 0), complete_14plus = sum(complete),
+      incomplete_14plus = sum(!complete), .groups = "drop") |>
+    mutate(absorbed_share = if_else(native_zeros > 0L,
+      scales::percent(absorbed / native_zeros, accuracy = 0.1), NA_character_),
+      program = recode(component, catch = "Commercial catch", index = "RV index"),
+      effort = factor(effort, levels = c("Northern cod", "low", "standard", "high"),
+        labels = c("Northern cod", "Low", "Standard", "High"))) |>
+    arrange(program, effort) |>
+    select(program, effort, native_zeros, absorbed, absorbed_share, positive_with_zeros,
+      complete_14plus, incomplete_14plus)
+  print(knitr::kable(pool_summary, col.names = c("Program", "Effort",
+    "Native zeros", "Zeros in positive pools", "Share absorbed", "Positive pools with zeros",
+    "Complete 14+ pools", "Incomplete 14+ pools"),
+    caption = "Native ages 14–20 can contribute zeros to an observed 14+ total that is positive. The zero share uses only complete age sets."))
 }
 ```
 
-```{r support, results='asis'}
-if (length(sampling)) {
-  support <- bind_rows(lapply(sampling, function(x) {
-    bind_rows(lapply(names(x$series), function(e) mutate(x$series[[e]]$zeros, effort = e)))
-  })) |>
-    group_by(component, effort, plus_age) |>
-    summarise(across(c(n_zero, n_positive, n_missing), sum), .groups = "drop")
-  print(knitr::kable(support, col.names = c("Series", "Effort", "Terminal age", "Zero", "Positive", "Missing")))
-}
-```
-
-```{r sampling-effort, fig.cap="Numbers of fish aged by year and effort. Points are medians across completed histories. Fishery and survey sample counts use their own scales."}
-if (length(sampling)) {
-  samples <- bind_rows(lapply(sampling, function(x) {
-    bind_rows(lapply(names(x$series), function(effort) {
-      program <- x$series[[effort]]
-      bind_rows(transmute(program$catch_diagnostics, year, n_aged, component = "Gillnet"),
-        transmute(program$survey_sampling, year, n_aged, component = "RV")) |>
-        mutate(effort = effort)
-    }))
-  }))
-  samples |>
-    group_by(effort, component, year) |>
-    summarise(n_aged = median(n_aged), .groups = "drop") |>
-    ggplot(aes(year, n_aged, colour = label_scenario(effort))) +
-    geom_line() + geom_point(size = 1) + facet_wrap(~component, scales = "free_y") +
-    labs(x = "Year", y = "Fish aged", colour = "Effort")
-}
-```
-
-Age 14+ sums the records at ages 14-20 before fitting. A positive value
-therefore can include an age that had no recorded fish, even with PLD.
-Comparison with age 20+ changes both the number of zero cells and the time
-fish can remain in the terminal age. The 14+ model also uses age-14 mortality
-and catchability throughout the bin. SimSurvey applies the native curves
-and lets fish exit at age 20. The two resolutions cannot be compared by
-information criteria.
-
-```{r plus-selectivity, fig.cap="Percent difference between effective age-14+ selectivity or catchability and the generating value at age 14. Each line is one completed history. Zero marks the age-14 value. The panels have different vertical scales because the survey logistic curve is nearly flat at these ages."}
-if (length(sampling)) {
-  plus_selectivity <- bind_rows(lapply(sampling, function(x) {
-    ages <- filter(x$reference, age >= 14L)
-    # Baranov catch is linear in F at the prescribed Z; use each native age's
-    # abundance and year-specific fraction exposed to fishing as weights.
-    ages |>
-      mutate(catch_weight = N * (-expm1(-Z)) / Z,
-        q = stats::plogis(2 * (age - 3))) |>
-      group_by(year) |>
-      summarise(Gillnet = weighted.mean(selectivity, catch_weight) / selectivity[age == 14L],
-        RV = weighted.mean(q, N) / q[age == 14L], .groups = "drop") |>
-      mutate(history = x$id)
-  })) |>
-    tidyr::pivot_longer(c(Gillnet, RV), names_to = "program", values_to = "ratio")
-  ggplot(plus_selectivity, aes(year, 100 * (ratio - 1), group = history)) +
-    geom_hline(yintercept = 0, linetype = 2) + geom_line(alpha = .55, colour = "#126782") +
-    facet_wrap(~program, scales = "free_y") +
-    labs(x = "Year", y = "Difference from the age-14 value (%)")
-}
-```
-
-```{r plus-selectivity-summary, results='asis'}
-if (length(sampling)) {
-  ranges <- plus_selectivity |>
-    group_by(program) |>
-    summarise(minimum = min(ratio), maximum = max(ratio), .groups = "drop")
-  gillnet <- filter(ranges, program == "Gillnet")
-  rv <- filter(ranges, program == "RV")
-  cat(sprintf("Effective Gillnet selectivity was %.1f-%.1f%% of age-14 selectivity. Effective RV catchability exceeded age-14 catchability by %.2g-%.2g%%.",
-    100 * gillnet$minimum, 100 * gillnet$maximum,
-    100 * (rv$minimum - 1), 100 * (rv$maximum - 1)))
-}
-```
-
-The catch summary weights native selectivity by \(N_a(1-e^{-Z_a})/Z_a\).
-At the simulator's prescribed \(Z_a\), that choice reproduces the total
-reference Baranov catch for ages 14-20. Survey catchability is weighted by
-abundance at the start of the year, when the survey takes place. The
-comparison uses generating curves and simulated abundances, with no
-assumption about which ages appeared in a particular sample.
-
-## What F and M did the simulator generate?
-
-```{r mortality-truth, fig.cap="Simulated fishing mortality (F) and natural mortality (M) through time, averaged over ages 5-10 using abundance at age. The prescribed rates determine survival. Realized F follows the catches allocated by SimSurvey, and realized M is the remainder of prescribed total mortality. Thin lines show individual histories. Thick lines show medians."}
-if (length(sampling)) {
-  mortality <- bind_rows(lapply(sampling, function(x) mutate(x$reference, history = x$id)))
-  audit <- mortality |>
-    filter(age %in% 5:10, is.finite(M_realized)) |>
+```{r plus-audit, fig.cap="Effective age-14+ selectivity and catchability as a percentage of their age-14 values. Thin lines show individual histories. At the prescribed Z, the effective catch selectivity reproduces total reference catch across ages 14–20. The RV calculation weights catchability by beginning-of-year abundance."}
+if (nrow(reference)) {
+  terminal <- reference |>
+    filter(age >= 14L, N > 0) |>
+    mutate(exposure = N * (-expm1(-Z)) / Z, q = pld_q(age)) |>
     group_by(history, year) |>
-    summarise(M_ref = weighted.mean(M_reference, N),
-      M_real = weighted.mean(M_realized, N), F_ref = weighted.mean(F_reference, N),
-      F_real = weighted.mean(F_realized, N), .groups = "drop")
-  rates <- audit |>
-    tidyr::pivot_longer(c(F_ref, F_real, M_ref, M_real), names_to = c("parameter", "source"),
-      names_sep = "_", values_to = "rate") |>
-    mutate(parameter = recode(parameter, F = "Fishing mortality (F)", M = "Natural mortality (M)"),
-      source = factor(source, levels = c("ref", "real"), labels = c("Prescribed", "Realized")))
-  medians <- rates |>
-    group_by(parameter, source, year) |>
-    summarise(rate = median(rate), .groups = "drop")
-  ggplot(rates, aes(year, rate, colour = source, linetype = source)) +
-    geom_line(aes(group = interaction(history, source)), alpha = .25) +
-    geom_line(data = medians, linewidth = .9) + facet_wrap(~parameter, scales = "free_y") +
-    scale_colour_manual(values = c(Prescribed = "#383838", Realized = "#126782")) +
-    scale_linetype_manual(values = c(Prescribed = "dashed", Realized = "solid")) +
-    labs(x = "Year", y = "Abundance-weighted rate (per year)", colour = NULL, linetype = NULL)
+    filter(any(age == 14L)) |>
+    summarise(Gillnet = weighted.mean(selectivity, exposure) / selectivity[age == 14L],
+      RV = weighted.mean(q, N) / q[age == 14L], .groups = "drop") |>
+    tidyr::pivot_longer(c(Gillnet, RV), names_to = "program", values_to = "ratio")
+  ggplot(terminal, aes(year, 100 * ratio, group = history)) +
+    geom_hline(yintercept = 100, linetype = 2, colour = "grey45") +
+    geom_line(alpha = .45, colour = "#126782") +
+    facet_wrap(~program, scales = "free_y") +
+    labs(x = "Simulation year", y = "Effective value (% of age 14)")
 }
 ```
 
-```{r mortality-by-age, fig.width=9, fig.height=5.6, fig.cap="Simulated fishing mortality (top) and natural mortality (bottom) by age and year. Prescribed rates on the left generate the population histories. Realized rates on the right are medians across histories at each age and year. Within each row the colour scale is shared between the two panels."}
+```{r omitted-survivors, results='asis'}
 if (length(sampling)) {
-  surfaces <- mortality |>
-    select(year, age, F_reference, F_realized, M_reference, M_realized) |>
-    tidyr::pivot_longer(-c(year, age), names_to = c("parameter", "source"),
-      names_sep = "_", values_to = "rate") |>
-    group_by(year, age, parameter, source) |>
-    summarise(rate = median(rate, na.rm = TRUE), .groups = "drop") |>
-    mutate(source = factor(source, levels = c("reference", "realized"),
-      labels = c("Prescribed", "Realized")))
-  draw_surface <- function(which_rate, title) {
-    ggplot(filter(surfaces, parameter == which_rate), aes(year, age, fill = rate)) +
-      geom_tile() + facet_wrap(~source) +
-      scale_fill_viridis_c(name = "Per year", option = "cividis") +
-      scale_x_continuous(breaks = c(1, 5, 10, 15, 20), expand = c(0, .5)) +
-      scale_y_continuous(breaks = c(1, 5, 10, 15, 20), expand = c(0, .5)) +
-      labs(x = "Year", y = "Age", title = title)
-  }
-  grid::grid.newpage()
-  grid::pushViewport(grid::viewport(layout = grid::grid.layout(2, 1)))
-  print(draw_surface("F", "Fishing mortality (F)"), vp = grid::viewport(layout.pos.row = 1))
-  print(draw_surface("M", "Natural mortality (M)"), vp = grid::viewport(layout.pos.row = 2))
-  grid::popViewport()
+  oldest <- bind_rows(lapply(sampling, function(h) mutate(h$oldest, history = h$id)))
+  omitted <- oldest |>
+    inner_join(reference |>
+      filter(age >= 14L) |>
+      group_by(history, year) |>
+      summarise(tail = sum(N), .groups = "drop"),
+      by = c("history", "year")) |>
+    mutate(relative_to_tail = if_else(tail > 0, survivor / tail, NA_real_))
+  cat(sprintf(paste("Up to %s individual fish survived the oldest simulated age in a year.",
+      "These omissions amounted to at most %.2f%% of total beginning-of-year abundance",
+      "or %.2f%% of beginning-of-year abundance at ages 14–20."),
+    format(round(max(oldest$survivor, na.rm = TRUE)), big.mark = ","),
+    100 * max(oldest$proportion, na.rm = TRUE),
+    100 * max(omitted$relative_to_tail, na.rm = TRUE)))
 }
 ```
 
-```{r ledger, results='asis'}
-if (length(sampling)) {
-  ledger <- bind_rows(lapply(sampling, `[[`, "annual_fishery"))
-  last <- bind_rows(lapply(sampling, `[[`, "oldest"))
-  pulses <- audit |>
-    group_by(history) |>
-    summarise(realized = mean(M_real[year %in% 9:12]) -
-      mean(M_real[year %in% c(1:4, 17:20)]), .groups = "drop")
-  cat(sprintf("There were %d positive target shortfalls in %d fishery-years. The largest absolute annual difference between reference and realized M averaged over ages 5-10 was %.3f per year. The greatest year-end loss beyond age 20 across these histories was %.3f%% of total beginning-of-year abundance.",
-    sum(ledger$shortfall > 0), nrow(ledger), max(abs(audit$M_real - audit$M_ref)),
-    100 * max(last$proportion)))
-  cat(sprintf(" The mean abundance-weighted rates across ages 5-10 were %.3f reference F and %.3f realized F, and %.3f reference M and %.3f realized M, per year.",
-    mean(audit$F_ref), mean(audit$F_real), mean(audit$M_ref), mean(audit$M_real)))
-  cat(sprintf(" Across these histories the realized weighted M pulse ranged from %.3f to %.3f per year, compared with the prescribed 0.350. Recovery scores use the prescribed mortality and fishing curves that generate the cohort trajectories.",
-    min(pulses$realized), max(pulses$realized)))
-}
-```
+## Which models could be compared?
 
-## Did the fits use the zeros reliably?
+Numerical success requires passing tinyAM's numerical checks. Frequency of
+success and recovery on successful pairs answer different questions.
+The table includes attempts where PLD could not estimate its half-detection
+scale. A program with zero recorded nondetections gives insufficient support
+to estimate the scale freely. Paired results therefore describe the
+particular histories for which both fits could be evaluated.
 
-```{r numerical, results='asis'}
+```{r fit-counts, results='asis'}
 if (nrow(fit_status)) {
-  numerical <- fit_status |>
+  counts <- fit_status |>
+    left_join(select(scale, all_of(keys), scale_flag), by = keys) |>
     group_by(scenario, resolution, model) |>
-    summarise(attempted = n(), passed = sum(success), with_warning = sum(warnings > 0),
-      error = sum(nzchar(error)), .groups = "drop") |>
-    mutate(scenario = label_scenario(scenario))
-  print(knitr::kable(numerical))
-  errors <- unique(fit_status$error[nzchar(fit_status$error)])
-  if (length(errors)) cat("\nErrors retained in the attempt records:\n\n", paste0("- ", errors, collapse = "\n"), "\n")
-} else show_not_ready()
-```
-
-Generated data also had `r n_input_failures` failed attempts. Those
-histories remain in provenance records and contribute no fits.
-
-```{r scale, fig.cap="Median annual fitted SSB divided by simulated SSB, for each numerically successful fit. The dashed line shows agreement. Shading covers estimates within a factor of ten in either direction, a descriptive flag for extreme scale disagreements."}
-if (nrow(scale_check)) {
-  scale_check |>
-    filter(is.finite(ssb_ratio), ssb_ratio > 0) |>
-    ggplot(aes(model, ssb_ratio, colour = model)) +
-    annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0.1, ymax = 10,
-      fill = "grey80", alpha = .35) +
-    geom_hline(yintercept = 1, linetype = 2) +
-    geom_jitter(width = .13, alpha = .65, show.legend = FALSE) +
-    facet_grid(resolution ~ label_scenario(scenario)) + scale_y_log10() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(x = NULL, y = "Fitted SSB / simulated SSB")
+    summarise(attempted = n(), passed = sum(success),
+      scale_flagged = sum(scale_flag, na.rm = TRUE),
+      no_zeros = sum(grepl("no eligible sampled zeros", error, ignore.case = TRUE)),
+      other_errors = sum(nzchar(error) & !grepl("no eligible sampled zeros", error, ignore.case = TRUE)),
+      warnings = sum(warnings > 0), .groups = "drop") |>
+    mutate(scenario = scenario_label(scenario), model = factor(model, levels = arms)) |>
+    arrange(scenario, resolution, model)
+  print(knitr::kable(counts, col.names = c("Design or effort", "Terminal age",
+    "Model", "Attempted", "Passed", "SSB flag", "No zeros", "Other errors", "Warned")))
+} else {
+  cat("This copy has no fit checkpoints.")
 }
 ```
 
-```{r scale-summary, results='asis'}
-if (nrow(scale_check)) {
-  large <- filter(scale_check, design == "sampling")
-  if (nrow(large)) {
-    counts <- large |>
-      group_by(model) |>
-      summarise(n = n(), flagged = sum(outside_scale),
-        maximum_ratio = max(ssb_ratio), .groups = "drop")
-    print(knitr::kable(counts, digits = 1,
-      col.names = c("Family", "Numerically successful", "Outside tenfold range", "Largest ratio")))
+```{r failed-checks, results='asis'}
+sampling_fits <- filter(fit_status, design == "sampling", !success)
+numerical_failures <- bind_rows(lapply(sampling_fits$attempt, function(attempt) {
+  checks <- fits[[attempt]]$value$numerical
+  if (is.data.frame(checks)) {
+    transmute(filter(checks, status == "fail"), attempt = attempt, check)
+  }
+}))
+if (nrow(numerical_failures)) {
+  failures <- count(numerical_failures, check, sort = TRUE)
+  reasons <- paste0(failures$check, " (", failures$n, ")")
+  cat(sprintf(paste("%d SimSurvey fits failed at least one numerical check.",
+      "The checks that failed were %s. A fit can fail more than one check.\n\n"),
+    n_distinct(numerical_failures$attempt), paste(reasons, collapse = ", ")))
+}
+```
+
+Some numerical passes can estimate an extreme stock size. For small F,
+catch is roughly proportional to \(NF\), and the survey index is proportional
+to \(Nq\). Increasing abundance and reducing fishing mortality and
+catchability can then leave the observations nearly unchanged. A fit is
+flagged here if its median SSB ratio is outside 0.1–10. The flag uses
+simulation truth. All numerical passes remain in the primary comparisons,
+and the sensitivity uses pairs where neither fit is flagged.
+
+```{r scale-check, fig.cap="Median annual fitted SSB divided by true SSB for each numerically successful SimSurvey fit. The shaded band spans one tenth to ten times the true value. It illustrates extreme scale errors and does not define acceptable biological agreement."}
+if (nrow(scale)) {
+  d <- filter(scale, design == "sampling", resolution == 14L,
+    is.finite(ssb_ratio), ssb_ratio > 0)
+  if (nrow(d)) {
+    ggplot(d, aes(factor(model, levels = arms), ssb_ratio)) +
+      annotate("rect", xmin = -Inf, xmax = Inf, ymin = 0.1, ymax = 10, alpha = .12) +
+      geom_hline(yintercept = 1, linetype = 2, colour = "grey40") +
+      geom_jitter(width = .13, alpha = .55, colour = "#126782") +
+      scale_y_log10() + facet_wrap(~scenario_label(scenario)) +
+      labs(x = NULL, y = "Fitted SSB / true SSB") +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
   }
 }
 ```
 
-When F is small, fitted catch is approximately (NF). The index also
-depends on the product (Nq). Multiplying abundance and dividing F and q
-by nearly the same factor can therefore leave observation predictions
-similar. Here the biomass audit uses simulation truth to flag this
-confounding. It would be harder to recognize from observations alone.
-Recovery figures retain these attempts and a separate comparison below
-shows how the scale flag affects the common set. A passed numerical check
-is a statement about the optimization and local curvature.
+## Did PLD recover the later M pulse?
 
-```{r detection, fig.cap="Observed and predicted zero frequency across fitted probability bins, calculated for supported rows of successful fits with both data streams using PLD. The dashed diagonal marks equality. These are checks on the fitted data."}
-if (length(fits) && any(fit_status$success)) {
-  calibration <- bind_rows(lapply(which(fit_status$success & fit_status$model == "Both PLD"), function(i) {
+The main mortality measure is mean M in years 16–19 minus mean M in
+years 1–10. We report its signed error and compare absolute error on
+matched histories. Early F is the mean in years 8–10 minus the mean in
+years 1–4. Late F and M are annual means over years 24–30. Annual F and M
+comparisons use ages 5–10, with the same true abundance weights in the
+fitted and reference summaries. The SimSurvey recovery target is the
+rate realized by the simulator. We also compare pulse-height errors
+against the prescribed M increase of 0.350 per year.
+
+```{r fitted-mortality, fig.cap="Fishing and natural mortality at standard effort on histories where both families passed. Thin curves show fitted histories and thick curves show their median. Dashed lines show the median realized rate on those same histories. Both fitted and realized rates use identical true abundance weights over ages 5–10."}
+if (nrow(annual)) {
+  d <- filter(annual, design == "sampling", scenario == "standard", resolution == 14L,
+    quantity %in% c("F_bar", "M_bar"), model %in% c("Lognormal", "Both PLD")) |>
+    group_by(history, quantity, year) |>
+    filter(n_distinct(model) == 2L) |>
+    ungroup()
+  if (nrow(d)) {
+    d <- mutate(d, quantity = recode(quantity, F_bar = "Fishing mortality (F)",
+      M_bar = "Natural mortality (M)"))
+    truth <- distinct(d, quantity, history, year, truth) |>
+      group_by(quantity, year) |>
+      summarise(truth = median(truth), .groups = "drop")
+    medians <- d |>
+      group_by(quantity, model, year) |>
+      summarise(est = median(est), .groups = "drop")
+    ggplot(d, aes(year, est, colour = model)) +
+      annotate("rect", xmin = 8, xmax = 10, ymin = -Inf, ymax = Inf, alpha = .09) +
+      annotate("rect", xmin = 16, xmax = 19, ymin = -Inf, ymax = Inf, alpha = .09) +
+      geom_line(aes(group = interaction(model, history)), alpha = .2) +
+      geom_line(data = medians, linewidth = .9) +
+      geom_line(data = truth, aes(year, truth), inherit.aes = FALSE, linetype = 2) +
+      facet_wrap(~quantity, scales = "free_y") + scale_colour_manual(values = arm_palette) +
+      labs(x = "Simulation year", y = "Abundance-weighted rate (per year)", colour = NULL) +
+      theme(legend.position = "bottom")
+  }
+}
+```
+
+```{r pulse-signed, fig.cap="Signed error of the late natural mortality pulse and early fishing mortality increase. Positive values mean the fitted increase exceeded the realized increase. Each point represents a numerically successful fit."}
+if (nrow(pulse_metrics)) {
+  d <- filter(pulse_metrics, design == "sampling", resolution == 14L,
+    metric %in% c("M pulse height", "Early F increase"))
+  if (nrow(d)) {
+    ggplot(d, aes(signed, factor(model, levels = rev(arms)))) +
+      geom_vline(xintercept = 0, linetype = 2, colour = "grey45") +
+      geom_jitter(height = .14, width = 0, colour = "#126782", alpha = .55) +
+      facet_grid(metric ~ scenario_label(scenario), scales = "free_x") +
+      labs(x = "Estimated minus realized increase (per year)", y = NULL)
+  }
+}
+```
+
+```{r pulse-paired, fig.cap="Paired changes in absolute error for the M pulse, early F and late rates. Negative values favour PLD or the fit including occurrence. Bars mark approximate 95% Monte Carlo intervals from independent histories. Open circles show descriptive comparisons with fewer than 12 common pairs."}
+if (nrow(pulse_pairs)) {
+  d <- filter(pulse_pairs, resolution == 14L)
+  if (nrow(d)) plot_paired(d, "Change in absolute error (per year)")
+}
+```
+
+```{r primary-denominator, results='asis'}
+primary_comparison <- function(d, metric_name) {
+  if (!nrow(d)) return(NULL)
+  pair_summary(d) |>
+    filter(metric == metric_name, resolution == 14L, design == "sampling",
+      comparison %in% c("Both PLD", "Occurrence added"))
+}
+primary <- bind_rows(primary_comparison(pulse_pairs, "M pulse height"),
+  primary_comparison(older_pairs, "Ages 14+"))
+if (nrow(primary)) {
+  primary |>
+    select(metric, effort, comparison, pairs, unflagged, baseline_error,
+      alternative_error, difference, unflagged_change) |>
+    arrange(metric, effort, comparison) |>
+    knitr::kable(digits = 3, col.names = c("Quantity", "Effort", "Comparison",
+      "Numerical pairs", "Unflagged pairs", "Baseline error", "Alternative error",
+      "Paired change", "Change among unflagged")) |>
+    print()
+} else {
+  cat("No successful pairs are available yet for the primary comparisons.")
+}
+```
+
+For Both PLD the baseline is lognormal. For Occurrence added the baseline
+uses the same positive density and fixed detection levels with the reporting
+indicator removed. Reported absolute errors average over paired histories.
+Pairs with fewer than 12 histories are descriptive.
+
+```{r prescribed-sensitivity, results='asis'}
+if (nrow(prescribed_pairs)) {
+  realized <- filter(pulse_pairs, design == "sampling", metric == "M pulse height",
+    comparison == "Both PLD", resolution == 14L)
+  prescribed <- filter(prescribed_pairs, comparison == "Both PLD", resolution == 14L)
+  sensitivity <- inner_join(
+    select(realized, history, scenario, realized = change),
+    select(prescribed, history, scenario, prescribed = change),
+    by = c("history", "scenario"))
+  if (nrow(sensitivity)) {
+    check <- group_by(sensitivity, scenario) |>
+      summarise(pairs = n(), realized = mean(realized), prescribed = mean(prescribed),
+        .groups = "drop") |>
+      mutate(effort = scenario_label(scenario))
+    print(knitr::kable(select(check, effort, pairs, realized, prescribed), digits = 3,
+      col.names = c("Effort", "Numerical pairs", "Realized M benchmark", "Prescribed M benchmark"),
+      caption = "Paired change in absolute pulse error (per year), both PLD minus lognormal."))
+  }
+}
+```
+
+## Did PLD recover older fish during and after the pulse?
+
+The primary abundance measure uses ages 14+ in years 16–23. We compare the
+reported fitted abundance directly with the sum of true ages 14–20, in
+thousands of fish. At less aggregated ages we compare the sum over
+ages 10–13 on the same years. For each history, signed log error averages
+\(\log(\widehat N/N)\) and measures bias. Mean absolute log error averages
+its magnitude before comparing models. Positive signed error means
+overestimation, and a difference of \(\log(2)\) represents a twofold error.
+
+```{r older-trajectories, fig.cap="Age-14+ abundance at each effort, on the histories where lognormal and both-PLD fits passed numerical checks. Thin curves show individual fitted histories. Lines and dashed truth show medians over the same paired histories. The shaded years are used in the primary abundance comparison."}
+if (nrow(age_abundance)) {
+  d <- filter(age_abundance, design == "sampling", resolution == 14L, age == 14L,
+    model %in% c("Lognormal", "Both PLD")) |>
+    group_by(scenario, history, year) |>
+    filter(n_distinct(model) == 2L) |>
+    ungroup()
+  if (nrow(d)) {
+    truth <- distinct(d, scenario, history, year, truth) |>
+      group_by(scenario, year) |>
+      summarise(truth = median(truth), .groups = "drop")
+    medians <- d |>
+      group_by(scenario, model, year) |>
+      summarise(est = median(est), .groups = "drop")
+    ggplot(d, aes(year, est, colour = model)) +
+      annotate("rect", xmin = 16, xmax = 23, ymin = -Inf, ymax = Inf, alpha = .1) +
+      geom_line(aes(group = interaction(model, history)), alpha = .22) +
+      geom_line(data = medians, linewidth = .9) +
+      geom_line(data = truth, aes(year, truth), inherit.aes = FALSE,
+        linetype = 2, linewidth = .8) +
+      facet_wrap(~scenario_label(scenario)) + scale_y_log10() +
+      scale_colour_manual(values = arm_palette) +
+      labs(x = "Simulation year", y = "Abundance at ages 14+ (thousand fish)",
+        colour = NULL) + theme(legend.position = "bottom")
+  }
+}
+```
+
+```{r older-signed, fig.cap="Signed log bias for older fish over years 16–23. A point is one successful fit. Positive values indicate overestimation. Open points flag median SSB ratios outside the tenfold range."}
+if (nrow(older)) {
+  d <- filter(older, design == "sampling") |>
+    left_join(select(scale, all_of(keys), scale_flag), by = keys)
+  if (nrow(d)) {
+    ggplot(d, aes(signed, factor(model, levels = rev(arms)), shape = scale_flag)) +
+      geom_vline(xintercept = 0, linetype = 2, colour = "grey45") +
+      geom_jitter(height = .13, width = 0, alpha = .65, colour = "#126782") +
+      facet_grid(metric ~ scenario_label(scenario), scales = "free_x") +
+      scale_shape_manual(values = c("TRUE" = 1, "FALSE" = 16),
+        labels = c("FALSE" = "Within tenfold", "TRUE" = "SSB flagged")) +
+      labs(x = "Mean log(fitted / true abundance)", y = NULL, shape = NULL) +
+      theme(legend.position = "bottom")
+  }
+}
+```
+
+```{r older-paired, fig.cap="Paired changes in mean absolute log error for the same older ages and years. Negative values mean the indicated PLD approach was closer to the true abundance."}
+if (nrow(older_pairs)) plot_paired(older_pairs, "Change in mean absolute log-abundance error")
+```
+
+### What happened to overall stock estimates?
+
+```{r population-recovery, fig.cap="Paired change in mean absolute annual log error for stock quantities and mortality levels. Dark marks indicate at least 12 common numerical pairs. The focal event contrasts use their own error measures above."}
+if (nrow(annual)) {
+  recovered <- filter(annual, resolution == 14L, is.finite(est), est > 0,
+    is.finite(truth), truth > 0) |>
+    mutate(metric = recode(quantity, ssb = "SSB", recruitment = "Recruitment",
+      abundance = "Abundance", M_bar = "Annual M", F_bar = "Annual F")) |>
+    group_by(across(all_of(c(keys, "metric")))) |>
+    summarise(absolute = mean(abs(log(est / truth))), .groups = "drop")
+  d <- comparisons(recovered)
+  if (nrow(d)) plot_paired(d, "Change in mean absolute annual log error")
+}
+```
+
+```{r interval-support, fig.cap="Coverage of nominal 95% intervals for annual SSB, recruitment and M at standard effort, evaluated on common years and histories with finite intervals from both fits. The size of a point shows the number of paired histories. Intervals for the true-abundance-weighted F summary and older-age abundance are unavailable."}
+if (nrow(annual)) {
+  coverage <- filter(annual, design == "sampling", scenario == "standard",
+    quantity %in% c("ssb", "recruitment", "M_bar"), model %in% c("Lognormal", "Both PLD"),
+    is.finite(lwr), is.finite(upr), lwr > 0, upr >= lwr) |>
+    group_by(quantity, history, year) |>
+    filter(n_distinct(model) == 2L) |>
+    group_by(quantity, model, history) |>
+    summarise(covered = mean(truth >= lwr & truth <= upr), .groups = "drop") |>
+    group_by(quantity, model) |>
+    summarise(coverage = mean(covered), histories = n(), .groups = "drop") |>
+    mutate(quantity = recode(quantity, ssb = "SSB", recruitment = "Recruitment", M_bar = "M"))
+  if (nrow(coverage)) {
+    ggplot(coverage, aes(coverage, model, size = histories, colour = model)) +
+      geom_vline(xintercept = .95, linetype = 2, colour = "grey45") +
+      geom_point() + facet_wrap(~quantity, nrow = 1) + scale_colour_manual(values = arm_palette) +
+      scale_x_continuous(limits = c(0, 1), labels = scales::label_percent()) +
+      labs(x = "Interval coverage", y = NULL, size = "Paired histories") +
+      guides(colour = "none")
+  }
+}
+```
+
+## Did the fitted observation model describe the zeros and positives?
+
+Zero-probability calibration compares the observed fraction of zeros
+against the average fitted probability among the same observations.
+The amount comparison uses the arithmetic mean of observed positive
+records versus the average fitted mean conditional on a positive. Both
+are in-sample diagnostics.
+
+```{r calibration, fig.cap="Calibration of fitted zero probability in successful joint PLD fits. Each point summarizes supported age-year rows in one fitted probability bin. Number of rows determines point size. The diagonal marks agreement."}
+obs <- bind_rows(lapply(which(fit_status$success & fit_status$model == "Both PLD" &
+  fit_status$resolution == 14L), function(i) {
     row <- fit_status[i, ]
-    fit <- fits[[row$attempt]]$value
-    bind_rows(fit$obs, .id = "component") |>
-      mutate(scenario = row$scenario, model = row$model, resolution = row$resolution)
+    bind_rows(fits[[row$attempt]]$value$obs, .id = "component") |>
+      mutate(design = row$design, scenario = row$scenario)
   }))
-  if (nrow(calibration) && "p_zero" %in% names(calibration)) {
-    calibration |>
-      filter(is.finite(obs), family == "pld_lognormal", resolution == 14L) |>
-      mutate(group = cut(p_zero, seq(0, 1, .1), include.lowest = TRUE)) |>
-      group_by(scenario, component, group) |>
-      summarise(predicted = mean(p_zero), observed = mean(obs == 0), n = n(), .groups = "drop") |>
-      ggplot(aes(predicted, observed, size = n)) + geom_abline(linetype = 2) +
-      geom_point() + facet_grid(component ~ label_scenario(scenario)) +
-      labs(x = "Predicted zero frequency", y = "Observed zero frequency", size = "Rows") +
-      coord_fixed(xlim = c(0, 1), ylim = c(0, 1))
+if (nrow(obs) && "p_zero" %in% names(obs)) {
+  calibration <- obs |>
+    filter(family == "pld_lognormal", is.finite(obs), is.finite(p_zero)) |>
+    mutate(bin = cut(p_zero, breaks = seq(0, 1, 0.1), include.lowest = TRUE)) |>
+    group_by(component, scenario, bin) |>
+    summarise(predicted = mean(p_zero), observed = mean(obs == 0), rows = n(), .groups = "drop")
+  if (nrow(calibration)) {
+    ggplot(calibration, aes(predicted, observed, size = rows)) +
+      geom_abline(linetype = 2, colour = "grey45") +
+      geom_point(colour = "#126782", alpha = .75) +
+      facet_grid(component ~ scenario_label(scenario)) +
+      coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
+      labs(x = "Fitted zero probability", y = "Observed zero frequency", size = "Rows")
   }
 }
 ```
 
-```{r magnitude, fig.width=9, fig.cap="Observed and fitted arithmetic means among positive records, grouped by fitted positive mean. Each point compares the same age-year rows. The dashed line marks agreement. SimSurvey can produce positive magnitudes whose sampling behaviour differs from the PLD lognormal model."}
-if (exists("calibration") && nrow(calibration) && "log_pred_positive" %in% names(calibration)) {
-  sizes <- calibration |>
-    filter(family == "pld_lognormal", resolution == 14L, is.finite(obs), obs > 0) |>
+```{r positive-amounts, fig.cap="Mean observed and fitted amounts for positive records in standard-effort joint PLD fits. Each point uses the same rows within a fitted-mean group. The diagonal marks agreement. Axes are logarithmic and values are in thousands of fish."}
+if (nrow(obs) && all(c("log_pred_positive", "sd") %in% names(obs))) {
+  amount <- obs |>
+    filter(scenario == "standard", family == "pld_lognormal", is.finite(obs), obs > 0) |>
     mutate(positive_mean = exp(log_pred_positive + sd^2 / 2)) |>
     filter(is.finite(positive_mean), positive_mean > 0) |>
-    group_by(scenario, component) |>
-    mutate(bin = ntile(positive_mean, 6)) |>
-    group_by(scenario, component, bin) |>
-    summarise(predicted = mean(positive_mean), observed = mean(obs), n = n(), .groups = "drop")
-  if (nrow(sizes)) {
-    ggplot(sizes, aes(predicted, observed, size = n)) + geom_abline(linetype = 2) +
-      geom_point() + facet_grid(component ~ label_scenario(scenario), scales = "free") +
-      scale_x_log10(breaks = scales::breaks_log(n = 3),
-        labels = scales::label_log()) +
-      scale_y_log10(breaks = scales::breaks_log(n = 3),
-        labels = scales::label_log()) +
-      labs(x = "Fitted positive mean (thousand fish)",
-        y = "Observed positive mean (thousand fish)", size = "Rows")
+    group_by(component) |>
+    mutate(bin = ntile(positive_mean, 8L)) |>
+    group_by(component, bin) |>
+    summarise(predicted = mean(positive_mean), observed = mean(obs), .groups = "drop")
+  if (nrow(amount)) {
+    ggplot(amount, aes(predicted, observed)) +
+      geom_abline(linetype = 2, colour = "grey45") +
+      geom_point(colour = "#126782") + facet_wrap(~component, scales = "free") +
+      scale_x_log10() + scale_y_log10() +
+      labs(x = "Fitted positive mean (thousand fish)", y = "Observed positive mean (thousand fish)")
   }
 }
 ```
 
-```{r y50, fig.cap="Half-detection estimates for the exact simulation with both families fitted freely and for the whole-area monitoring runs. Each point is one successful history; black crosses show the exact generating values. Whole-area monitoring has no single true half-detection parameter."}
-if (length(fits) && any(fit_status$success)) {
-  parameters <- bind_rows(lapply(which(fit_status$success & fit_status$model == "Both PLD" &
-    fit_status$resolution == 14L), function(i) {
-      row <- fit_status[i, ]
-      value <- fits[[row$attempt]]$value$y50
-      mutate(value, scenario = row$scenario)
-  }))
-  if (nrow(parameters)) {
-    generate <- data.frame(scenario = "exact", par = c("y50_catch", "y50_index"), est = c(1.5, 100))
-    ggplot(filter(parameters, is.finite(est)), aes(label_scenario(scenario), est)) +
-      geom_jitter(width = .12, alpha = .5) + geom_point(data = generate, shape = 4, size = 3) +
-      facet_wrap(~par, scales = "free_y") + scale_y_log10() +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-      labs(x = NULL, y = "Half-detection level (thousand fish)")
-  }
-}
-```
+## What does this imply for assessments?
 
-## Did retaining zeros improve the stock estimates?
+`r m_evidence` `r n_evidence` `r ablation_abundance`
 
-```{r trajectories, fig.cap="Median fitted natural mortality across the histories passing all four main fits within a scenario, alongside the generating annual M (dashed black line). Each fit uses a single M per year across all ages."}
-if (nrow(annual)) {
-  comparable <- annual |>
-    filter(resolution == 14L, model %in% arms[1:4], quantity == "M_bar") |>
-    group_by(design, scenario, resolution, history) |>
-    filter(n_distinct(model) == 4L) |>
-    ungroup()
-  if (nrow(comparable)) {
-    comparable |>
-      group_by(scenario, model, year) |>
-      summarise(est = median(est), truth = first(truth), .groups = "drop") |>
-      ggplot(aes(year, est, colour = model)) +
-      geom_line(aes(y = truth), colour = "black", linetype = 2) + geom_line() +
-      facet_wrap(~label_scenario(scenario)) +
-      labs(x = "Year", y = "Natural mortality (per year)", colour = "Fit")
-  } else show_not_ready()
-} else show_not_ready()
-```
+The comparison of lognormal and full PLD measures the net effect of changing
+the observation family. The fixed-detection comparison answers the narrower
+question of how much the record of zeros and positives adds after the
+positive density is held fixed. Small paired samples, extreme stock-scale
+estimates, and changes between the full and unflagged sets qualify either
+result. Sampled zeros can inform low catchability-weighted abundance.
+The interpretation of losses as fishing or natural mortality still depends
+on the catch data and population assumptions.
 
-```{r pulse, fig.cap="Pulse-height and timing errors for successful fits. Height is mean M in years 9-12 minus mean M in years 1-4 and 17-20. Timing is the year averaged by positive departures above baseline, with no timing estimate when there are no such departures."}
-if (nrow(pulse)) {
-  p <- filter(pulse, resolution == 14L, model %in% arms[1:4])
-  ggplot(p, aes(height_error, center_error, colour = model)) + geom_hline(yintercept = 0, linetype = 2) +
-    geom_vline(xintercept = 0, linetype = 2) + geom_point(alpha = .65) +
-    facet_wrap(~label_scenario(scenario)) +
-    labs(x = "Pulse-height error (M per year)", y = "Timing error (years)", colour = "Fit")
-} else show_not_ready()
-```
+The study simulated an early F peak and a later M increase. It measures
+recovery for that ordering and the monitoring designs above. It provides
+no estimate of false pulse detections under constant mortality or of
+forecast skill. A fixed detection scale within a stream may be inadequate
+when effort or sampling methods vary through a time series.
 
-```{r scale-sensitivity, fig.cap="Sensitivity of the SimSurvey pulse-height comparison to extreme SSB discrepancies. Lines join matching successful lognormal and both-PLD fits. Labels identify whether either fit's median SSB fell outside a tenfold range of the truth."}
-if (nrow(pulse)) {
-  p <- filter(pulse, design == "sampling", resolution == 14L,
-    model %in% c("Lognormal", "Both PLD")) |>
-    group_by(scenario, history) |>
-    filter(n_distinct(model) == 2L) |>
-    mutate(scale = if_else(any(outside_scale), "Scale flag", "Within tenfold")) |>
-    ungroup()
-  if (nrow(p)) {
-    ggplot(p, aes(model, abs(height_error), colour = scale, group = history)) +
-      geom_line(alpha = .5) + geom_point() + facet_wrap(~label_scenario(scenario)) +
-      labs(x = NULL, y = "Absolute pulse-height error", colour = NULL)
-  } else show_not_ready()
-}
-```
-
-```{r pulse-by-effort, results='asis'}
-if (nrow(pulse)) {
-  amplitude <- filter(pulse, design == "sampling", resolution == 14L,
-    is.finite(height_error), model %in% arms[1:4])
-  baseline <- filter(amplitude, model == "Lognormal") |>
-    select(scenario, history, legacy_error = height_error, legacy_flag = outside_scale)
-  common <- inner_join(amplitude, baseline, by = c("scenario", "history")) |>
-    mutate(unflagged = !outside_scale & !legacy_flag)
-  if (nrow(common)) {
-    partial_mae <- function(x) if (length(x)) mean(abs(x)) else NA_real_
-    measures <- common |>
-      group_by(scenario, model) |>
-      summarise(pairs = n(), legacy = mean(abs(legacy_error)), alternative = mean(abs(height_error)),
-        clean_pairs = sum(unflagged), legacy_clean = partial_mae(legacy_error[unflagged]),
-        alternative_clean = partial_mae(height_error[unflagged]), .groups = "drop")
-    tidyr::expand_grid(scenario = c("low", "standard", "high"), model = arms[1:4]) |>
-      left_join(measures, by = c("scenario", "model")) |>
-      mutate(scenario = label_scenario(scenario), across(c(pairs, clean_pairs), ~ coalesce(.x, 0L))) |>
-      knitr::kable(digits = 3, col.names = c("Effort", "Family", "Pairs", "Lognormal MAE",
-        "Family MAE", "Unflagged pairs", "Lognormal MAE (unflagged)", "Family MAE (unflagged)"),
-        caption = "Paired mean absolute pulse-height errors (per year) for each 14+ SimSurvey family and the lognormal benchmark.",
-        format = "pipe") |>
-      print()
-  } else show_not_ready()
-} else show_not_ready()
-```
-
-Each family row uses its own common successful histories with the
-lognormal. In the lognormal rows, a successful fit is paired with itself
-to show the benchmark's available sample and error. The unflagged columns
-use only pairs where both fits' median annual SSB was within a factor of
-ten of truth. Small or empty paired samples give little basis for ranking
-the families.
-The paired PLD recovery results are conditional on eligible sampled zeros
-for each series with an estimated detection level, and both fits passing
-the numerical checks. The attempted-fit totals include the excluded
-histories.
-
-```{r ablation, fig.cap="Direct information in occurrence, with the same two detection scales fixed at their generating values. Left compares mortality-pulse errors. Right compares mean absolute annual error across stock and mortality quantities. Lines join fits on the same simulated history."}
-if (nrow(pulse)) {
-  p <- filter(pulse, scenario == "exact", model %in% arms[5:6]) |>
-    select(history, model, value = height_error) |>
-    mutate(quantity = "Absolute pulse-height error", value = abs(value))
-  metrics <- annual |>
-    filter(scenario == "exact", model %in% arms[5:6]) |>
-    group_by(history, quantity, model) |>
-    summarise(value = mean(abs(log_error)), .groups = "drop")
-  comparison <- bind_rows(p, metrics) |>
-    group_by(history, quantity) |>
-    filter(n_distinct(model) == 2L) |>
-    ungroup()
-  if (nrow(comparison)) {
-    ggplot(comparison, aes(model, value, group = history)) +
-      geom_line(alpha = .3) + geom_point(alpha = .65) + facet_wrap(~quantity, scales = "free_y") +
-      labs(x = NULL, y = "Absolute error")
-  } else show_not_ready()
-} else show_not_ready()
-```
-
-`r ablation_sentence` This compares the exact-fit density with the occurrence
-terms omitted and retained, respectively. Both fits used the same
-conditional density for positive observations.
-
-```{r quantities, fig.cap="Differences in mean absolute annual log error relative to the legacy lognormal fit on the same history and at the same age resolution. Points show mean paired differences. Bars show approximate 95% Monte Carlo intervals across histories, only when at least two pairs were available."}
-if (nrow(paired)) {
-  paired |>
-    filter(resolution == 14L) |>
-    group_by(scenario, quantity, model) |>
-    summarise(n = n(), delta = mean(difference), se = sd(difference) / sqrt(n), .groups = "drop") |>
-    mutate(half = if_else(n > 1L, qt(.975, pmax(n - 1L, 1L)) * se, NA_real_)) |>
-    ggplot(aes(delta, model)) + geom_vline(xintercept = 0, linetype = 2) +
-    geom_point() + geom_errorbar(aes(xmin = delta - half, xmax = delta + half), orientation = "y", width = .1) +
-    facet_grid(quantity ~ label_scenario(scenario), scales = "free_x") +
-    labs(x = "Change in absolute log error (lower favours PLD)", y = NULL)
-} else show_not_ready()
-```
-
-```{r coverage, fig.cap="Coverage of annual 95% intervals on common numerically successful histories with a finite interval from all four models for the same year and quantity. Symbol size shows the number of eligible model-specific intervals. The dashed line marks 95%."}
-common_coverage <- NULL
-if (nrow(annual)) {
-  common_coverage <- annual |>
-    filter(resolution == 14L, model %in% arms[1:4], !is.na(covered)) |>
-    group_by(scenario, history, quantity, year) |>
-    filter(n_distinct(model) == 4L) |>
-    group_by(scenario, quantity, model) |>
-    summarise(coverage = mean(covered), intervals = n(),
-      width = median(log(upr / lwr)), .groups = "drop")
-  if (nrow(common_coverage)) {
-    ggplot(common_coverage, aes(coverage, model, size = intervals)) +
-      geom_vline(xintercept = .95, linetype = 2) +
-      geom_point() + facet_grid(quantity ~ label_scenario(scenario)) +
-      scale_x_continuous(limits = c(0, 1), breaks = c(0, .5, 1)) +
-      labs(x = "Interval coverage", y = NULL)
-  } else knitr::asis_output("No histories have finite intervals from all four models on common rows.")
-} else show_not_ready()
-```
-
-```{r interval-width, fig.cap="Median log interval width on the common support used for the preceding coverage comparison."}
-if (!is.null(common_coverage) && nrow(common_coverage)) {
-  ggplot(common_coverage, aes(width, model)) + geom_point() +
-    facet_grid(quantity ~ label_scenario(scenario), scales = "free_x") +
-    labs(x = "Median log interval width", y = NULL)
-}
-```
-
-```{r age-resolution, fig.cap="Comparison of spawning-biomass error when the same simulated monitoring data were fit at age 14+ versus age 20+. Only standard-effort histories with two successful fits for the same family are shown."}
-if (nrow(annual)) {
-  age <- annual |>
-    filter(design == "sampling", scenario == "standard", quantity == "ssb", history <= 8L) |>
-    group_by(model, history, resolution) |>
-    summarise(mae = mean(abs(log_error)), .groups = "drop") |>
-    group_by(model, history) |>
-    filter(n_distinct(resolution) == 2L)
-  if (nrow(age)) {
-    ggplot(age, aes(factor(resolution), mae, group = history)) + geom_line(alpha = .4) +
-      geom_point() + facet_wrap(~model) + labs(x = "Terminal modeled age", y = "Mean absolute log error")
-  } else show_not_ready()
-}
-```
-
-### How well were older ages recovered?
-
-Ages 10-13 cover the older fish immediately below the 14+ group. Each
-retains its own abundance estimate in both age resolutions and can be
-compared with the corresponding native-age abundance in SimSurvey. From
-the saved fit checkpoints, recover fitted abundance by inverting the
-single-fleet Baranov catch equation,
-\[
-\widehat N_{a,t}
-=\frac{\widetilde C_{a,t}\widehat Z_{a,t}}
-{\widehat F_{a,t}(1-e^{-\widehat Z_{a,t}})},\qquad
-\widehat Z_{a,t}=\widehat F_{a,t}+\widehat M_t.
-\]
-Here \(\widetilde C_{a,t}\) is the catch prediction from the population
-equation, before any adjustment for detection or lognormal variance. The
-fitted model shares one M at all ages each year. SimSurvey truth is the
-number of fish at each native age at the beginning of the year, converted
-to thousands of fish to match the fit. The comparison uses identical
-age-year cells with finite, positive fitted catches, F, Z and abundances
-in each pair. No abundance uncertainty was reconstructed.
-
-```{r older-abundance, fig.cap="Older-age recovery in the 14+ SimSurvey fits. Each point is one numerically successful pair, compared on the same valid age-year cells at ages 10-13. Values below zero favour the indicated PLD family over the lognormal. Open points flag a more than tenfold overall SSB scale error in at least one fit."}
-older_paired <- data.frame()
-older_fits <- filter(fit_status, design == "sampling", resolution == 14L, success)
-if (nrow(older_fits)) {
-  older <- bind_rows(lapply(seq_len(nrow(older_fits)), function(i) {
-    row <- older_fits[i, ]
-    fit <- fits[[row$attempt]]$value
-    truth <- inputs[[sprintf("sampling-%02d", row$history)]]$value$reference
-    catch <- transmute(filter(fit$obs$catch, age %in% 10:13), year, age, catch = pred)
-    fishing <- transmute(filter(fit$metric$F, age %in% 10:13), year, age, F = est)
-    natural <- transmute(filter(fit$metric$annual, quantity == "M_bar"), year, M = est)
-    numbers <- transmute(filter(truth, age %in% 10:13), year, age, truth = N / 1000)
-    inner_join(catch, fishing, by = c("year", "age")) |>
-      inner_join(natural, by = "year") |>
-      inner_join(numbers, by = c("year", "age")) |>
-      mutate(Z = F + M) |>
-      filter(if_all(c(catch, F, Z, truth), ~ is.finite(.x) & .x > 0)) |>
-      mutate(log_est = log(catch) + log(Z) - log(F) - log(-expm1(-Z)),
-        est = exp(log_est)) |>
-      filter(is.finite(est), est > 0) |>
-      transmute(year, age, error = abs(log_est - log(truth)),
-        history = row$history, scenario = row$scenario, model = row$model)
-  }))
-  if (nrow(older)) {
-    baseline <- filter(older, model == "Lognormal") |>
-      select(scenario, history, year, age, baseline = error)
-    older_paired <- filter(older, model %in% arms[2:4]) |>
-      inner_join(baseline, by = c("scenario", "history", "year", "age")) |>
-      group_by(scenario, history, model) |>
-      summarise(difference = mean(error - baseline), cells = n(), .groups = "drop")
-  }
-}
-if (nrow(older_paired)) {
-  flags <- filter(scale_check, design == "sampling", resolution == 14L)
-  baseline_flag <- filter(flags, model == "Lognormal") |>
-    select(scenario, history, baseline_flag = outside_scale)
-  older_paired |>
-    left_join(select(flags, scenario, history, model, outside_scale),
-      by = c("scenario", "history", "model")) |>
-    left_join(baseline_flag, by = c("scenario", "history")) |>
-    mutate(scale = if_else(outside_scale | baseline_flag, "Scale flag", "Within tenfold")) |>
-    ggplot(aes(difference, model, shape = scale)) +
-    geom_vline(xintercept = 0, linetype = 2) +
-    geom_jitter(width = 0, height = .12, alpha = .75) +
-    facet_wrap(~label_scenario(scenario)) +
-    scale_shape_manual(values = c("Scale flag" = 1, "Within tenfold" = 16)) +
-    labs(x = "Change in mean absolute log-abundance error", y = NULL, shape = "SSB check")
-} else show_not_ready()
-```
-
-```{r older-abundance-support, results='asis'}
-if (nrow(older_paired)) {
-  cat(sprintf("The figure includes %d paired comparisons, with %d to %d common age-year cells per pair.",
-    nrow(older_paired), min(older_paired$cells), max(older_paired$cells)))
-}
-```
-
-```{r fishing, fig.cap="Age profile of F in successful 14+ fits. Points show median fitted F across years and histories. The dashed line shows the normal curve used for generating reference F. The pooled age is omitted because the two curves refer to different quantities there."}
-fishing <- summarise_fit("F")
-if (nrow(fishing)) {
-  fishing |>
-    filter(resolution == 14L, model %in% arms[1:4]) |>
-    group_by(model, scenario, age) |>
-    summarise(F = median(est), F_ref = first(truth), .groups = "drop") |>
-    ggplot(aes(age, F, colour = model)) + geom_line() +
-    geom_line(aes(y = F_ref), colour = "black", linetype = 2) +
-    facet_wrap(~label_scenario(scenario)) + labs(x = "Age", y = "F (per year)", colour = "Fit")
-}
-```
-
-```{r weak-cohorts, fig.cap="Mean absolute log error of weak cohorts, defined within each generating history as the five lowest recruitment years. Each point is one successful fit."}
-if (nrow(annual)) {
-  annual |>
-    filter(quantity == "recruitment", resolution == 14L, model %in% arms[1:4]) |>
-    group_by(scenario, history, model) |>
-    slice_min(truth, n = 5, with_ties = FALSE) |>
-    summarise(error = mean(abs(log_error)), .groups = "drop") |>
-    ggplot(aes(model, error)) + geom_jitter(width = .12, alpha = .5) +
-    facet_wrap(~label_scenario(scenario)) +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-    labs(x = NULL, y = "Weak-cohort log error")
-}
-```
-
-## Interpretation
-
-The comparison of survey-only, catch-only and joint fits separates the
-consequences of modeling nondetection in the two data streams. Detection
-calibration helps distinguish a useful occurrence relationship from a
-numerically acceptable fit. The fixed-scale ablation addresses the additional
-question of whether the Bernoulli contribution itself improves the pulse
-estimate once the positive density is held constant.
-
-Every simulated history has the same true M pulse and a fixed reference F
-curve. Estimating false-pulse rates would require histories without a
-pulse. Testing whether the fits can separate a change in M from a change
-in F would require independently varying both rates.
-
-A constant half-detection scale describes one effective observation process.
-In real monitoring, sampling effort and the allocation of age samples may
-alter the chance of a zero at the same expected index or catch. The
-multinomial and SimSurvey comparisons test that limitation. Plus-group
-aggregation, a one-parameter occurrence curve and repeated ages from the same
-sample also limit interpretation. Treat numerical failures, small common
-samples and wide Monte Carlo intervals as part of the result.
-
-All inputs, numerical diagnostics, warnings and failures are retained in the
-ignored study results directory. The script records source revisions and
-writes one checkpoint per generated dataset and attempted fit.
+Seeds, source revisions, observation support and every attempted fit are
+recorded with the study checkpoints.

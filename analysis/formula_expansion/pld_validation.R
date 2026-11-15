@@ -6,15 +6,23 @@ pld_effort <- data.frame(effort = c("low", "standard", "high"),
 # Northern cod zero frequencies on ages 2-14+. Preserve the low/high effort
 # contrast and keep unsampled cells missing.
 pld_rv_tow_area <- 0.0018
-pld_fishing <- list(f_full = 0.06, peak = 7.7, width = 2.5, gear_amount = 1200L,
+pld_years <- 1:30
+pld_fishing <- list(peak = 7.7, width = 2.5, gear_amount = 1200L,
   duration = 24L, capture_q = 0.02, capacity = 150L)
+pld_f_schedule <- data.frame(year = c(1, 4, 8, 10, 13, 20, 30),
+  rate = c(0.06, 0.06, 0.22, 0.22, 0.06, 0.035, 0.035))
+pld_m_schedule <- data.frame(year = c(1, 13, 16, 19, 24, 30),
+  rate = c(0.25, 0.25, 0.60, 0.60, 0.40, 0.40))
+pld_windows <- list(F_baseline = 1:4, F_peak = 8:10, F_event = 5:13,
+  M_baseline = 1:10, M_peak = 16:19, M_event = 11:23, late = 24:30, older_N = 16:23)
 pld_y50 <- c(catch = 1.5, index = 100)
 pld_sd <- c(catch = 0.25, index = 0.35)
 
-pld_m <- function(year) stats::approx(c(1, 5, 9, 12, 16, 20),
-  c(0.25, 0.25, 0.60, 0.60, 0.25, 0.25), xout = year)$y
+pld_m <- function(year) stats::approx(pld_m_schedule$year, pld_m_schedule$rate, xout = year)$y
+pld_f_full <- function(year) stats::approx(pld_f_schedule$year, pld_f_schedule$rate, xout = year)$y
+pld_selection <- function(age) with(pld_fishing, exp(-0.5 * ((age - peak) / width)^2))
+pld_f <- function(age, year) pld_f_full(year) * pld_selection(age)
 
-pld_f <- function(age) with(pld_fishing, f_full * exp(-0.5 * ((age - peak) / width)^2))
 pld_q <- function(age) stats::plogis(2 * (age - 3))
 
 pld_seeds <- function(id) {
@@ -24,9 +32,9 @@ pld_seeds <- function(id) {
 }
 
 pld_demography <- function(seed, ages = 1:20) {
-  withr::with_seed(seed, SimSurvey::sim_abundance(ages = ages,
+  withr::with_seed(seed, SimSurvey::sim_abundance(ages = ages, years = pld_years,
     Z = function(ages, years) outer(rep(1, length(ages)), pld_m(years)) +
-      outer(pld_f(ages), rep(1, length(years)))))
+      outer(ages, years, pld_f)))
 }
 
 pld_biology <- function(population) {
@@ -144,12 +152,13 @@ pld_fishery_stock <- function(sim, year, key) {
   stock
 }
 
-pld_fishery_simulator <- function() {
+pld_fishery_simulator <- function(adapt_engine = identity) {
   simulate <- SimSurvey::sim_fisheries
   engine <- getFromNamespace(".run_fisheries", "SimSurvey")
   if (!".fishery_stock" %in% all.names(body(engine))) {
     stop("The pinned SimSurvey fishery engine changed. Audit the batched length allocation.")
   }
+  engine <- adapt_engine(engine)
   private <- new.env(parent = environment(simulate))
   private$.fishery_stock <- pld_fishery_stock
   environment(engine) <- private
@@ -218,7 +227,7 @@ pld_check_fishery_cache <- function(cache, grid_n, n, revision, source_set) {
     all(c(manifest$revision, revision) %in% accepted),
     identical(manifest$simsurvey, source_set))
   for (i in seq_len(n)) {
-    stage <- file.path(cache, sprintf("history-%02d", i), sprintf("fishery-year%02d.rds", 1:20))
+    stage <- file.path(cache, sprintf("history-%02d", i), sprintf("fishery-year%02d.rds", pld_years))
     run <- file.path(cache, sprintf("sampling-%02d.rds", i))
     if (!all(file.exists(c(stage, run))) || !isTRUE(readRDS(run)$ok)) {
       stop("Original fishery operations are incomplete for history ", i, ".")
@@ -228,8 +237,9 @@ pld_check_fishery_cache <- function(cache, grid_n, n, revision, source_set) {
 }
 
 pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
-    effort = pld_effort, tow_area = pld_rv_tow_area, fishery_cache = NULL) {
-  seeds <- pld_seeds(id)
+    effort = pld_effort, tow_area = pld_rv_tow_area, fishery_cache = NULL,
+    seed_offset = 0L, adapt_engine = identity) {
+  seeds <- pld_seeds(id + seed_offset)
   history <- pld_demography(seeds[["population"]])
   grid <- SimSurvey::make_grid(res = rep(280 / grid_n, 2L))
   cells <- as.data.frame(grid)
@@ -250,14 +260,14 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
   flush.console()
 
   # A single set of fishery operations supplies all effort comparisons.
-  spec <- SimSurvey::sim_fishery(target = pld_fishing$f_full, target_type = "F_full",
-    selectivity = function(age) pld_f(age) / pld_fishing$f_full,
+  spec <- SimSurvey::sim_fishery(target = setNames(pld_f_full(pop$years), pop$years), target_type = "F_full",
+    selectivity = pld_selection,
     catch_model = SimSurvey::sim_capture(q = pld_fishing$capture_q, capacity_per_gear = pld_fishing$capacity),
     gear_amount = pld_fishing$gear_amount, duration = pld_fishing$duration,
     gear_unit = "net", time_unit = "hour",
     sampling_coverage = 0, reporting_cv = 0.05, lengths_cap = 150,
     ages_cap = 150, age_sampling = "random", maturity_sampling = "none", light = FALSE)
-  simulate_fisheries <- pld_fishery_simulator()
+  simulate_fisheries <- pld_fishery_simulator(adapt_engine)
   within_draw <- function(stage, year, calculate) {
     if (is.null(checkpoint_dir)) return(calculate())
     dir.create(checkpoint_dir, recursive = TRUE, showWarnings = FALSE)
@@ -277,8 +287,10 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
       if (file.exists(known)) return(readRDS(known))
     }
     snapshot <- oe_snapshot(pop, year)
+    annual_spec <- spec
+    annual_spec$target <- pld_f_full(year)
     annual <- withr::with_seed(seeds[["fishery"]] + year,
-      simulate_fisheries(snapshot, Gillnet = spec))$fishery
+      simulate_fisheries(snapshot, Gillnet = annual_spec))$fishery
     cat("    Fishery year", year, "operations:", nrow(annual$setdet), "\n")
     flush.console()
     # run_catch() needs the realized catches and monitoring records. Keep
@@ -315,7 +327,7 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
   stopifnot(identical(reference[c("year", "age")], expected[c("year", "age")]),
     isTRUE(all.equal(reference$N, expected$N, tolerance = 0)),
     isTRUE(all.equal(reference$Z, expected$Z, tolerance = 0)),
-    isTRUE(all.equal(reference$F_reference, pld_f(reference$age), tolerance = 1e-12)),
+    isTRUE(all.equal(reference$F_reference, pld_f(reference$age, reference$year), tolerance = 1e-12)),
     all(truth$setdet$gear_amount == pld_fishing$gear_amount),
     all(truth$setdet$duration == pld_fishing$duration))
   if (!is.null(fishery_cache)) {
@@ -339,7 +351,7 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
 
     rv <- lapply(pop$years, function(year) within_draw(paste0("rv-", current$effort), year, function() {
       pld_monitor_rv_year(oe_snapshot(pop, year), current$sets_per_1000,
-        seeds[["rv"]] + 30L * index + year, tow_area)
+        seeds[["rv"]] + length(pld_years) * index + year, tow_area)
     }))
     rv_table <- function(name) as.data.frame(data.table::rbindlist(lapply(rv, `[[`, name)))
     rv_rows <- rv_table("index")
@@ -368,7 +380,8 @@ pld_simsurvey_inputs <- function(id, grid_n, checkpoint_dir = NULL,
   survivor <- as.numeric(pop$N[oldest, ] * exp(-pop$Z[oldest, ]))
   list(id = id, seeds = seeds, series = setNames(series, effort$effort),
     design = list(grid_n = grid_n, effort = effort, rv_tow_area = tow_area, fishing = pld_fishing,
-      rv_curve = c(slope = 2, midpoint = 3)),
+      rv_curve = c(slope = 2, midpoint = 3), F_full = pld_f_schedule,
+      M = pld_m_schedule, windows = pld_windows),
     annual = pld_annual_truth(pop$years, pop$ages, pop$N, biology),
     reference = reference, annual_fishery = as.data.frame(truth$annual),
     oldest = data.frame(year = pop$years, survivor = survivor,
@@ -404,7 +417,7 @@ pld_controlled_inputs <- function(id) {
     old <- nrow(pop$N)
     pop$N[old, y] <- pop$N[old, y] + pop$N[old, y - 1L] * exp(-pop$Z[old, y - 1L])
   }
-  catches <- pop$N * pld_f(pop$ages) * (-expm1(-pop$Z)) / pop$Z / 1000
+  catches <- pop$N * outer(pop$ages, pop$years, pld_f) * (-expm1(-pop$Z)) / pop$Z / 1000
   indexes <- pop$N * pld_q(pop$ages) / 1000
   keys <- expand.grid(age = pop$ages, year = pop$years)
   keys$survey <- "RV"
@@ -421,5 +434,6 @@ pld_controlled_inputs <- function(id) {
       pld_rmultinomial(indexes, effort, pld_y50[["index"]])))
   list(id = id, seeds = seeds, exact = exact, multinomial = multinomial, effort = effort,
     annual = pld_annual_truth(pop$years, pop$ages, pop$N, biology),
-    prediction = data.frame(keys, catch = as.numeric(catches), index = as.numeric(indexes)))
+    prediction = data.frame(keys, N = as.numeric(pop$N),
+      catch = as.numeric(catches), index = as.numeric(indexes)))
 }

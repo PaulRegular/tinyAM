@@ -7,9 +7,9 @@ n <- if (length(args) >= 2L) as.integer(args[2L]) else 24L
 grid <- if (length(args) >= 3L) as.integer(args[3L]) else 40L
 out <- if (length(args) >= 4L) args[4L] else file.path(
   "analysis/formula_expansion/results", paste0("pld-grid", grid, "-n", n))
-if (!phase %in% c("controlled", "sampling", "fit", "report", "sampling_fit") ||
+if (!phase %in% c("controlled", "calibration", "sampling", "fit", "report", "sampling_fit") ||
     is.na(n) || !n %in% 1:24 || is.na(grid) || grid < 20L) {
-  stop("Use simulate_pld.R {controlled|sampling|fit|report|sampling_fit} [replicates] [grid width] [output directory].")
+  stop("Use simulate_pld.R {controlled|calibration|sampling|fit|report|sampling_fit} [replicates] [grid width] [output directory].")
 }
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 out <- normalizePath(out, winslash = "/")
@@ -53,7 +53,20 @@ pld_record_sources <- function(path, value) {
   }
 }
 
-if (phase %in% c("controlled", "sampling", "sampling_fit")) {
+pld_detection_calibration <- function() {
+  directory <- Sys.getenv("TINYAM_PLD_CALIBRATION",
+    file.path(study, "results", "pld-30yr-calibration"))
+  files <- file.path(directory, sprintf("calibration-%02d.rds", 1:6))
+  if (!all(file.exists(files))) stop("Generate six independent standard-effort calibration histories first.")
+  manifest <- readRDS(file.path(directory, "calibration-manifest.rds"))
+  stopifnot(identical(manifest$phase, "calibration"), identical(manifest$years, pld_years),
+    identical(manifest$F_full, pld_f_schedule), identical(manifest$M, pld_m_schedule))
+  calibration <- pld_calibrate(files)
+  pld_record_sources(file.path(directory, "calibration-y50.rds"), calibration)
+  list(y50 = setNames(calibration$y50, calibration$component), source = tools::md5sum(files))
+}
+
+if (phase %in% c("controlled", "calibration", "sampling", "sampling_fit")) {
   sim <- normalizePath(Sys.getenv("TINYAM_PLD_SIMSURVEY"), mustWork = TRUE, winslash = "/")
   head <- suppressWarnings(system2("git", c("-C", shQuote(sim), "rev-parse", "HEAD"),
     stdout = TRUE, stderr = TRUE))
@@ -74,8 +87,10 @@ if (phase %in% c("controlled", "sampling", "sampling_fit")) {
     file.path(study, "pld_validation.R"))
   if (phase != "controlled") {
     shared_source <- file.path(study, "observation_error_sim.R")
+    fishery_source <- file.path(study, "pld_fishery_engine.R")
     source(shared_source)
-    generating_sources <- c(generating_sources, shared_source)
+    source(fishery_source)
+    generating_sources <- c(generating_sources, shared_source, fishery_source)
     pld_check_allocate_lengths()
   }
   simsurvey_sources <- unname(tools::md5sum(sort(list.files(file.path(sim, "R"),
@@ -84,16 +99,26 @@ if (phase %in% c("controlled", "sampling", "sampling_fit")) {
   fishery_provenance <- NULL
   if (phase != "controlled" && nzchar(fishery_cache)) {
     fishery_cache <- normalizePath(fishery_cache, winslash = "/", mustWork = TRUE)
+    cache_manifest <- readRDS(file.path(fishery_cache, "sampling-manifest.rds"))
+    if (!identical(cache_manifest$years, pld_years) ||
+        !identical(cache_manifest$F_full, pld_f_schedule) ||
+        !identical(cache_manifest$M, pld_m_schedule)) {
+      stop("The previous fishery stages use a different year or mortality schedule.")
+    }
     pld_check_fishery_cache(fishery_cache, grid, n, revision, simsurvey_sources)
     fishery_provenance <- tools::md5sum(file.path(fishery_cache, "sampling-manifest.rds"))
   }
   generator <- if (phase == "controlled") pld_controlled_inputs else {
     function(id) pld_simsurvey_inputs(id, grid, file.path(out, sprintf("history-%02d", id)),
+      effort = if (phase == "calibration") subset(pld_effort, effort == "standard") else pld_effort,
+      seed_offset = if (phase == "calibration") 100L else 0L,
+      adapt_engine = pld_fast_fishery_engine,
       fishery_cache = if (nzchar(fishery_cache)) file.path(fishery_cache, sprintf("history-%02d", id)))
   }
-  input_phase <- if (phase == "controlled") phase else "sampling"
+  input_phase <- if (phase == "sampling_fit") "sampling" else phase
   manifest <- file.path(out, paste0(input_phase, "-manifest.rds"))
-  generation <- list(n = n, grid = grid, revision = revision,
+  generation <- list(n = n, grid = grid, revision = revision, phase = input_phase,
+    years = pld_years, F_full = pld_f_schedule, M = pld_m_schedule,
     generator = tools::md5sum(generating_sources), simsurvey = simsurvey_sources,
     R = as.character(getRversion()), data_table = as.character(packageVersion("data.table")))
   if (!is.null(fishery_provenance)) generation$fishery_cache <- fishery_provenance
@@ -112,18 +137,20 @@ if (phase %in% c("controlled", "sampling", "sampling_fit")) {
   }
   if (phase == "sampling_fit") {
     source(file.path(study, "pld_validation_fit.R"))
+    detection <- pld_detection_calibration()
     model_files <- sort(c(list.files("R", "[.]R$", full.names = TRUE), "NAMESPACE"))
     pld_record_sources(file.path(out, "fit-sampling-manifest.rds"),
       list(package = tools::md5sum(model_files),
         fitter = unname(tools::md5sum(file.path(study, "pld_validation_fit.R"))),
         R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
+        detection = detection,
         observation_input = tools::md5sum(file.path(out, "sampling-manifest.rds"))))
   }
   for (id in seq_len(n)) {
     file <- file.path(out, sprintf("%s-%02d.rds", input_phase, id))
     pld_checkpoint(file, function() generator(id))
     if (phase == "sampling_fit") {
-      pld_fit_input(file, out, pld_checkpoint)
+      pld_fit_input(file, out, pld_checkpoint, detection$y50)
       # Render in a clean process so knitr never changes simulation RNG or
       # package versions for the next history.
       plot_dir <- Sys.getenv("TINYAM_PLD_REPORT_DIR")
@@ -150,17 +177,21 @@ if (phase == "fit") {
     fitter = unname(tools::md5sum(file.path(study, "pld_validation_fit.R"))),
     R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")))
   source(file.path(study, "pld_validation_fit.R"))
+  if (any(startsWith(basename(relevant), "sampling-"))) detection <- pld_detection_calibration()
   for (input in relevant) {
     input_kind <- sub("-.*", "", basename(input))
     manifest <- file.path(out, paste0(input_kind, "-manifest.rds"))
+    if (input_kind == "sampling") provenance$detection <- detection
     pld_record_sources(file.path(out, paste0("fit-", input_kind, "-manifest.rds")),
       c(provenance, list(observation_input = tools::md5sum(manifest))))
-    pld_fit_input(input, out, pld_checkpoint)
+    pld_fit_input(input, out, pld_checkpoint,
+      if (input_kind == "sampling") detection$y50 else pld_y50)
   }
 }
 
 if (phase == "report") {
   extra <- Sys.getenv("TINYAM_PLD_REPORT_EXTRA")
+  if (nzchar(extra)) extra <- normalizePath(extra, winslash = "/", mustWork = TRUE)
   html <- rmarkdown::render(file.path(study, "pld_validation_report.Rmd"),
     params = list(results = out, extra_results = extra), output_dir = out, quiet = TRUE)
   cat("Report:", html, "\n")
