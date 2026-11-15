@@ -54,7 +54,43 @@ tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
 
-## Poisson-link delta and mortality recovery
+## Do sampled zeros improve stock estimates?
+
+The [controlled PLD study](pld_simple_report.Rmd) uses known survey scale,
+three fitted fishing phases, two recruitment levels and a true 14+ group.
+It isolates encounter information with fixed detection under exact PLD,
+then compares ordinary lognormal and fitted PLD with finite age samples.
+The last comparison estimates early and late natural mortality in a rise
+and a constant-rate control. Each stage starts with eight histories and
+expands when at least seven paired fits pass the numerical checks.
+
+```sh
+Rscript analysis/formula_expansion/simulate_pld_simple.R run analysis/formula_expansion/results/pld-simple-refined newton
+Rscript analysis/formula_expansion/simulate_pld_simple.R report analysis/formula_expansion/results/pld-simple-refined analysis/formula_expansion/results/pld-simple/summary.rds analysis/formula_expansion/results/pld-simple-tight/summary.rds
+```
+
+Supply a fresh directory as the second argument to run against current package
+source. On Windows use one below-normal R worker. To continue or replay the
+original package implementation, set
+`TINYAM_PLD_SIMPLE_SOURCE` to an extracted checkout of `5a7f6a0d`. The run
+records source hashes, all fit attempts and independent calibration.
+
+The default optimizer pilot stopped the finite-sample and mortality
+comparisons at eight histories. All numerical failures exceeded the gradient
+threshold. A separate pilot with relative optimizer tolerance `1e-13` produced
+singular-convergence codes. The final comparison uses one damped Newton step
+after the usual optimizer, accepted only when the objective and maximum
+gradient decrease. All runs used the same acceptance checks.
+
+```sh
+Rscript analysis/formula_expansion/simulate_pld_simple.R run analysis/formula_expansion/results/pld-simple default
+Rscript analysis/formula_expansion/simulate_pld_simple.R run analysis/formula_expansion/results/pld-simple-tight tight
+```
+
+[Controlled study report](results/pld-simple-refined/pld_simple_report.html)
+[Default optimizer report](results/pld-simple/pld_simple_report.html)
+
+## Poisson-link delta and mortality recovery under spatial monitoring
 
 Use the SimSurvey source at [29a1b03](https://github.com/PaulRegular/SimSurvey/commit/29a1b03350c274f88dac108fb95f9446eac79233)
 or [bb4a06d](https://github.com/PaulRegular/SimSurvey/commit/bb4a06d8fef8f4eb74ecfa179d6dc831f589e5fe),
