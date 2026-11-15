@@ -1,6 +1,6 @@
 # Eastern English Channel common sole (`sol.27.7d`), 2026: tinyAM translation notes
 
-Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_sole_eastern_channel_7d_2026.md).
+Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ck_ices_wgnssk_solea_ns_7d.md).
 
 ## Translation boundary
 

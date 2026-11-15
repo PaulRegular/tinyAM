@@ -9,5 +9,5 @@ background <- c(
 )
 cli::cli_abort(c(
   "Irish Sea herring needs verification of its catch-year and population-state reference dates.",
-  "i" = "See the annual-reference follow-up in SAIO's discovery/source_reviews/ices_irish_sea_herring_2026.md."
+  "i" = "See the annual-reference follow-up in SAIO's source_reviews/ices_her_27_nirs.md."
 ))
