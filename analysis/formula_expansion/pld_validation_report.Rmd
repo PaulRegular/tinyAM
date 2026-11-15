@@ -166,9 +166,9 @@ n_sentence <- pair_sentence(older_pairs, "Ages 14+", "Both PLD", "")
 ablation_sentence <- pair_sentence(pulse_pairs, "M pulse height", "Occurrence added", " per year")
 ablation_abundance <- pair_sentence(older_pairs, "Ages 14+", "Occurrence added", "")
 
-read_primary_result <- function(d, target, label) {
+read_primary_result <- function(d, target, label, efforts = "standard") {
   if (!nrow(d)) return(data.frame())
-  filter(pair_summary(d), scenario == "standard", metric == target,
+  filter(pair_summary(d), design == "sampling", scenario %in% efforts, metric == target,
     comparison == label, resolution == 14L)
 }
 evidence_sentence <- function(d, target, quantity) {
@@ -182,7 +182,7 @@ evidence_sentence <- function(d, target, quantity) {
     return(sprintf(wording, quantity))
   }
   if (s$pairs < 12L) {
-    return(sprintf("The %s comparison has too few common numerical pairs for a firm conclusion.", quantity))
+    return(sprintf("At standard effort, the %s comparison had fewer than 12 common successful fits.", quantity))
   }
   if (s$upper < 0) {
     out <- sprintf("At standard effort, both-stream PLD reduced %s error on the common numerical pairs.", quantity)
@@ -205,8 +205,24 @@ primary_evidence <- if (nzchar(m_sentence) || nzchar(n_sentence)) {
 } else {
   "The mortality and older-fish comparisons await common successful fits."
 }
-abstract_results <- paste(Filter(nzchar, c(m_sentence, n_sentence, ablation_sentence,
-  primary_evidence)), collapse = " ")
+other_effort_evidence <- function(d, target, quantity) {
+  s <- read_primary_result(d, target, "Both PLD", c("low", "high"))
+  if (!nrow(s)) return("")
+  s <- filter(s, pairs >= 12L)
+  sprintf("At %s effort, mean absolute %s was %.3f with lognormal and %.3f with PLD across %d pairs (paired change %+.3f, 95%% Monte Carlo interval %.3f to %.3f).",
+    s$scenario, quantity, s$baseline_error, s$alternative_error, s$pairs,
+    s$difference, s$lower, s$upper)
+}
+other_efforts <- bind_rows(
+  read_primary_result(pulse_pairs, "M pulse height", "Both PLD", c("low", "high")),
+  read_primary_result(older_pairs, "Ages 14+", "Both PLD", c("low", "high"))
+)
+other_evidence <- paste(c(
+  other_effort_evidence(pulse_pairs, "M pulse height", "M pulse-height error per year"),
+  other_effort_evidence(older_pairs, "Ages 14+", "age-14+ log-abundance error"),
+  if (any(other_efforts$pairs < 12L)) "Comparisons with fewer than 12 common histories are descriptive."
+), collapse = " ")
+abstract_results <- paste(Filter(nzchar, c(primary_evidence, other_evidence)), collapse = " ")
 
 plot_paired <- function(d, axis_label) {
   pair_summary(d) |>
@@ -234,8 +250,7 @@ same observations with the positive-only lognormal and a Poisson-link
 delta lognormal (PLD) that uses zeros and positives. A fixed-detection
 comparison isolated the information in recording fish or recording zero
 while holding the positive likelihood fixed. This report includes
-`r length(sampling)` of 24 planned SimSurvey histories and
-`r n_controlled` controlled `r ngettext(n_controlled, "history", "histories")`.
+`r length(sampling)` of 24 planned SimSurvey histories`r if (n_controlled > 0L) sprintf(" and %d controlled %s", n_controlled, ngettext(n_controlled, "history", "histories"))`.
 Of the `r attempted_main` checkpointed
 SimSurvey fits, `r passed_main` passed numerical checks. `r abstract_results`
 
@@ -255,18 +270,14 @@ observation log-SD. The ordinary lognormal fits positive records and uses
 changes both the treatment of zeros and the positive likelihood. A separate
 comparison fixes the two half-detection levels from independent calibration
 histories and removes the Bernoulli contributions for zeros and positives
-from one fit. Both fits keep the same positive density. The exact PLD
-control fixes those levels at their true values and repeats the comparison.
+from one fit. Both fits keep the same positive density.
 [Thorson (2018)](https://doi.org/10.1139/cjfas-2017-0266)
 
 The SimSurvey design has no single true half-detection level. Its
 calibration relates recorded zeros to the simulated whole-area survey
 index and realized removals, using six independent histories at standard
-effort. These histories supply no recovery measures. The controlled
-likelihood tests use exact PLD draws and multinomial age samples, which
-introduce varying sample size and dependence through a shared sample
-total. Fit comparisons use the same observations and starting rules
-within each history. We estimate a normal-shaped age pattern and a separate
+effort. The recovery comparisons use the same observations and starting rules
+within each main history. We estimate a normal-shaped age pattern and a separate
 annual scale for F, an age-shared AR(1) process for M, a recruitment random
 walk and exact cohort transitions. The survey catchability curve is logistic
 in age. Cohort initialization uses exponential survival in the assessment.
@@ -371,8 +382,11 @@ remain missing.
 ```{r zeros, fig.cap="Zero frequency at the age resolution of the Northern cod example. Only sampled rows with either a zero or positive value enter the denominator. The final tick pools ages 14–20. The dashed line shows Northern cod."}
 zero_rows <- data.frame()
 if (length(sampling)) {
-  zero_rows <- bind_rows(pld_cod_observation_rows(cod_obs),
-    filter(pld_sim_observation_rows(sampling), age >= 2L)) |>
+  # Pool observed counts only. Catch covariates can vary within ages 14–20.
+  cod_counts <- lapply(cod_obs[c("catch", "index")], function(d) d[c("year", "age", "obs")])
+  cod_rows <- pld_cod_observation_rows(cod_counts)
+  stopifnot(!anyDuplicated(cod_rows[c("component", "year", "age")]))
+  zero_rows <- bind_rows(cod_rows, filter(pld_sim_observation_rows(sampling), age >= 2L)) |>
     mutate(program = recode(component, catch = "Commercial catch", index = "RV index"),
       effort = factor(effort, levels = c("Northern cod", "low", "standard", "high"),
         labels = c("Northern cod", "Low", "Standard", "High")))
@@ -855,6 +869,47 @@ if (nrow(obs) && "p_zero" %in% names(obs)) {
 }
 ```
 
+
+```{r detection-by-effort, fig.cap="Estimated half-detection levels from joint PLD fits at each SimSurvey effort. Each circle is one numerically successful history. Labels give numerical passes out of attempted fits. Crosses show the independent calibration values for standard effort."}
+joint <- filter(fit_status, design == "sampling", resolution == 14L, model == "Both PLD")
+detection_estimates <- bind_rows(lapply(joint$attempt[joint$success], function(attempt) {
+  d <- fits[[attempt]]$value$y50
+  if (!is.null(d) && nrow(d)) {
+    d |>
+      filter(!is_fixed, is.finite(est), est > 0) |>
+      transmute(program = recode(par, y50_catch = "Gillnet", y50_index = "RV"),
+        effort = joint$scenario[match(attempt, joint$attempt)], est)
+  }
+}))
+if (nrow(detection_estimates)) {
+  effort <- c("low", "standard", "high")
+  counts <- data.frame(effort) |>
+    left_join(summarise(group_by(joint, scenario),
+      passed = sum(success), attempted = n(), .groups = "drop"),
+      by = c("effort" = "scenario")) |>
+    mutate(label = sprintf("%s\n%d/%d passed", tools::toTitleCase(effort),
+      coalesce(passed, 0L), coalesce(attempted, 0L)))
+  p <- ggplot(detection_estimates, aes(effort, est)) +
+    geom_point(position = position_jitter(width = .12, height = 0, seed = 1),
+      alpha = .7, colour = "#126782") +
+    facet_wrap(~program, scales = "free_y") + scale_y_log10() +
+    scale_x_discrete(limits = effort, labels = counts$label) +
+    labs(x = "Monitoring effort", y = "Half-detection level (thousand fish)")
+  if (length(values)) {
+    fixed <- data.frame(program = c("Gillnet", "RV"), effort = "standard",
+      est = unname(values[[1L]][c("catch", "index")]))
+    p <- p + geom_point(data = fixed, shape = 4, size = 3, stroke = .85)
+  }
+  p
+}
+```
+
+At a lower half-detection level, the fitted model gives a 50% chance of
+recording zero at a smaller expected catch or survey index. More sampling
+can make rare ages easier to detect and lower this level. Successful fits
+can come from different histories at each effort, so the figure describes
+those fits and does not measure a paired change with effort.
+
 ```{r positive-amounts, fig.cap="Mean observed and fitted amounts for positive records in standard-effort joint PLD fits. Each point uses the same rows within a fitted-mean group. The diagonal marks agreement. Axes are logarithmic and values are in thousands of fish."}
 if (nrow(obs) && all(c("log_pred_positive", "sd") %in% names(obs))) {
   amount <- obs |>
@@ -877,7 +932,20 @@ if (nrow(obs) && all(c("log_pred_positive", "sd") %in% names(obs))) {
 
 ## What does this imply for assessments?
 
-`r m_evidence` `r n_evidence` `r ablation_abundance`
+`r primary_evidence` `r other_evidence`
+
+```{r older-scale-sensitivity, results='asis'}
+tail_high <- read_primary_result(older_pairs, "Ages 14+", "Both PLD", "high")
+if (nrow(tail_high) && is.finite(tail_high$unflagged_change) &&
+    sign(tail_high$unflagged_change) != sign(tail_high$difference)) {
+  cat(sprintf(paste("In the %d high-effort pairs within the tenfold SSB scale check,",
+    "the mean change in age-14+ error was %+.3f log units.",
+    "The direction reversed relative to all high-effort pairs."),
+    tail_high$unflagged, tail_high$unflagged_change))
+}
+```
+
+`r ablation_sentence` `r ablation_abundance`
 
 The comparison of lognormal and full PLD measures the net effect of changing
 the observation family. The fixed-detection comparison answers the narrower
