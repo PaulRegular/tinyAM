@@ -49,12 +49,12 @@ test_that("public residual plots retain exact model traces and unavailable OSA v
     expect_equal(vapply(config$views[[2]]$cells, residual_points, integer(1)), c(2L, 0L))
     note <- config$views[[2]]$cells[[2]]$layout$annotations[[1]]$text
     expect_match(note, "OSA residuals unavailable", fixed = TRUE)
-    expect_match(config$views[[2]]$cells[[1]]$layout$annotations[[1]]$text,
+    osa_cell <- config$views[[2]]$cells[[1]]
+    expect_length(osa_cell$layout$annotations, 0L)
+    expect_identical(osa_cell$status$osa_method, "oneStepGeneric")
+    expect_match(paste(unlist(lapply(osa_cell$data, `[[`, "text")), collapse = " "),
       "oneStepGeneric", fixed = TRUE)
-    annotation <- config$views[[2]]$cells[[1]]$layout$annotations[[1]]
-    expect_equal(annotation$x, 0)
-    expect_identical(annotation$xanchor, "left")
-    expect_equal(annotation$yshift, 8)
+    expect_identical(config$combineQuantile, c(TRUE, TRUE))
     expect_length(config$views[[2]]$cells[[2]]$data, 0L)
     expect_identical(residual_config(fun(d, residual_type = "osa"))$view, 1L)
   }
@@ -94,8 +94,8 @@ test_that("residual views preserve custom hover, scalar inputs and process bubbl
   titled <- residual_config(plot_bubbles(d, title = "Catch residuals"))
   expect_false(titled$compactHeader)
   expect_identical(titled$views[[2]]$cells[[1]]$layout$title, "Catch residuals")
-  expect_match(residual_config(plot_bubbles(d))$views[[2]]$cells[[1]]$layout$annotations[[1]]$text,
-    "method unspecified", fixed = TRUE)
+  expect_identical(residual_config(plot_bubbles(d))$views[[2]]$cells[[1]]$status$osa_method,
+    "method unspecified")
   d$osa_res <- NA_real_
   expect_identical(residual_config(plot_resid(d))$views[[1]]$cells[[1]]$status$residual_type, "standardized")
   expect_false(residual_config(plot_resid(d))$showSelector)
@@ -153,6 +153,7 @@ test_that("Gamma residuals select quantiles and only PLD includes sampled zeros"
   d$obs[7L] <- 0
   config <- residual_config(plot_bubbles(d, frame = ~model))
   expect_identical(config$defaultViews, c(0L, 2L))
+  expect_identical(config$combineQuantile, c(TRUE, FALSE))
   expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 5L)
   d$family[d$model == "B"] <- "pld_gengamma"
   d$is_observed <- TRUE

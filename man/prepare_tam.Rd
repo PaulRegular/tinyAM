@@ -317,7 +317,9 @@ Required entries cannot be \code{NULL}.
 See \code{\link[=as_tam_data]{as_tam_data()}} for table keys, units, fleet-specific catch weights and
 covariate routing, and \link{cod_obs} for example data. Catch and survey zeros and
 missing values are excluded from the lognormal observation likelihood;
-complete predictions are still calculated.
+complete predictions are still calculated. When using a \link[=observation_families]{PLD family},
+native catch and survey observations are pooled into a terminal observation
+only when every biological age in that bin has an observation.
 
 Biological ages above the modeled plus age are retained in \code{W_plus_input},
 \code{W_catch_plus_input} and \code{P_plus_input}. The population calculation derives

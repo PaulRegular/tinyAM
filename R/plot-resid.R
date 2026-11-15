@@ -103,7 +103,6 @@ plot_resid <- function(
   data$.residual_source <- rep(NA_character_, nrow(data))
   status <- lapply(models, function(name) {
     rows <- which(model == name)
-    has_pld <- any(pld[rows])
     has_quantile_family <- any(quantile_family[rows])
     selected <- if (type == "auto" && !is.null(selection)) selection[[name]] else if (type == "auto") {
       if (has_quantile_family) "quantile" else if (any(is.finite(osa[rows]))) "osa" else "standardized"
@@ -118,7 +117,7 @@ plot_resid <- function(
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
       osa_method = if (selected == "osa" && length(finite)) paste(unique(method[finite]), collapse = ", ") else NA_character_,
-      has_pld = has_pld, has_quantile_family = has_quantile_family,
+      has_quantile_family = has_quantile_family,
       n = length(finite), stringsAsFactors = FALSE)
   })
   list(data = data, status = do.call(rbind, status))
@@ -187,13 +186,10 @@ plot_resid <- function(
       "Residuals unavailable for this model/panel"
     return(list(list(text = text, x = .5, y = .5, xref = "paper", yref = "paper", showarrow = FALSE)))
   }
-  labels <- ifelse(status$residual_type == "osa", paste0("OSA (", status$osa_method, ")"), "Standardized")
-  labels[status$residual_type == "quantile"] <- "Quantile"
-  labels[status$residual_type == "standardized" & status$has_pld] <- "Standardized (positive component for PLD)"
-  labels[!available] <- if (type == "osa") "OSA unavailable" else "Unavailable"
-  if (nrow(status) > 1L) labels <- paste0(status$model, ": ", labels)
-  text <- paste(labels, collapse = "; ")
-  list(list(text = as.character(htmltools::htmlEscape(text)), x = 0, y = 1,
+  if (all(available)) return(list())
+  message <- if (type == "osa") "OSA residuals unavailable" else "Residuals unavailable"
+  text <- paste0(htmltools::htmlEscape(status$model[!available]), ": ", message, collapse = "<br>")
+  list(list(text = text, x = 0, y = 1,
     xref = "paper", yref = "paper", xanchor = "left", yanchor = "bottom",
     yshift = 8, showarrow = FALSE, font = list(size = 10)))
 }
@@ -255,10 +251,13 @@ plot_resid <- function(
   # Resolve once for the complete panel, never from a partially observed frame.
   default_type <- if (any(available$has_quantile_family)) "quantile" else
     if (all(available$residual_type == "osa")) "osa" else "standardized"
-  defaults <- if (model_frame) {
-    available$residual_type[match(frame$levels, available$model)]
-  } else rep(default_type, length(frame$levels))
+  model_rows <- match(frame$levels, available$model)
+  defaults <- if (model_frame) available$residual_type[model_rows] else
+    rep(default_type, length(frame$levels))
   defaults[is.na(defaults)] <- "standardized"
+  combine_quantile <- if (model_frame) !available$has_quantile_family[model_rows] else
+    rep(!any(available$has_quantile_family), length(frame$levels))
+  combine_quantile[is.na(combine_quantile)] <- TRUE
   default_views <- match(defaults, types) - 1L
   models <- if (is.factor(data$model)) levels(data$model) else unique(as.character(data$model))
   model_colors <- NULL
@@ -305,8 +304,9 @@ plot_resid <- function(
     automatic = type == "auto", defaultViews = default_views,
     compactHeader = kind == "bubbles" && is.null(title),
     selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
-    showSelector = length(selectors) > 1L && (type != "osa" ||
-      any(available$residual_type == "osa") || any(available$has_quantile_family)))
+    combineQuantile = combine_quantile,
+    showSelector = (has_frames && model_frame) || any(available$residual_type == "osa") ||
+      any(available$has_quantile_family))
   initial <- views[[initial_view + 1L]]$cells[[1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data

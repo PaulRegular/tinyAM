@@ -3,6 +3,7 @@ function(el, x, config) {
   function array(value) { return Array.isArray(value) ? value : [value]; }
   var frames = array(config.frames);
   var defaults = array(config.defaultViews);
+  var combineQuantile = array(config.combineQuantile);
   var currentFrame = 0;
   var currentView = config.view;
   var automatic = config.automatic;
@@ -14,7 +15,18 @@ function(el, x, config) {
     'display:flex;gap:.8em;align-items:center;pointer-events:none;';
   controls.style.top = config.compactHeader ? '8px' : '26px';
 
-  function select(label, name, values, labels, selected, change) {
+  function setOptions(input, values, labels, selected) {
+    input.replaceChildren();
+    values.forEach(function(value, i) {
+      var option = document.createElement('option');
+      option.value = String(value);
+      option.textContent = labels[i];
+      input.appendChild(option);
+    });
+    input.value = String(selected);
+  }
+
+  function select(label, name, change) {
     var field = document.createElement('label');
     field.style.cssText = 'display:flex;gap:.4em;align-items:center;min-width:0;' +
       'white-space:nowrap;pointer-events:auto;margin:0;';
@@ -23,13 +35,6 @@ function(el, x, config) {
     var input = document.createElement('select');
     input.className = 'tam-residual-' + name;
     input.style.cssText = 'min-width:0;font:inherit;';
-    values.forEach(function(value, i) {
-      var option = document.createElement('option');
-      option.value = String(value);
-      option.textContent = labels[i];
-      input.appendChild(option);
-    });
-    input.value = String(selected);
     input.addEventListener('change', function() {
       change(Number(input.value));
       draw();
@@ -40,24 +45,33 @@ function(el, x, config) {
     return input;
   }
 
+  var types = array(config.selectors);
   var typeSelect;
+  function updateTypeOptions() {
+    if (!typeSelect) return;
+    var combined = combineQuantile[currentFrame];
+    var choices = types.filter(function(i) { return !(combined && i === 2); });
+    var labels = choices.map(function(i) {
+      return combined && i === 0 ? 'Standardized / Quantile' : config.labels[i];
+    });
+    // Keep the requested quantile view for a later frame with distinct residuals.
+    var selected = combined && currentView === 2 ? 0 : currentView;
+    setOptions(typeSelect, choices, labels, selected);
+  }
   if (config.showSelector) {
-    var types = array(config.selectors);
-    typeSelect = select('Residuals', 'type', types,
-      types.map(function(i) { return config.labels[i]; }), currentView, function(view) {
-        currentView = view;
-        automatic = false;
-      });
+    typeSelect = select('Residuals', 'type', function(view) {
+      currentView = view;
+      automatic = false;
+    });
+    updateTypeOptions();
   }
   if (frames.length > 1) {
-    select(config.frameLabel, 'frame', frames.map(function(_, i) { return i; }),
-      frames, currentFrame, function(frame) {
-        currentFrame = frame;
-        if (automatic) {
-          currentView = defaults[frame];
-          if (typeSelect) typeSelect.value = String(currentView);
-        }
-      });
+    var modelSelect = select(config.frameLabel, 'frame', function(frame) {
+      currentFrame = frame;
+      if (automatic) currentView = defaults[frame];
+      updateTypeOptions();
+    });
+    setOptions(modelSelect, frames.map(function(_, i) { return i; }), frames, currentFrame);
   }
   if (controls.childElementCount) {
     if (window.getComputedStyle(el).position === 'static') el.style.position = 'relative';

@@ -211,42 +211,62 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' summed for `catch` and `index` data. Weight and maturity tables retain all
 #' ages for abundance-based aggregation inside [nll_fun()]. Other catch/index
 #' columns retain their values from the plus age or first available older age.
+#' Native PLD observations require a complete sampled bin.
 #'
 #' @param obs Named list with data.frames `catch`, `index`, `weight`, `maturity`.
 #' @param plus_age Integer specifying the terminal age to be modeled.
 #'   All ages greater than or equal to this value are combined into a plus group.
+#' @param families Normalized observation families by catch fleet or survey.
 #' @return A list with the same structure as `obs`, with catch/index observations
 #'   aggregated into the specified plus group and biological tables unchanged.
 #' @keywords internal
 #'
 #' @noRd
-.plus_fun <- function(obs, plus_age) {
-  .aggregate_one <- function(df, plus_age, fun, groups = "year") {
+.plus_fun <- function(obs, plus_age, families = NULL) {
+  .aggregate_one <- function(df, type, groups) {
     plus_df <- df[df$age >= plus_age, , drop = FALSE]
-    if (nrow(plus_df) == 0) {
-      return(df)
-    } else {
-      plus_group <- stats::aggregate(plus_df["obs"], plus_df[groups], FUN = function(x) {
-        if (all(is.na(x))) NA_real_ else fun(x, na.rm = TRUE)
-      })
-      # Retain metadata at the plus age, or the first available older age.
-      template <- plus_df[order(plus_df$age), , drop = FALSE]
-      template <- template[!duplicated(template[groups]), , drop = FALSE]
-      template$age <- plus_age
-      plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
-                         plus_group,
-                         by = groups
-      )
-      df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
-      for (column in names(df)[vapply(df, is.factor, logical(1))]) {
-        attr(df_out[[column]], "contrasts") <- attr(df[[column]], "contrasts")
+    if (!nrow(plus_df)) return(df)
+
+    # Infer the input resolution across the supplied series once, including
+    # years outside the fitting window. A legacy pooled series may retain NA
+    # placeholders for every older age.
+    pld <- names(Filter(function(spec) .is_pld_family(spec$name), families[[type]]))
+    series <- .observation_series(plus_df, type)
+    native_pld <- unique(series[series %in% pld & plus_df$age > plus_age & !is.na(plus_df$obs)])
+    values <- plus_df["obs"]
+    if (length(native_pld)) {
+      keys <- c(groups, "age")
+      if (anyDuplicated(plus_df[series %in% native_pld, keys, drop = FALSE])) {
+        cli::cli_abort("Native PLD {.val {type}} plus groups require one row per year, age and series.")
       }
-      return(df_out[order(df_out$age, df_out$year), ])
+      values$n_sampled <- as.integer(!is.na(plus_df$obs))
     }
+    plus_group <- stats::aggregate(values, plus_df[groups], FUN = function(x) {
+      if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
+    })
+    if (length(native_pld)) {
+      n_ages <- max(obs$weight$age) - plus_age + 1L
+      incomplete <- .observation_series(plus_group, type) %in% native_pld &
+        plus_group$n_sampled != n_ages
+      plus_group$obs[incomplete] <- NA_real_
+      plus_group$n_sampled <- NULL
+    }
+
+    # Retain metadata at the plus age, or the first available older age.
+    template <- plus_df[order(plus_df$age), , drop = FALSE]
+    template <- template[!duplicated(template[groups]), , drop = FALSE]
+    template$age <- plus_age
+    plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
+                       plus_group, by = groups)
+    df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
+    for (column in names(df)[vapply(df, is.factor, logical(1))]) {
+      attr(df_out[[column]], "contrasts") <- attr(df[[column]], "contrasts")
+    }
+    df_out[order(df_out$age, df_out$year), ]
   }
 
-  obs$catch <- .aggregate_one(obs$catch, plus_age, sum, c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
-  obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
+  obs$catch <- .aggregate_one(obs$catch, "catch", c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
+  obs$index <- .aggregate_one(obs$index, "index", c("year", "survey"))
   obs
 }
 
@@ -274,7 +294,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' See [as_tam_data()] for table keys, units, fleet-specific catch weights and
 #' covariate routing, and [cod_obs] for example data. Catch and survey zeros and
 #' missing values are excluded from the lognormal observation likelihood;
-#' complete predictions are still calculated.
+#' complete predictions are still calculated. When using a [PLD family][observation_families],
+#' native catch and survey observations are pooled into a terminal observation
+#' only when every biological age in that bin has an observation.
 #'
 #' Biological ages above the modeled plus age are retained in `W_plus_input`,
 #' `W_catch_plus_input` and `P_plus_input`. The population calculation derives
@@ -649,16 +671,8 @@ prepare_tam <- function(
   })
   names(families) <- names(series)
   if (max(all_obs_ages) > max(dat$ages)) {
-    for (type in names(families)) {
-      d <- obs[[type]]
-      pld <- names(Filter(function(x) .is_pld_family(x$name), families[[type]]))
-      if (any(d$age > max(dat$ages) & d$year %in% dat$years & !is.na(d$obs) &
-          .observation_series(d, type) %in% pld)) {
-        cli::cli_abort("Supply pooled {.val {type}} observations at the modeled plus age for PLD series. Older biological inputs may be retained.")
-      }
-    }
     .check_f_plus_covariates(dat$obs, max(dat$ages), dat$F_settings, dat$years)
-    dat$obs <- .plus_fun(dat$obs, max(dat$ages))
+    dat$obs <- .plus_fun(dat$obs, max(dat$ages), families)
   }
   dat$obs <- stats::setNames(lapply(names(dat$obs), function(nm) {
     d <- dat$obs[[nm]]

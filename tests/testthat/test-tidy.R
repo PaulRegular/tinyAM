@@ -101,6 +101,10 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
 
   expect_equal(out$catch$std_res, expected_catch_res)
   expect_equal(out$index$std_res, expected_index_res)
+  expect_identical(out$catch$quantile_res, out$catch$std_res)
+  expect_identical(out$index$quantile_res, out$index$std_res)
+  expect_identical(fit$obs_pred$catch$quantile_res, out$catch$std_res)
+  expect_identical(fit$obs_pred$index$quantile_res, out$index$std_res)
 })
 
 test_that("tidy_obs_pred forwards OSA controls and maps included observations", {

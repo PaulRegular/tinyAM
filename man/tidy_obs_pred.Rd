@@ -54,12 +54,12 @@ mean including zeros. In those families, \code{sd} describes the positive
 component. The \code{sd_scale} column identifies a log SD, CV or Prentice scale.
 Fits using these families also report the \code{family}, the scale of \code{pred} in
 \code{pred_scale}, the arithmetic mean in \code{pred_mean}, the positive-component
-mean and median, and \code{quantile_res} for stochastic observations. Poisson-link
-delta rows include zero and positive probabilities (\code{p_zero}, \code{p_positive}
+mean and median. Poisson-link delta rows include zero and positive probabilities (\code{p_zero}, \code{p_positive}
 and their logs). Generalized gamma rows include the signed \code{gengamma_Q}.
 Standardized residuals use the positive component's log mean and log SD.
-Standardized and quantile residuals condition on fitted states. With
-correlated lognormal observations, both use marginal distributions.
+Standardized and quantile residuals (\code{std_res} and \code{quantile_res}) condition
+on fitted states. They are identical for lognormal observations and use
+the marginal distribution when those observations are correlated.
 One-step-ahead residuals use a different predictive calculation and are
 available for all-lognormal fits. See \link{tinyAM-model} for the equations.
 OSA calculation rebuilds a temporary objective at stored fitted parameters;

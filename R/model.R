@@ -357,8 +357,9 @@
 #' surveys may be sparse. Reducing the maximum age sums catch and index within
 #' year (and within survey for indices). Weight and maturity use the hidden-age
 #' abundance and biomass weighting described above. Other covariates come from the plus age
-#' or the first available older age. Supply PLD observations already aggregated
-#' at the modeled plus age and leave unsupported values missing.
+#' or the first available older age. Native PLD observations are pooled only
+#' across complete sampled age groups. See [observation families][observation_families]
+#' for details on input resolution and missing terminal observations.
 #'
 #' ## Likelihood and inference
 #'

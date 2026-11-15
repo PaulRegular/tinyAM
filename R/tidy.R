@@ -83,12 +83,12 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' component. The `sd_scale` column identifies a log SD, CV or Prentice scale.
 #' Fits using these families also report the `family`, the scale of `pred` in
 #' `pred_scale`, the arithmetic mean in `pred_mean`, the positive-component
-#' mean and median, and `quantile_res` for stochastic observations. Poisson-link
-#' delta rows include zero and positive probabilities (`p_zero`, `p_positive`
+#' mean and median. Poisson-link delta rows include zero and positive probabilities (`p_zero`, `p_positive`
 #' and their logs). Generalized gamma rows include the signed `gengamma_Q`.
 #' Standardized residuals use the positive component's log mean and log SD.
-#' Standardized and quantile residuals condition on fitted states. With
-#' correlated lognormal observations, both use marginal distributions.
+#' Standardized and quantile residuals (`std_res` and `quantile_res`) condition
+#' on fitted states. They are identical for lognormal observations and use
+#' the marginal distribution when those observations are correlated.
 #' One-step-ahead residuals use a different predictive calculation and are
 #' available for all-lognormal fits. See [tinyAM-model] for the equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
@@ -242,8 +242,10 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       obs_pred[[name]] <- d
     }
     obs_pred <- .add_quantile_residuals(obs_pred, residual_seed)
-  } else if (!is.null(residual_seed)) {
-    .observation_residual_seed(residual_seed)
+  } else {
+    if (!is.null(residual_seed)) .observation_residual_seed(residual_seed)
+    obs_pred$catch$quantile_res <- obs_pred$catch$std_res
+    obs_pred$index$quantile_res <- obs_pred$index$std_res
   }
 
   if (add_osa_res) {

@@ -11,6 +11,7 @@ class Element {
     this.style = {};
   }
   appendChild(child) { this.children.push(child); }
+  replaceChildren() { this.children = []; }
   get childElementCount() { return this.children.length; }
   addEventListener(name, listener) { this.handlers[name] = listener; }
   choose(value) {
@@ -54,7 +55,7 @@ function widget(options = config) {
   assert.equal(points(a), 2);
   assert.equal(points(b), 2);
   const residual = a.find('tam-residual-type'), model = a.find('tam-residual-frame');
-  assert.deepEqual(residual.children.map(option => option.textContent), ['Standardized', 'OSA']);
+  assert.deepEqual(residual.children.map(option => option.textContent), ['Standardized / Quantile', 'OSA']);
   assert.deepEqual(model.children.map(option => option.textContent), ['A', 'B']);
   assert.equal(residual.value, '1');
   assert.equal(model.value, '0');
@@ -76,7 +77,8 @@ function widget(options = config) {
   assert.equal(residual.value, '1'); // Explicit selection persists.
   await finish(a);
   assert.equal(points(a), 2);
-  assert(a.layout.annotations[0].text.includes('oneStepGeneric'));
+  assert.deepEqual(a.layout.annotations, []);
+  assert(a.data.some(trace => trace.text.some(label => label.includes('oneStepGeneric'))));
   assert.deepEqual(years(a), [2000, 2001]);
 
   // Keep one render artificially pending while several selections arrive.
@@ -117,12 +119,23 @@ function widget(options = config) {
   await finish(delta);
   const deltaType = delta.find('tam-residual-type');
   const deltaModel = delta.find('tam-residual-frame');
+  assert.deepEqual(deltaType.children.map(option => option.textContent), ['Standardized / Quantile']);
+  deltaModel.choose(1);
   assert.deepEqual(deltaType.children.map(option => option.textContent), ['Standardized', 'Quantile']);
   assert.deepEqual(deltaType.children.map(option => option.value), ['0', '2']);
-  deltaModel.choose(1);
   assert.equal(deltaType.value, '2');
   await finish(delta);
   assert.equal(points(delta), 6); // Includes the sampled zero.
+  deltaType.choose(2);
+  await finish(delta);
+  deltaModel.choose(0);
+  assert.deepEqual(deltaType.children.map(option => option.textContent), ['Standardized / Quantile']);
+  assert.equal(deltaType.value, '0');
+  await finish(delta);
+  deltaModel.choose(1);
+  await finish(delta);
+  assert.equal(deltaType.value, '2'); // The combined label preserves explicit Quantile.
+  assert.equal(points(delta), 6);
   deltaType.choose(0);
   await finish(delta);
   assert.equal(points(delta), 5);

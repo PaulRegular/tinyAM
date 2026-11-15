@@ -64,10 +64,6 @@ test_that("only supported PLD zeros join the likelihood", {
   sim <- nll_fun(make_par(dat), dat, simulate = TRUE)
   expect_true(all(sim$log_obs[structural] == -Inf))
   expect_true(is.na(sim$log_obs[missing]))
-
-  args$ages <- 2:14
-  expect_error(do.call(prepare_tam, args), "Supply pooled.*plus age")
-  args$ages <- NULL
   args$catch_settings$cor_struct <- "ar1"
   expect_error(do.call(prepare_tam, args), "requires independent")
   args$catch_settings$cor_struct <- NULL

@@ -46,11 +46,12 @@
 #'   observation residuals. Use `y = ~age_block` for shared M state blocks.
 #' @param residual_type Initial observation residual view: `"auto"` (default),
 #'   `"standardized"`, `"osa"` or `"quantile"`. The default uses quantile
-#'   residuals for Poisson-link delta lognormal observations, retained OSAs if
-#'   available for other panels, and standardized residuals otherwise. Model
-#'   frames choose separately. With several overlaid models, any Poisson-link
-#'   delta model selects quantile residuals, or all models must have OSAs to
-#'   select them. Residual and model selectors switch the displayed view.
+#'   residuals for Poisson-link delta, Gamma and generalized gamma observations,
+#'   retained OSAs when available for lognormal observations, and standardized
+#'   residuals otherwise. Model frames choose separately. Lognormal-only
+#'   frames combine the equivalent standardized and quantile choices. In
+#'   overlays, any non-lognormal model selects quantile residuals. Otherwise,
+#'   the default overlay uses OSA only when every model has retained OSAs.
 #'   Partial gaps stay missing.
 #'   A supplied `res` formula in `plot_bubbles()` bypasses these controls.
 #' @param ylab Label for the y-axis.

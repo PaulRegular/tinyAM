@@ -1,5 +1,13 @@
 # tinyAM 0.1.1.9001
 
+* Pool complete native-age observations for Poisson-link delta plus groups.
+  Keep incomplete tail observations missing and preserve native counts for
+  observed-catch hindcasts.
+
+* Include quantile residuals in tidy lognormal outputs. Use a single dashboard
+  choice for the equivalent standardized and quantile residuals in lognormal
+  panels.
+
 * Add Gamma and generalized gamma observations, including Poisson-link delta
   forms. Use `stats::Gamma(link = "log")`, `gengamma()`, `pld_gamma()`, or
   `pld_gengamma()` in catch and index settings.

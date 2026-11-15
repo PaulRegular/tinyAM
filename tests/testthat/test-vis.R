@@ -110,7 +110,8 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
     expect_identical(controls$frameLabel, "Model")
     expect_identical(unlist(controls$frames), names(fits))
     expect_identical(unlist(controls$defaultViews), rep(0L, length(fits)))
-    expect_false(controls$showSelector)
+    expect_true(controls$showSelector)
+    expect_identical(unlist(controls$combineQuantile), rep(TRUE, length(fits)))
     views <- controls$views
     expect_identical(vapply(views, `[[`, character(1), "type"), c("standardized", "osa"))
     for (view in views) {

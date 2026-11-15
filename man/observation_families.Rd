@@ -76,11 +76,23 @@ Use zero for a sampled nondetection and \code{NA} for a missing observation.
 Estimating the detection scale requires both sampled zeros and positives.
 A fixed scale can be used with all-positive data. Each fitted series needs
 at least one positive observation. Catch at structurally unfished ages is
-deterministic. Supply pooled terminal-age observations for PLD series at
-the modeled plus age. Biological inputs can extend to older ages.
-If only pooled catches are available with older biological ages, use
-\code{proj_settings = list(F_mult = 1)} in \code{\link[=fit_hindcast]{fit_hindcast()}}. Observed-catch
-hindcasts require catches by biological age to compute held-out yield.
+deterministic.
+
+For a native-age series, \code{\link[=prepare_tam]{prepare_tam()}} sums the observations from the
+modeled plus age through the oldest biological age, separately by year and
+series. Each age needs one sampled value, including any sampled zeros. An
+absent age or \code{NA} makes that terminal observation missing. The chosen
+positive-component family applies to the pooled value.
+
+A series with no recorded values above the modeled plus age in the supplied
+data is treated as already pooled at that age. Older catch rows may be
+present with missing observations to complete the input grid. The input
+resolution is determined across all supplied years and is used in each
+retrospective fold. Biological inputs can extend to older ages.
+
+Observed-catch hindcasts use the original counts and weights by biological
+age to compute held-out yield. If only pooled counts are available with older
+biological ages, use \code{proj_settings = list(F_mult = 1)} in \code{\link[=fit_hindcast]{fit_hindcast()}}.
 
 PLD assumes independent observation errors conditional on the fitted states
 and a stable detection scale across years and ages within each series.
