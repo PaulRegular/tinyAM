@@ -50,7 +50,8 @@
 #'   available for other panels, and standardized residuals otherwise. Model
 #'   frames choose separately. With several overlaid models, any Poisson-link
 #'   delta model selects quantile residuals, or all models must have OSAs to
-#'   select them. A dropdown switches available views. Partial gaps stay missing.
+#'   select them. Residual and model selectors switch the displayed view.
+#'   Partial gaps stay missing.
 #'   A supplied `res` formula in `plot_bubbles()` bypasses these controls.
 #' @param ylab Label for the y-axis.
 #' @param xlab Label for the x-axis.

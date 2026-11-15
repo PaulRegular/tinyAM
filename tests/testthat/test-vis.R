@@ -12,14 +12,17 @@ dashboard_plots <- function(file) {
     json <- substr(script, start, end)
     jsonlite::fromJSON(json, simplifyVector = FALSE)
   })
-  lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), `[[`, "x")
+  lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), function(widget) {
+    plot <- widget$x
+    for (hook in widget$jsHooks$render) {
+      if (!is.null(hook$data$frameLabel)) attr(plot, "residual_controls") <- hook$data
+    }
+    plot
+  })
 }
 
 dashboard_residuals <- function(plots) {
-  Filter(function(plot) {
-    title <- unlist(c(plot$layout$title, plot$layout$yaxis$title))
-    any(grepl("residuals", title, fixed = TRUE))
-  }, plots)
+  Filter(function(plot) !is.null(attr(plot, "residual_controls", exact = TRUE)), plots)
 }
 
 dashboard_metric <- function(plot) {
@@ -102,14 +105,37 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   residuals <- dashboard_residuals(dashboard_plots(tmpfile))
   expect_gt(length(residuals), 0L)
   for (plot in residuals) {
-    expect_gt(length(plot$data), 0L)
-    expect_true(any(is.finite(unlist(lapply(plot$data, `[[`, "y")))))
-    frame_names <- vapply(plot$frames, `[[`, character(1), "name")
-    expect_setequal(frame_names, names(fits))
-    expect_true(all(vapply(
-      plot$frames, function(frame) length(frame$traces) > 0L,
-      logical(1)
-    )))
+    expect_length(plot$frames, 0L)
+    controls <- attr(plot, "residual_controls", exact = TRUE)
+    expect_identical(controls$frameLabel, "Model")
+    expect_identical(unlist(controls$frames), names(fits))
+    expect_identical(unlist(controls$defaultViews), rep(0L, length(fits)))
+    expect_false(controls$showSelector)
+    views <- controls$views
+    expect_identical(vapply(views, `[[`, character(1), "type"), c("standardized", "osa"))
+    for (view in views) {
+      expect_length(view$cells, length(fits))
+      for (i in seq_along(view$cells)) {
+        cell <- view$cells[[i]]
+        expect_length(cell$status, 1L)
+        status <- cell$status[[1L]]
+        expect_identical(status$model, names(fits)[i])
+        expect_identical(status$residual_type, view$type)
+        x <- unlist(lapply(cell$data, `[[`, "x"))
+        y <- unlist(lapply(cell$data, `[[`, "y"))
+        expect_length(x, status$n)
+        expect_length(y, status$n)
+        if (view$type == "standardized") {
+          expect_gt(status$n, 0L)
+          expect_true(all(is.finite(y)))
+        } else {
+          expect_length(cell$data, 0L)
+        }
+      }
+    }
+    initial <- views[[controls$view + 1L]]$cells[[1L]]
+    expect_identical(lapply(plot$data, `[`, c("x", "y")),
+      lapply(initial$data, `[`, c("x", "y")))
   }
 })
 

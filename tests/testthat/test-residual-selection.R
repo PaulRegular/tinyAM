@@ -30,7 +30,7 @@ test_that("initial resolution selects retained residuals per model and preserves
   expect_identical(before, residual_plot_data())
 })
 
-test_that("public residual plots retain models, labels and unavailable OSA frames", {
+test_that("public residual plots retain exact model traces and unavailable OSA views", {
   d <- residual_plot_data(); before <- d
   local_mocked_bindings(.fitted_objective = function(...) stop("Must not compute OSA"))
   for (fun in list(plot_bubbles, plot_resid)) {
@@ -38,10 +38,9 @@ test_that("public residual plots retain models, labels and unavailable OSA frame
     expect_s3_class(p, "plotly")
     config <- residual_config(p)
     expect_identical(config$frames, c("A", "B"))
-    expect_identical(vapply(p$x$frames, `[[`, character(1), "name"), c("A", "B"))
-    expect_equal(vapply(p$x$frames, residual_points, integer(1)), c(2L, 6L))
-    expect_true(all(vapply(p$x$frames, function(frame) length(frame$traces) > 0L, logical(1))))
-    expect_identical(plotly::plotly_build(p)$x$frames, p$x$frames)
+    expect_identical(config$frameLabel, "Model")
+    expect_null(p$x$frames)
+    expect_equal(residual_points(list(data = plotly::plotly_build(p)$x$data)), 2L)
     expect_identical(config$view, 1L)
     expect_identical(config$defaultViews, c(1L, 0L))
     expect_true(config$showSelector)
@@ -56,23 +55,23 @@ test_that("public residual plots retain models, labels and unavailable OSA frame
     expect_equal(annotation$x, 0)
     expect_identical(annotation$xanchor, "left")
     expect_equal(annotation$yshift, 8)
-    slots <- unlist(lapply(config$views, function(view) vapply(view$cells, function(cell) length(cell$data), integer(1))))
-    expect_length(unique(slots), 1L)
+    expect_length(config$views[[2]]$cells[[2]]$data, 0L)
     expect_identical(residual_config(fun(d, residual_type = "osa"))$view, 1L)
   }
   expect_identical(d, before)
   expect_error(plot_resid(d, residual_type = "unknown"), "arg")
 })
 
-test_that("overlays choose one type for the whole panel before animation", {
+test_that("subsets choose one residual type across the whole panel", {
   d <- residual_plot_data()
   p <- plot_resid(d, frame = ~age, color = ~model, colors = c("#001122", "#ee8800"))
   config <- residual_config(p)
+  expect_identical(config$frameLabel, "Age")
   status <- config$views[[1]]$cells[[2]]$status
   expect_identical(status$residual_type, c("standardized", "standardized"))
   expect_equal(status$n, c(3L, 3L))
   expect_identical(config$defaultViews, c(0L, 0L))
-  expect_equal(residual_points(p$x$frames[[2]]), 6L)
+  expect_equal(residual_points(config$views[[1]]$cells[[2]]), 6L)
   p <- plot_resid(d, frame = ~model, color = ~model, colors = c("#001122", "#ee8800"))
   config <- residual_config(p)
   for (i in 1:2) {
@@ -86,7 +85,7 @@ test_that("residual views preserve custom hover, scalar inputs and process bubbl
   d$osa_method <- NULL
   p <- plot_resid(d, text = ~paste("custom", year), hovertemplate = "Custom: %{text}",
     residual_type = "standardized")
-  expect_false(residual_config(p)$animated)
+  expect_length(residual_config(p)$frames, 1L)
   expect_identical(residual_config(p)$view, 0L)
   traces <- Filter(function(trace) length(trace$x), residual_config(p)$views[[1]]$cells[[1]]$data)
   expect_identical(traces[[1]]$hovertemplate, "Custom: %{text}")
@@ -106,10 +105,17 @@ test_that("residual views preserve custom hover, scalar inputs and process bubbl
   expect_true(all(vapply(plotly::plotly_build(p)$x$data, function(trace) identical(trace$marker$line$width, 0), logical(1))))
 })
 
-test_that("native residual dropdown and frames coordinate in independent widgets", {
+test_that("native residual selectors replace complete cells in independent widgets", {
   node <- Sys.which("node"); skip_if(!nzchar(node))
   config <- tempfile(fileext = ".json"); on.exit(unlink(config))
-  jsonlite::write_json(residual_config(plot_bubbles(residual_plot_data(), frame = ~model)),
+  d <- residual_plot_data()
+  osa <- residual_config(plot_bubbles(d, frame = ~model))
+  d$osa_res <- NA_real_
+  d$family <- ifelse(d$model == "B", "pld_lognormal", "lognormal")
+  d$obs[7L] <- 0
+  d$quantile_res <- d$std_res + .5
+  pld <- residual_config(plot_bubbles(d, frame = ~model))
+  jsonlite::write_json(list(osa = osa, pld = pld),
     config, auto_unbox = TRUE, na = "null", null = "null", digits = NA)
   result <- system2(node, c(shQuote(test_path("residual-selection-controls.js")),
     shQuote(system.file("js", "residual-selection.js", package = "tinyAM")), shQuote(config)),
@@ -128,7 +134,7 @@ test_that("overlay defaults require eligible OSA in every displayed model", {
   d$osa_res[7L] <- -.5
   p <- plot_resid(d, frame=~age)
   expect_identical(residual_config(p)$defaultViews, c(1L, 1L))
-  expect_equal(residual_points(p$x$frames[[2]]), 0L)
+  expect_equal(residual_points(residual_config(p)$views[[2]]$cells[[2]]), 0L)
   traces <- do.call(c, lapply(residual_config(plot_bubbles(d))$views, function(view)
     do.call(c, lapply(view$cells, `[[`, "data"))))
   expect_true(all(vapply(traces, function(trace) identical(trace$marker$line$width, 0), logical(1))))

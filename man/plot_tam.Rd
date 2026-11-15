@@ -81,7 +81,8 @@ residuals for Poisson-link delta lognormal observations, retained OSAs if
 available for other panels, and standardized residuals otherwise. Model
 frames choose separately. With several overlaid models, any Poisson-link
 delta model selects quantile residuals, or all models must have OSAs to
-select them. A dropdown switches available views. Partial gaps stay missing.
+select them. Residual and model selectors switch the displayed view.
+Partial gaps stay missing.
 A supplied \code{res} formula in \code{plot_bubbles()} bypasses these controls.}
 
 \item{x}{Formula specifying x variable}

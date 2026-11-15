@@ -144,7 +144,7 @@ plot_resid <- function(
 }
 
 .residual_frame_values <- function(data, frame) {
-  if (is.null(frame)) return(list(values = rep("Model", nrow(data)), levels = "Model", prefix = ""))
+  if (is.null(frame)) return(list(values = rep("Model", nrow(data)), levels = "Model", label = "Model"))
   value <- if (inherits(frame, "formula")) {
     tab <- stats::model.frame(frame, data, na.action = stats::na.pass)
     if (ncol(tab) != 1L) cli::cli_abort("Residual plot frames must select one column.")
@@ -157,10 +157,11 @@ plot_resid <- function(
   }
   levels <- if (is.factor(value)) levels(value)[levels(value) %in% value] else unique(as.character(value))
   if (!length(levels)) levels <- "Model"
-  label <- if (inherits(frame, "formula")) all.vars(frame)[1L] else "Frame"
+  label <- if (inherits(frame, "formula")) all.vars(frame)[1L] else if (length(frame) == 1L &&
+    is.character(frame) && frame %in% names(data)) frame else "Frame"
   if (!length(label) || is.na(label)) label <- "Frame"
   list(values = as.character(value), levels = levels,
-    prefix = paste0(toupper(substr(label, 1L, 1L)), substring(label, 2L), ": "))
+    label = paste0(toupper(substr(label, 1L, 1L)), substring(label, 2L)))
 }
 
 .residual_plot_label <- function(status, type) {
@@ -212,19 +213,12 @@ plot_resid <- function(
       plotly::add_markers(alpha = .8)
   }
   p <- plotly::plotly_build(p)
-  if (!nrow(d)) for (j in seq_along(p$x$data)) {
-    p$x$data[[j]]$x <- p$x$data[[j]]$y <- numeric()
-    p$x$data[[j]]$showlegend <- FALSE
-  }
+  if (!nrow(d)) p$x$data <- list()
   p$x$layout$xaxis$title <- if (kind == "bubbles") "Year" else xlab
   p$x$layout$yaxis$title <- if (kind == "bubbles") ylab else label
   if (kind == "bubbles") p$x$layout$title <- if (is.null(title)) label else title
   p$x$layout$annotations <- .residual_plot_annotations(selected$status, type)
   list(data = p$x$data, layout = p$x$layout, status = selected$status)
-}
-
-.residual_trace_key <- function(trace) {
-  paste(trace$name, trace$legendgroup, trace$type, trace$mode, collapse = "\r")
 }
 
 .plot_observation_residuals <- function(data, type, kind, args,
@@ -247,7 +241,7 @@ plot_resid <- function(
     }
   }
   frame <- .residual_frame_values(data, args$frame)
-  animated <- !is.null(args$frame) && length(frame$levels) > 1L
+  has_frames <- !is.null(args$frame) && length(frame$levels) > 1L
   model_frame <- identical(args$frame, "model") ||
     (inherits(args$frame, "formula") && identical(all.vars(args$frame), "model"))
   args$frame <- NULL
@@ -280,7 +274,7 @@ plot_resid <- function(
     xrange <- .residual_axis_range(valid, if (kind == "bubbles") ~year else x)
     yrange <- .residual_axis_range(valid, if (kind == "bubbles") y else ~.residual_value)
     cells <- lapply(frame$levels, function(level) {
-      d <- if (animated) data[frame$values == level, , drop = FALSE] else data
+      d <- if (has_frames) data[frame$values == level, , drop = FALSE] else data
       cell <- .residual_plot_cell(d, view, kind, args, x, xlab, y, ylab, title, selection)
       if (!is.null(xrange)) cell$layout$xaxis <- utils::modifyList(cell$layout$xaxis, list(range = xrange, autorange = FALSE))
       if (!is.null(yrange)) cell$layout$yaxis <- utils::modifyList(cell$layout$yaxis, list(range = yrange, autorange = FALSE))
@@ -299,49 +293,19 @@ plot_resid <- function(
     })
     list(type = view, cells = cells)
   })
-  # Stable trace slots clear markers when a model lacks the selected residuals.
-  templates <- list()
-  for (view in views) for (cell in view$cells) for (trace in cell$data) {
-    key <- .residual_trace_key(trace)
-    if (is.null(templates[[key]])) templates[[key]] <- trace
-  }
-  for (i in seq_along(views)) for (j in seq_along(views[[i]]$cells)) {
-    cell <- views[[i]]$cells[[j]]
-    keys <- vapply(cell$data, .residual_trace_key, character(1))
-    cell$data <- lapply(names(templates), function(key) {
-      found <- match(key, keys)
-      if (!is.na(found)) return(cell$data[[found]])
-      trace <- templates[[key]]
-      trace$x <- trace$y <- numeric()
-      trace$text <- character()
-      trace$showlegend <- FALSE
-      if (!is.null(trace$marker$size)) trace$marker$size <- numeric()
-      trace
-    })
-    views[[i]]$cells[[j]] <- cell
-  }
-  initial_views <- if (type == "auto") default_views else
-    rep(match(type, types) - 1L, length(frame$levels))
+  initial_view <- if (type == "auto") default_views[1L] else match(type, types) - 1L
   selectors <- which(types != "osa" | any(available$residual_type == "osa"))
   # Show OSA on explicit selection even when its retained values are unavailable.
   if (type == "osa") selectors <- seq_along(types)
-  config <- list(views = views, frames = frame$levels, animated = animated,
-    prefix = frame$prefix, view = initial_views[1L], frame = 0L,
+  config <- list(views = views, frames = frame$levels, frameLabel = frame$label, view = initial_view,
     automatic = type == "auto", defaultViews = default_views,
     selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
     showSelector = length(selectors) > 1L && (type != "osa" ||
       any(available$residual_type == "osa") || any(available$has_pld)))
-  initial <- views[[initial_views[1L] + 1L]]$cells[[1L]]
+  initial <- views[[initial_view + 1L]]$cells[[1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data
   p$x$layout <- utils::modifyList(p$x$layout, initial$layout)
-  if (animated) {
-    p$x$frames <- lapply(seq_along(frame$levels), function(i) {
-      cell <- views[[initial_views[i] + 1L]]$cells[[i]]
-      list(name = frame$levels[i], data = cell$data, layout = cell$layout,
-        traces = seq_along(cell$data) - 1L)
-    })
-  }
   script <- paste(readLines(system.file("js", "residual-selection.js", package = "tinyAM"), warn = FALSE), collapse = "\n")
   htmlwidgets::onRender(p, script, data = config)
 }
