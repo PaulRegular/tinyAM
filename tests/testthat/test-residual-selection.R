@@ -13,6 +13,18 @@ residual_plot_data <- function() {
 residual_config <- function(p) p$jsHooks$render[[1L]]$data
 residual_points <- function(cell) sum(vapply(cell$data, function(trace) length(trace$x), integer(1)))
 
+state_sampled_plot_data <- function() {
+  d <- residual_plot_data()
+  d$family <- "lognormal"
+  d$osa_res <- NA_real_
+  d$quantile_res <- d$std_res
+  d$quantile_res[7:12] <- c(NA_real_, -1.1, -.3, .4, 1.3, 2)
+  d$quantile_method <- ifelse(d$model == "A", "mle-eb", "mle-mvn")
+  d$quantile_method[7L] <- NA_character_
+  d$quantile_status <- ifelse(d$model == "A", "fallback", "ok")
+  d
+}
+
 test_that("initial resolution selects retained residuals per model and preserves OSA gaps", {
   d <- residual_plot_data(); before <- d
   auto <- .observation_residual_data(d, "auto")
@@ -54,7 +66,7 @@ test_that("public residual plots retain exact model traces and unavailable OSA v
     expect_identical(osa_cell$status$osa_method, "oneStepGeneric")
     expect_match(paste(unlist(lapply(osa_cell$data, `[[`, "text")), collapse = " "),
       "oneStepGeneric", fixed = TRUE)
-    expect_identical(config$combineQuantile, c(TRUE, TRUE))
+    expect_identical(config$viewOptions[[1L]]$labels, c("Standardized / Quantile", "OSA"))
     expect_length(config$views[[2]]$cells[[2]]$data, 0L)
     expect_identical(residual_config(fun(d, residual_type = "osa"))$view, 1L)
   }
@@ -119,13 +131,63 @@ test_that("native residual selectors replace complete cells in independent widge
   d$obs[7L] <- 0
   d$quantile_res <- d$std_res + .5
   pld <- residual_config(plot_bubbles(d, frame = ~model))
-  jsonlite::write_json(list(osa = osa, pld = pld),
+  sampled <- residual_config(plot_bubbles(state_sampled_plot_data(), frame = ~model))
+  jsonlite::write_json(list(osa = osa, pld = pld, sampled = sampled),
     config, auto_unbox = TRUE, na = "null", null = "null", digits = NA)
   result <- system2(node, c(shQuote(test_path("residual-selection-controls.js")),
     shQuote(system.file("js", "residual-selection.js", package = "tinyAM")), shQuote(config)),
     stdout = TRUE, stderr = TRUE)
   expect_null(attr(result, "status"))
   expect_match(paste(result, collapse = "\n"), "Residual controls passed", fixed = TRUE)
+})
+
+
+test_that("state-sampled lognormal quantiles stay distinct from fitted-state residuals", {
+  d <- state_sampled_plot_data()
+  before <- d
+  auto <- .observation_residual_data(d, "auto")
+  expect_identical(auto$status$residual_type, c("standardized", "quantile"))
+  expect_equal(auto$data$.residual_value, d$quantile_res)
+  expect_match(auto$data$.residual_source[8L], "mle-mvn", fixed = TRUE)
+  expect_match(.observation_residual_data(d, "quantile")$data$.residual_source[1L],
+    "mle-eb) [fallback]", fixed = TRUE)
+  config <- residual_config(plot_resid(d, frame = ~model))
+  expect_identical(config$defaultViews, c(0L, 2L))
+  expect_identical(lapply(config$viewOptions, `[[`, "labels"),
+    list("Standardized / Quantile", c("Standardized", "Quantile")))
+  expect_equal(vapply(config$views[[3L]]$cells, residual_points, integer(1)), c(6L, 5L))
+  overlay <- residual_config(plot_resid(d, frame = ~age))
+  expect_identical(overlay$defaultViews, c(2L, 2L))
+  expect_equal(vapply(overlay$views[[3L]]$cells, residual_points, integer(1)), c(5L, 6L))
+  expect_identical(d, before)
+
+  # A retained OSA method remains selectable even if it is not the default.
+  d <- d[d$model == "B", ]
+  d$osa_res[2L] <- -.9
+  config <- residual_config(plot_bubbles(d))
+  expect_identical(config$view, 2L)
+  expect_identical(config$viewOptions[[1L]]$labels, c("Standardized", "OSA", "Quantile"))
+  expect_equal(residual_points(config$views[[2L]]$cells[[1L]]), 1L)
+
+  d$quantile_method <- "mle-eb"
+  d$quantile_res <- d$std_res
+  config <- residual_config(plot_bubbles(d))
+  expect_identical(config$view, 0L)
+  expect_identical(config$viewOptions[[1L]]$labels, c("Standardized / Quantile", "OSA"))
+})
+
+
+test_that("ineligible rows cannot make a sampled quantile view available", {
+  d <- state_sampled_plot_data()
+  d <- d[d$model == "B", ]
+  d$is_observed <- c(TRUE, FALSE, TRUE, TRUE, TRUE, TRUE)
+  d$is_proj[3L] <- TRUE
+  d$obs[4L] <- 0
+  d$is_structural <- c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE)
+  auto <- .observation_residual_data(d, "auto")
+  expect_identical(auto$status$residual_type, "standardized")
+  expect_false(auto$status$has_quantile)
+  expect_true(all(is.na(.observation_residual_data(d, "quantile")$data$.residual_value)))
 })
 
 
@@ -153,7 +215,8 @@ test_that("Gamma residuals select quantiles and only PLD includes sampled zeros"
   d$obs[7L] <- 0
   config <- residual_config(plot_bubbles(d, frame = ~model))
   expect_identical(config$defaultViews, c(0L, 2L))
-  expect_identical(config$combineQuantile, c(TRUE, FALSE))
+  expect_identical(lapply(config$viewOptions, `[[`, "labels"),
+    list("Standardized / Quantile", c("Standardized", "Quantile")))
   expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 5L)
   d$family[d$model == "B"] <- "pld_gengamma"
   d$is_observed <- TRUE

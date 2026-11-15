@@ -136,8 +136,9 @@ When supplied, **Background** is the first page, followed by **Model structure**
 and its **Function calls** tab. Without Background, Model structure opens first.
 Start your diagnostic review in **Fisheries → Aggregate fishery** and **Surveys**:
 inspect observed/predicted trajectories and residual patterns across age and
-year. Retained OSA residuals are displayed when available; otherwise the plots
-start with standardized residuals. Rendering never calculates OSAs implicitly.
+year. For state-space models, the plots start with quantile residuals evaluated
+at one sampled set of states. The lognormal SCAA example starts with
+standardized residuals. Retained OSA residuals are available in the selector.
 
 Next inspect **Parameters** and **Tables → Diagnostics** for uncertainty and
 process behavior. Then use **Trends** to compare abundance and mortality. The

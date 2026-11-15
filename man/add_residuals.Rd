@@ -4,7 +4,13 @@
 \alias{add_residuals}
 \title{Calculate and retain observation residuals}
 \usage{
-add_residuals(fit, type = c("quantile", "osa"), ..., residual_seed = NULL)
+add_residuals(
+  fit,
+  type = c("quantile", "osa"),
+  ...,
+  residual_seed = NULL,
+  method = NULL
+)
 }
 \arguments{
 \item{fit}{A fitted \code{tam_fit}.}
@@ -13,8 +19,10 @@ add_residuals(fit, type = c("quantile", "osa"), ..., residual_seed = NULL)
 
 \item{...}{For \code{type = "osa"}, arguments to \code{\link[=add_osa_residuals]{add_osa_residuals()}}.}
 
-\item{residual_seed}{Optional nonnegative integer for randomizing exact zeros
-in quantile residuals. Defaults to the stored seed, or 123456 for a new fit.}
+\item{residual_seed}{Optional nonnegative integer for the Gaussian draw and
+randomization of observed zeros. Defaults to the stored seed or 123456.}
+
+\item{method}{Residual method, as in \code{\link[=residuals.tam_fit]{residuals.tam_fit()}}.}
 }
 \value{
 A \code{tam_fit} with retained \code{quantile_res} or \code{osa_res} columns in
@@ -23,8 +31,8 @@ unchanged by the quantile calculation.
 }
 \description{
 Store observation diagnostics in a returned copy of a fitted model for use
-with \code{\link[=residuals]{residuals()}} and \code{\link[=vis_tam]{vis_tam()}}. Quantile residuals condition on the fitted
-states. One-step-ahead residuals are available for all-lognormal fits.
+with \code{\link[=residuals]{residuals()}} and \code{\link[=vis_tam]{vis_tam()}}. One-step-ahead residuals are available
+for all-lognormal fits. Standardized residuals are already in the fit.
 }
 \seealso{
 \code{\link[=residuals.tam_fit]{residuals.tam_fit()}}, \code{\link[=add_osa_residuals]{add_osa_residuals()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}

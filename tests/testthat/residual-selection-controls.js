@@ -48,7 +48,7 @@ function widget(options = config) {
   return el;
 }
 
-(async () => {
+async function verifyObservations() {
   const a = widget(), b = widget();
   await finish(a);
   await finish(b);
@@ -145,5 +145,71 @@ function widget(options = config) {
   await finish(delta);
   assert.equal(deltaType.value, '0'); // Standardized remains explicit.
   assert.equal(points(delta), 5);
+
+  const sampled = widget(configs.sampled);
+  await finish(sampled);
+  const sampledType = sampled.find('tam-residual-type');
+  const sampledModel = sampled.find('tam-residual-frame');
+  assert.deepEqual(sampledType.children.map(option => option.textContent), ['Standardized / Quantile']);
+  sampledModel.choose(1);
+  await finish(sampled);
+  assert.deepEqual(sampledType.children.map(option => option.textContent), ['Standardized', 'Quantile']);
+  assert.equal(sampledType.value, '2');
+  assert.equal(points(sampled), 5); // The gap is not filled with a fitted-state residual.
+  assert(sampled.data.every(trace => trace.text.every(label => label.includes('mle-mvn'))));
+  sampledType.choose(2);
+  await finish(sampled);
+  sampledModel.choose(0);
+  await finish(sampled);
+  assert.equal(sampledType.value, '0');
+  assert.equal(points(sampled), 6);
+  assert(sampled.data.every(trace => trace.text.every(label => label.includes('mle-eb) [fallback]'))));
+  sampledModel.choose(1);
+  await finish(sampled);
+  assert.equal(sampledType.value, '2');
+  assert.equal(points(sampled), 5);
   console.log('Residual controls passed');
-})().catch(error => { console.error(error); process.exit(1); });
+}
+
+async function verifyProcess(config) {
+  const a = widget(config), b = widget(config);
+  await finish(a);
+  await finish(b);
+  const process = a.find('tam-residual-type'), model = a.find('tam-residual-frame');
+  assert.deepEqual(process.children.map(option => option.textContent), ['N', 'F', 'M']);
+  assert.deepEqual(model.children.map(option => option.textContent), ['scaa', 'sam', 'ncam']);
+  assert.equal(process.value, '0');
+  assert.equal(model.value, '1');
+  assert.equal(points(a), 6);
+  process.choose(2);
+  await finish(a);
+  assert.deepEqual(a.layout.yaxis.ticktext, ['2-4', '5-8']);
+  model.choose(2);
+  await finish(a);
+  assert.equal(process.value, '2');
+  assert.deepEqual(a.layout.yaxis.ticktext, ['2']);
+  assert.deepEqual(a.layout.yaxis.tickvals, [1]);
+  assert.equal(points(a), 3);
+  assert(a.data.every(trace => trace.text.every(label => label.includes('Model: ncam'))));
+  model.choose(0);
+  await finish(a);
+  assert.equal(points(a), 0);
+  assert.equal(a.layout.annotations[0].text, 'Unavailable for this model component');
+
+  process.choose(1);
+  await flush();
+  model.choose(1);
+  process.choose(0);
+  model.choose(2);
+  await finish(a);
+  await finish(a);
+  assert.equal(points(a), 6);
+  assert(a.data.every(trace => trace.text.every(label => label.includes('Model: ncam<br>N residual'))));
+  assert.deepEqual(a.layout.annotations, []);
+  assert.equal(b.find('tam-residual-type').value, '0');
+  assert.equal(b.find('tam-residual-frame').value, '1');
+  console.log('Process bubble controls passed');
+}
+
+(configs.process ? verifyProcess(configs.process) : verifyObservations())
+  .catch(error => { console.error(error); process.exit(1); });

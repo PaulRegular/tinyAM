@@ -81,43 +81,57 @@ plot_resid <- function(
   standardized <- values("std_res")
   osa <- values("osa_res")
   quantile <- values("quantile_res")
-  pld <- seq_len(nrow(data)) %in% which(.is_pld_family(data$family))
-  quantile_family <- pld | seq_len(nrow(data)) %in% which(data$family %in% c("gamma", "gengamma"))
-  quantile[!quantile_family] <- standardized[!quantile_family]
+  family <- as.character(values("family"))
+  pld <- .is_pld_family(family)
+  non_lognormal <- !is.na(family) & family != "lognormal"
+  quantile_method <- as.character(values("quantile_method"))
+  sampled <- quantile_method %in% "mle-mvn"
+  distinct_quantile <- non_lognormal | sampled
+  # Plain lognormal tables without quantile metadata also support the fitted-
+  # state quantile view. Keep values and gaps exactly as retained otherwise.
+  if (!"quantile_method" %in% names(data)) quantile[!non_lognormal] <- standardized[!non_lognormal]
   eligible <- rep(TRUE, nrow(data))
   if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | pld & data$obs == 0)
   if ("is_proj" %in% names(data)) eligible <- eligible & !is.na(data$is_proj) & !data$is_proj
+  eligible <- eligible & !(values("is_structural") %in% TRUE | values("is_observed") %in% FALSE)
   osa[!eligible] <- standardized[!eligible] <- NA_real_
-  osa[quantile_family] <- NA_real_
+  osa[non_lognormal] <- NA_real_
   if ("obs" %in% names(data)) standardized[which(data$obs == 0)] <- NA_real_
   quantile[!eligible] <- NA_real_
-  quantile[which(data$is_structural %in% TRUE)] <- NA_real_
   model <- if ("model" %in% names(data)) as.character(data$model) else rep("Model", nrow(data))
   models <- if (is.factor(data$model)) levels(data$model) else unique(model)
   models <- models[models %in% model & !is.na(models)]
   if (!length(models)) models <- "Model"
   method <- if ("osa_method" %in% names(data)) as.character(data$osa_method) else rep(NA_character_, nrow(data))
   method[is.na(method) | !nzchar(method)] <- "method unspecified"
+  quantile_label <- rep("Quantile residuals", nrow(data))
+  quantile_label[sampled] <- "State-sampled quantile residuals (mle-mvn)"
+  quantile_label[quantile_method %in% "mle-eb"] <- "Fitted-state quantile residuals (mle-eb)"
+  fallback <- values("quantile_status") %in% "fallback"
+  quantile_label[fallback] <- paste0(quantile_label[fallback], " [fallback]")
   data$.residual_value <- rep(NA_real_, nrow(data))
   data$.residual_type <- rep(NA_character_, nrow(data))
   data$.residual_source <- rep(NA_character_, nrow(data))
   status <- lapply(models, function(name) {
     rows <- which(model == name)
-    has_quantile_family <- any(quantile_family[rows])
+    has_quantile <- any(is.finite(quantile[rows]) & distinct_quantile[rows])
+    has_osa <- any(is.finite(osa[rows]))
+    has_method <- any(!is.na(quantile_method[rows]))
     selected <- if (type == "auto" && !is.null(selection)) selection[[name]] else if (type == "auto") {
-      if (has_quantile_family) "quantile" else if (any(is.finite(osa[rows]))) "osa" else "standardized"
+      if (has_quantile) "quantile" else if (has_osa && !has_method) "osa" else "standardized"
     } else type
     data$.residual_value[rows] <<- switch(selected, osa = osa[rows],
       quantile = quantile[rows], standardized = standardized[rows])
     data$.residual_type[rows] <<- selected
     label <- switch(selected, osa = paste0("OSA residuals (", method[rows], ")"),
-      quantile = "Quantile residuals",
+      quantile = quantile_label[rows],
       standardized = ifelse(pld[rows], "Standardized positive-component residuals", "Standardized residuals"))
     data$.residual_source[rows] <<- label
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
       osa_method = if (selected == "osa" && length(finite)) paste(unique(method[finite]), collapse = ", ") else NA_character_,
-      has_quantile_family = has_quantile_family,
+      has_quantile = has_quantile, has_osa = has_osa,
+      combine_quantile = !any(distinct_quantile[rows]),
       n = length(finite), stringsAsFactors = FALSE)
   })
   list(data = data, status = do.call(rbind, status))
@@ -247,16 +261,16 @@ plot_resid <- function(
   args$frame <- NULL
   available <- .observation_residual_data(data, "auto")$status
   types <- c("standardized", "osa")
-  if (any(available$has_quantile_family) || type == "quantile") types <- c(types, "quantile")
+  if (any(available$has_quantile) || type == "quantile") types <- c(types, "quantile")
   # Resolve once for the complete panel, never from a partially observed frame.
-  default_type <- if (any(available$has_quantile_family)) "quantile" else
+  default_type <- if (any(available$has_quantile)) "quantile" else
     if (all(available$residual_type == "osa")) "osa" else "standardized"
   model_rows <- match(frame$levels, available$model)
   defaults <- if (model_frame) available$residual_type[model_rows] else
     rep(default_type, length(frame$levels))
   defaults[is.na(defaults)] <- "standardized"
-  combine_quantile <- if (model_frame) !available$has_quantile_family[model_rows] else
-    rep(!any(available$has_quantile_family), length(frame$levels))
+  combine_quantile <- if (model_frame) available$combine_quantile[model_rows] else
+    rep(all(available$combine_quantile), length(frame$levels))
   combine_quantile[is.na(combine_quantile)] <- TRUE
   default_views <- match(defaults, types) - 1L
   models <- if (is.factor(data$model)) levels(data$model) else unique(as.character(data$model))
@@ -297,17 +311,32 @@ plot_resid <- function(
     list(type = view, cells = cells)
   })
   initial_view <- if (type == "auto") default_views[1L] else match(type, types) - 1L
-  selectors <- which(types != "osa" | any(available$residual_type == "osa"))
+  selectors <- which(types != "osa" | any(available$has_osa))
   # Show OSA on explicit selection even when its retained values are unavailable.
   if (type == "osa") selectors <- seq_along(types)
-  config <- list(views = views, frames = frame$levels, frameLabel = frame$label, view = initial_view,
+  labels <- c("Standardized", "OSA", "Quantile")[seq_along(types)]
+  view_options <- lapply(combine_quantile, function(combine) {
+    display <- seq_along(types)
+    frame_labels <- labels
+    if (combine) {
+      display[types == "quantile"] <- 1L
+      frame_labels[1L] <- "Standardized / Quantile"
+    }
+    choices <- unique(display[selectors])
+    list(values = choices - 1L, labels = frame_labels[choices], display = display - 1L)
+  })
+  config <- list(views = views, frames = frame$levels, frameLabel = frame$label,
+    viewLabel = "Residuals", view = initial_view, frame = 0L,
     automatic = type == "auto", defaultViews = default_views,
     compactHeader = kind == "bubbles" && is.null(title),
-    selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
-    combineQuantile = combine_quantile,
-    showSelector = (has_frames && model_frame) || any(available$residual_type == "osa") ||
-      any(available$has_quantile_family))
-  initial <- views[[initial_view + 1L]]$cells[[1L]]
+    viewOptions = view_options,
+    showSelector = (has_frames && model_frame) || any(available$has_osa) ||
+      any(available$has_quantile))
+  .residual_widget(config)
+}
+
+.residual_widget <- function(config) {
+  initial <- config$views[[config$view + 1L]]$cells[[config$frame + 1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data
   p$x$layout <- utils::modifyList(p$x$layout, initial$layout)

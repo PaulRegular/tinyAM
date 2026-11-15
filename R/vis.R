@@ -35,13 +35,12 @@
 #'          yield across models and shows catch at age and residuals for models
 #'          fitted to aggregate catches. Fleet residuals appear on each
 #'          fleet's page.
-#'          For Poisson-link delta lognormal observations, panels start with
-#'          quantile residuals and include a comparison of observed and predicted
-#'          zero frequencies. Other panels start with retained OSA residuals
-#'          when available, or standardized residuals. Model frames choose their
-#'          initial type separately. Partial OSA gaps remain missing, and labels
-#'          identify the method. Use [add_residuals()] to retain OSA calculations
-#'          before rendering.
+#'          Panels prefer state-sampled quantile residuals for fits with random
+#'          effects. Poisson-link delta panels use quantiles and compare observed
+#'          with predicted zero frequencies. Lognormal panels without usable
+#'          sampled quantiles start with standardized residuals. Retained OSAs
+#'          are selectable and partial OSA gaps remain missing.
+#'          Use [add_residuals()] to choose a quantile method or retain OSAs.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
 #'          Stock-recruit models add a relationship page with parent-year pairs,
@@ -54,10 +53,11 @@
 #'          [plot_process_deviations()] and [plot_process_residuals()] reproduce
 #'          individual diagnostic plots from a single tidy result, selecting
 #'          `component = "Recruitment"` or `"NFM"`. The dashboard supplies dropdown
-#'          tabs for these views; N/F/M plots have component buttons and a model slider.
+#'          tabs for these views. Joint-sample bubbles have Process and Model menus.
 #'          Shared M blocks are not treated as separate biological ages.
 #'          `process_seed` reproduces the same Gaussian joint draw as [tidy_tam()].
-#'          `residual_seed` controls randomization at observed zeros.
+#'          `residual_seed` controls the observation diagnostic's Gaussian draw
+#'          and randomization at observed zeros.
 #'          Random plots include latent states and formula-effect trends.
 #'          Age-year plots offer Annual trends (year axis, age selector) and
 #'          Age profiles (age axis, year selector). Each plot starts in its

@@ -3,8 +3,7 @@ function(el, x, config) {
   function array(value) { return Array.isArray(value) ? value : [value]; }
   var frames = array(config.frames);
   var defaults = array(config.defaultViews);
-  var combineQuantile = array(config.combineQuantile);
-  var currentFrame = 0;
+  var currentFrame = config.frame;
   var currentView = config.view;
   var automatic = config.automatic;
   var drawing = false;
@@ -45,31 +44,25 @@ function(el, x, config) {
     return input;
   }
 
-  var types = array(config.selectors);
   var typeSelect;
-  function updateTypeOptions() {
+  function updateViewOptions() {
     if (!typeSelect) return;
-    var combined = combineQuantile[currentFrame];
-    var choices = types.filter(function(i) { return !(combined && i === 2); });
-    var labels = choices.map(function(i) {
-      return combined && i === 0 ? 'Standardized / Quantile' : config.labels[i];
-    });
-    // Keep the requested quantile view for a later frame with distinct residuals.
-    var selected = combined && currentView === 2 ? 0 : currentView;
-    setOptions(typeSelect, choices, labels, selected);
+    var options = config.viewOptions[currentFrame];
+    // Multiple views can share a label while preserving the user's choice.
+    setOptions(typeSelect, array(options.values), array(options.labels), array(options.display)[currentView]);
   }
   if (config.showSelector) {
-    typeSelect = select('Residuals', 'type', function(view) {
+    typeSelect = select(config.viewLabel, 'type', function(view) {
       currentView = view;
       automatic = false;
     });
-    updateTypeOptions();
+    updateViewOptions();
   }
   if (frames.length > 1) {
     var modelSelect = select(config.frameLabel, 'frame', function(frame) {
       currentFrame = frame;
       if (automatic) currentView = defaults[frame];
-      updateTypeOptions();
+      updateViewOptions();
     });
     setOptions(modelSelect, frames.map(function(_, i) { return i; }), frames, currentFrame);
   }
@@ -92,6 +85,13 @@ function(el, x, config) {
         if (trace[key] !== undefined) trace[key] = array(trace[key]);
       });
       if (trace.marker && trace.marker.size !== undefined) trace.marker.size = array(trace.marker.size);
+    });
+    ['xaxis', 'yaxis'].forEach(function(axis) {
+      ['tickvals', 'ticktext'].forEach(function(key) {
+        if (cell.layout[axis] && cell.layout[axis][key] != null) {
+          cell.layout[axis][key] = array(cell.layout[axis][key]);
+        }
+      });
     });
     var top = controls.childElementCount ? 85 : 60;
     if (config.compactHeader) top -= 25;

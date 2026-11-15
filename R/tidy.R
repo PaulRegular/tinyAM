@@ -72,8 +72,11 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @param method OSA algorithm; defaults to `"oneStepGaussianOffMode"`.
 #'   See [add_osa_residuals()] for supported choices and computation details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
-#' @param residual_seed Optional nonnegative integer seed for randomized
-#'   quantile residuals. The default seed is 123456.
+#' @param residual_seed Optional nonnegative integer seed for the Gaussian draw
+#'   and randomization of observed zeros. Defaults to the stored seed or 123456.
+#' @param quantile_method `"auto"`, `"mle-mvn"` or `"mle-eb"`, as in
+#'   [residuals.tam_fit()]. With `NULL`, retain stored residuals when available
+#'   and use the automatic choice otherwise.
 #'
 #' @details
 #' For lognormal observations, `pred` is the median and `sd` is the marginal
@@ -86,9 +89,12 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' mean and median. Poisson-link delta rows include zero and positive probabilities (`p_zero`, `p_positive`
 #' and their logs). Generalized gamma rows include the signed `gengamma_Q`.
 #' Standardized residuals use the positive component's log mean and log SD.
-#' Standardized and quantile residuals (`std_res` and `quantile_res`) condition
-#' on fitted states. They are identical for lognormal observations and use
-#' the marginal distribution when those observations are correlated.
+#' Standardized residuals (`std_res`) use fitted states. Quantile residuals
+#' (`quantile_res`) use one conditional Gaussian draw when fitted random effects
+#' and usable precision are available. All-lognormal fits without random effects
+#' use standardized residuals in the default plots. The `quantile_method` and
+#' `quantile_status` columns identify the calculation and any fallback. Both
+#' residual types use the marginal distribution of correlated observations.
 #' One-step-ahead residuals use a different predictive calculation and are
 #' available for all-lognormal fits. See [tinyAM-model] for the equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
@@ -123,14 +129,25 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @export
 
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
-                          method = "oneStepGaussianOffMode", ..., residual_seed = NULL) {
+                          method = "oneStepGaussianOffMode", ..., residual_seed = NULL,
+                          quantile_method = NULL) {
   fit <- .require_tam_fit(fit, arg = "fit")
   .osa_method(method, list(...))
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
     interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
   }
+  obs_pred <- .tidy_obs_predictions(fit, interval)
+  obs_pred <- .observation_quantiles(fit, obs_pred, quantile_method, residual_seed)
+  if (add_osa_res) {
+    osa <- .compute_osa_residuals(fit, method, list(...))
+    obs_pred <- .attach_osa_tables(obs_pred, osa$tables, osa$metadata)
+  }
+  attr(obs_pred, "interval") <- interval
+  obs_pred
+}
 
+.tidy_obs_predictions <- function(fit, interval = .95) {
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
   log_pred <- split(fit$rep$log_pred, fit$dat$obs_map$type)
@@ -182,7 +199,6 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
     with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
   if (.obs_has_non_lognormal(fit$dat)) {
-    if (is.null(residual_seed)) residual_seed <- attr(fit$obs_pred, "residual_seed", exact = TRUE)
     map <- fit$dat$obs_map
     for (name in names(obs_pred)) {
       rows <- which(map$type == name)
@@ -241,19 +257,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       d$pred_positive_mean[d$is_structural] <- NA_real_
       obs_pred[[name]] <- d
     }
-    obs_pred <- .add_quantile_residuals(obs_pred, residual_seed)
-  } else {
-    if (!is.null(residual_seed)) .observation_residual_seed(residual_seed)
-    obs_pred$catch$quantile_res <- obs_pred$catch$std_res
-    obs_pred$index$quantile_res <- obs_pred$index$std_res
   }
-
-  if (add_osa_res) {
-    osa <- .compute_osa_residuals(fit, method, list(...))
-    obs_pred <- .attach_osa_tables(obs_pred, osa$tables, osa$metadata)
-  }
-
-  attr(obs_pred, "interval") <- interval
   obs_pred
 }
 
@@ -1047,8 +1051,10 @@ stack_nested <- function(x, label = "model",
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
 #' @param process_residuals Calculate joint-sample process diagnostics? Use
 #'   `FALSE` for lightweight consumers that need only existing fitted summaries.
-#' @param residual_seed Optional seed for randomized quantile residuals, as
+#' @param residual_seed Optional seed for quantile residuals, as
 #'   in [tidy_obs_pred()]. With `NULL`, retain the seed of each fitted model.
+#' @param quantile_method Method passed to [tidy_obs_pred()]. With `NULL`, retain
+#'   any explicitly stored quantile calculation and otherwise choose by model.
 #' @param process_seed Non-negative integer seed for a reproducible local
 #'   Gaussian joint sample. Default `123456L`; the caller's RNG state is restored.
 #' @inheritParams stack_nested
@@ -1122,9 +1128,10 @@ stack_nested <- function(x, label = "model",
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
                      process_residuals = TRUE, process_seed = 123456L,
-                     residual_seed = NULL) {
+                     residual_seed = NULL, quantile_method = NULL) {
   process_seed <- .validate_process_seed(process_seed)
   if (!is.null(residual_seed)) residual_seed <- .observation_residual_seed(residual_seed)
+  if (!is.null(quantile_method)) quantile_method <- .quantile_method(quantile_method)
   if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
     cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
   }
@@ -1173,13 +1180,14 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     }
     tables <- fit$obs_pred
     if (is.null(tables) || !interval_matches(tables)) {
-      tables <- tidy_obs_pred(fit, interval = interval, residual_seed = residual_seed)
+      tables <- tidy_obs_pred(fit, interval = interval, residual_seed = residual_seed,
+        quantile_method = quantile_method)
       metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
       if (is.null(metadata)) metadata <- fit$osa
       tables <- .preserve_observation_extras(tables, fit$obs_pred, metadata)
-    } else if (!is.null(residual_seed) && .obs_has_non_lognormal(fit$dat) &&
-               !identical(attr(tables, "residual_seed", exact = TRUE), residual_seed)) {
-      tables <- .add_quantile_residuals(tables, residual_seed)
+    } else if (!is.null(quantile_method) || !is.null(residual_seed) ||
+               is.null(attr(tables, "quantile", exact = TRUE))) {
+      tables <- .observation_quantiles(fit, tables, quantile_method, residual_seed)
     }
     if (mixed_families && !.obs_has_non_lognormal(fit$dat)) {
       for (name in names(tables)) {
@@ -1220,6 +1228,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
   residual_seeds <- Filter(Negate(is.null), lapply(obs_list, attr, which = "residual_seed", exact = TRUE))
   if (length(residual_seeds)) attr(obs_pred, "residual_seed") <- residual_seeds
+  quantile_metadata <- Filter(Negate(is.null), lapply(obs_list, attr, which = "quantile", exact = TRUE))
+  if (length(quantile_metadata)) attr(obs_pred, "quantile") <- quantile_metadata
   osa_metadata <- lapply(seq_along(model_list), function(i) {
     metadata <- attr(obs_list[[i]], "osa", exact = TRUE)
     if (is.null(metadata)) metadata <- model_list[[i]]$osa

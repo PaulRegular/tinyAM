@@ -7,7 +7,7 @@
 \method{residuals}{tam_fit}(
   object,
   type = c("standardized", "log", "response", "osa", "quantile"),
-  method = "oneStepGaussianOffMode",
+  method = NULL,
   ...,
   residual_seed = NULL
 )
@@ -19,8 +19,11 @@
 median), \code{"response"} (observation minus prediction), \code{"quantile"}, or
 \code{"osa"}.}
 
-\item{method}{OSA algorithm, as in \code{\link[=add_osa_residuals]{add_osa_residuals()}}. Only used with
-\code{type = "osa"}. Explicitly supplying it requests a fresh calculation.}
+\item{method}{For \code{type = "quantile"}, use \code{"mle-mvn"} for a Gaussian draw of
+the random effects, \code{"mle-eb"} for the fitted states, or \code{"auto"} to choose
+by model. With \code{NULL}, use the retained method or the automatic choice.
+For \code{type = "osa"}, select an algorithm from \code{\link[=add_osa_residuals]{add_osa_residuals()}}.
+Supplying a method explicitly requests a fresh calculation.}
 
 \item{...}{Computation controls passed to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}, such as
 \code{trace = FALSE} or \code{parallel = FALSE}.
@@ -29,14 +32,16 @@ unrequested rows retain missing residuals.
 Explicit controls request a fresh calculation; other residual types reject them.}
 
 \item{residual_seed}{Optional nonnegative integer for \code{type = "quantile"}.
-The default is 123456. Supplying a seed requests a fresh calculation.}
+Controls the Gaussian state draw and randomization of recorded zeros.
+Defaults to the stored seed, or 123456. Supplying a seed requests a fresh calculation.}
 }
 \value{
 A data frame with year, age, type (catch/index), survey, observations,
 predictions, residuals, and available unit/fleet columns. OSA output also
 identifies \code{osa_method}. The \code{residual_type} attribute names the requested
-scale, \code{residual_seed} records the quantile seed, and \code{osa} retains available
-method/settings/coverage metadata.
+scale. Quantile output identifies the method and any fallback in the table.
+The \code{quantile} attribute records the requested and used methods, status and
+seed. The \code{osa} attribute retains available method, settings and coverage.
 }
 \description{
 Return keyed catch and survey rows for plotting or further checks. This is a
@@ -49,15 +54,27 @@ leaves any across-age correlation in place.
 or method are supplied. Otherwise both catch and index residuals are calculated
 together, using one algorithm at fitted parameter values. It can be expensive,
 but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
-objectives protect the fitted object's state. Other residual types remain
-simple extractors. For Gamma and generalized gamma, standardized residuals
+objectives protect the fitted object's state. For Gamma and generalized gamma, standardized residuals
 use the mean and SD of the log of positive observations. Log residuals use
 the positive median. For any Poisson-link delta family, response residuals
-use the mean including zeros. Quantile residuals use the fitted cumulative distribution,
-drawing uniformly across its probability step at each observed zero. These
-residuals condition on fitted states. For lognormal observations they equal
-marginal standardized residuals. Missing and projected observations have
-missing residuals, and deterministic zeros have no quantile residuals.
+use the mean including zeros.
+
+For \code{"mle-mvn"}, fixed effects stay at their estimates and all fitted random
+effects are sampled together. The Gaussian approximation uses their
+conditional mode and precision. Catch and survey distributions are evaluated
+at this draw, using the approach described in the
+\href{https://sdmtmb.github.io/sdmTMB/reference/residuals.sdmTMB.html}{sdmTMB residual documentation}.
+The fitted-state method \code{"mle-eb"} evaluates the same distributions at the
+mode. For lognormal observations at the mode, quantile and standardized
+residuals agree. Both quantile methods randomize uniformly across the
+cumulative probability step at each sampled zero. Missing observations,
+projections and structural zeros have missing quantile residuals.
+Marginal quantiles retain any across-age observation correlation.
+
+The automatic choice uses \code{"mle-mvn"} when there are fitted random effects and
+the conditional draw is usable. Otherwise it uses \code{"mle-eb"}. If a draw
+fails, the returned metadata records the reason. An explicit request for
+\code{"mle-mvn"} in that case gives an error.
 OSA is available for all-lognormal fits. The supplied fit is not modified.
 To retain results for later extraction and dashboard use, assign
 \code{fit_osa <- add_osa_residuals(fit, method = "oneStepGeneric", trace = FALSE)}.
@@ -67,6 +84,7 @@ To retain results for later extraction and dashboard use, assign
 residuals(fit)
 residuals(fit, type = "log")
 residuals(fit, type = "quantile")
+residuals(fit, type = "quantile", method = "mle-eb")
 residuals(fit, type = "osa", method = "oneStepGeneric", trace = FALSE)
 }
 }

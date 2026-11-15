@@ -228,8 +228,9 @@ page to inspect process switches and formulas. Its second tab shows function cal
 shows how to read the diagram alongside the fit diagnostics.
 
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
-residuals. Plots start with retained OSA residuals when available, otherwise
-standardized residuals; the dropdown selects either type explicitly. Fisheries
+residuals. State-space fits start with quantile residuals from a sampled set
+of states. Lognormal fits without random effects start with standardized
+residuals. The dropdown includes retained OSA residuals when available. Fisheries
 lists each fleet, then **Aggregate fishery**;
 without fleets, the aggregate page contains the single-fishery diagnostics.
 Review **Tables → Diagnostics** and **Parameters** for

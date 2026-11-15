@@ -10,7 +10,8 @@ tidy_obs_pred(
   interval = 0.95,
   method = "oneStepGaussianOffMode",
   ...,
-  residual_seed = NULL
+  residual_seed = NULL,
+  quantile_method = NULL
 )
 }
 \arguments{
@@ -25,8 +26,12 @@ See \code{\link[=add_osa_residuals]{add_osa_residuals()}} for supported choices 
 
 \item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
 
-\item{residual_seed}{Optional nonnegative integer seed for randomized
-quantile residuals. The default seed is 123456.}
+\item{residual_seed}{Optional nonnegative integer seed for the Gaussian draw
+and randomization of observed zeros. Defaults to the stored seed or 123456.}
+
+\item{quantile_method}{\code{"auto"}, \code{"mle-mvn"} or \code{"mle-eb"}, as in
+\code{\link[=residuals.tam_fit]{residuals.tam_fit()}}. With \code{NULL}, retain stored residuals when available
+and use the automatic choice otherwise.}
 }
 \value{
 A named list with two data frames:
@@ -57,9 +62,12 @@ Fits using these families also report the \code{family}, the scale of \code{pred
 mean and median. Poisson-link delta rows include zero and positive probabilities (\code{p_zero}, \code{p_positive}
 and their logs). Generalized gamma rows include the signed \code{gengamma_Q}.
 Standardized residuals use the positive component's log mean and log SD.
-Standardized and quantile residuals (\code{std_res} and \code{quantile_res}) condition
-on fitted states. They are identical for lognormal observations and use
-the marginal distribution when those observations are correlated.
+Standardized residuals (\code{std_res}) use fitted states. Quantile residuals
+(\code{quantile_res}) use one conditional Gaussian draw when fitted random effects
+and usable precision are available. All-lognormal fits without random effects
+use standardized residuals in the default plots. The \code{quantile_method} and
+\code{quantile_status} columns identify the calculation and any fallback. Both
+residual types use the marginal distribution of correlated observations.
 One-step-ahead residuals use a different predictive calculation and are
 available for all-lognormal fits. See \link{tinyAM-model} for the equations.
 OSA calculation rebuilds a temporary objective at stored fitted parameters;

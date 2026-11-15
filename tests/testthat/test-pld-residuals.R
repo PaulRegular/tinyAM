@@ -59,8 +59,8 @@ test_that("delta displays include zero residuals and maintain calibration suppor
   d <- .add_quantile_residuals(list(index = d))$index
   config <- plot_resid(d)$jsHooks$render[[1L]]$data
   expect_identical(config$view, 2L)
-  expect_identical(config$selectors, c(0L, 2L))
-  expect_identical(config$labels[config$selectors + 1L], c("Standardized", "Quantile"))
+  expect_identical(config$viewOptions[[1L]]$values, c(0L, 2L))
+  expect_identical(config$viewOptions[[1L]]$labels, c("Standardized", "Quantile"))
   expect_identical(config$views[[3L]]$cells[[1L]]$status$n, 3L)
   frequencies <- .zero_frequency_data(d)
   expect_equal(frequencies$n, 3L)

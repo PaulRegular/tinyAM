@@ -20,7 +20,8 @@
 #' diagnostic draws. Missing/invalid joint uncertainty is reported explicitly.
 #'
 #' Each call returns one plot; the dashboard supplies its dropdown containers.
-#' N/F/M buttons retain the selected model. Signed matrices share symmetric colour ranges across
+#' The joint-sample bubbles use Process and Model menus that retain their selections.
+#' Signed matrices share symmetric colour ranges across
 #' models within a component and have no logarithmic scale. Blocked F and M use unique,
 #' ordered state blocks. Bubble areas use absolute residuals with one scale
 #' across all components/models; orange is negative and navy is positive.
@@ -148,7 +149,8 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
   limit <- max(c(.01, abs(d$est[is.finite(d$est)])))
   colours <- c(tail(tam_cols(), 1L), tam_cols()[1L])
   span <- function(x) if (length(x)) range(x) + c(-.5, .5) else c(0, 1)
-  components <- lapply(c("N", "F", "M"), function(component) {
+  components <- c("N", "F", "M")
+  views <- lapply(components, function(component) {
     values <- d[as.character(d$component) == component, , drop = FALSE]
     xrange <- span(values$year[is.finite(values$est)])
     cells <- lapply(models, function(model) {
@@ -161,44 +163,37 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
           "<br>Year: ", z$year, "<br>Residual")
         p <- plotly::plotly_build(plot_bubbles(z, res = ~est, y = ~coordinate,
           title = "", colors = colours))
-        traces <- p$x$data
+        traces <- lapply(p$x$data, function(trace) {
+          positive <- trace$name == "+"
+          trace$marker$size <- abs(z$est[if (positive) z$est > 0 else z$est <= 0])
+          trace$marker$color <- colours[if (positive) 2L else 1L]
+          trace$marker$sizeref <- 2 * limit / 30^2
+          trace$marker$sizemode <- "area"
+          trace$marker$sizemin <- 0
+          trace$marker$line <- list(width = 0)
+          trace
+        })
       }
-      # Two stable sign traces in every frame prevent stale markers on empty frames.
-      traces <- lapply(c("-", "+"), function(sign) {
-        found <- Filter(function(trace) identical(trace$name, sign), traces)
-        trace <- if (length(found)) found[[1L]] else list(type = "scatter", mode = "markers",
-          x = numeric(), y = numeric(), marker = list(), name = sign)
-        trace$showlegend <- FALSE
-        trace$marker$size <- abs(z$est[if (sign == "+") z$est > 0 else z$est <= 0])
-        trace$marker$color <- colours[if (sign == "-") 1L else 2L]
-        trace$marker$sizeref <- 2 * limit / 30^2
-        trace$marker$sizemode <- "area"
-        trace$marker$sizemin <- 0
-        trace$marker$line <- list(width = 0)
-        trace$frame <- NULL
-        trace
-      })
       ticks <- sort(unique(z$coordinate))
       axis <- list(title = if (component == "M") "M state block" else if (state_labels) "F state block" else "Age",
         type = "linear", range = span(z$coordinate), autorange = FALSE,
         tickmode = if (state_labels) "array" else "auto",
         tickvals = ticks, ticktext = z$coordinate_label[match(ticks, z$coordinate)])
-      list(data = traces, layout = list(xaxis = list(title = "Year", range = xrange, autorange = FALSE),
+      list(data = traces, layout = list(title = "", showlegend = FALSE, margin = list(l = 150, r = 25, b = 50),
+        xaxis = list(title = "Year", range = xrange, autorange = FALSE),
         yaxis = axis, annotations = if (nrow(z)) list() else .process_empty_annotation()), available = nrow(z) > 0L)
     })
     list(name = component, cells = cells)
   })
-  initial_component <- which(vapply(components, function(x) any(vapply(x$cells, `[[`, logical(1), "available")), logical(1)))[1L]
+  initial_component <- which(vapply(views, function(x) any(vapply(x$cells, `[[`, logical(1), "available")), logical(1)))[1L]
   if (is.na(initial_component)) initial_component <- 1L
-  initial_model <- which(vapply(components[[initial_component]]$cells, `[[`, logical(1), "available"))[1L]
+  initial_model <- which(vapply(views[[initial_component]]$cells, `[[`, logical(1), "available"))[1L]
   if (is.na(initial_model)) initial_model <- 1L
-  config <- list(models = models, components = components, component = initial_component - 1L, model = initial_model - 1L)
-  cell <- components[[initial_component]]$cells[[initial_model]]
-  p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", x = numeric(), y = numeric(), mode = "markers"))
-  p$x$data <- cell$data
-  p$x$layout <- utils::modifyList(p$x$layout, cell$layout)
-  script <- paste(readLines(system.file("js", "process-bubbles.js", package = "tinyAM"), warn = FALSE), collapse = "\n")
-  htmlwidgets::onRender(p, script, data = config)
+  choices <- seq_along(components) - 1L
+  options <- list(values = choices, labels = components, display = choices)
+  .residual_widget(list(views = views, frames = models, frameLabel = "Model",
+    viewLabel = "Process", view = initial_component - 1L, frame = initial_model - 1L,
+    compactHeader = TRUE, viewOptions = rep(list(options), length(models)), showSelector = TRUE))
 }
 
 .plot_process <- function(out, component, residuals) {

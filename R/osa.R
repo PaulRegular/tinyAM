@@ -183,13 +183,13 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
 .observation_match <- function(target, source) {
   keys <- intersect(c("year", "age", "survey", "fleet"), names(source))
   if (!all(keys %in% names(target)) || !length(keys)) {
-    cli::cli_abort("OSA observation rows must retain the fitted year, age, survey and fleet keys.")
+    cli::cli_abort("Diagnostic observation rows must retain the fitted year, age, survey and fleet keys.")
   }
   key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
   source_key <- key(source)
   rows <- match(key(target), source_key)
   if (anyDuplicated(source_key) || anyNA(rows)) {
-    cli::cli_abort("OSA observation rows do not match the fitted inputs uniquely.")
+    cli::cli_abort("Diagnostic observation rows do not match the fitted inputs uniquely.")
   }
   rows
 }

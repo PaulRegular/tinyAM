@@ -4,9 +4,9 @@
   Keep incomplete tail observations missing and preserve native counts for
   observed-catch hindcasts.
 
-* Include quantile residuals in tidy lognormal outputs. Use a single dashboard
-  choice for the equivalent standardized and quantile residuals in lognormal
-  panels.
+* Default to quantile residuals from a conditional Gaussian draw in state-space
+  fits. Keep fitted-state quantiles available through `method = "mle-eb"` and
+  standardized residuals for lognormal fits without random effects.
 
 * Add Gamma and generalized gamma observations, including Poisson-link delta
   forms. Use `stats::Gamma(link = "log")`, `gengamma()`, `pld_gamma()`, or

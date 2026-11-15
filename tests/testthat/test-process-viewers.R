@@ -40,10 +40,13 @@ test_that("empty recruitment is a centred Plotly annotation and NFM retains empt
     expect_equal(p$x$layout$annotations[[1]]$y, .5)
     p <- viewer(out)
     spec <- p$jsHooks$render[[1L]]$data
-    expect_equal(spec$models, "Model")
     if (identical(viewer, plot_process_residuals)) {
-      expect_false(any(vapply(spec$components[[1]]$cells, `[[`, logical(1), "available")))
-    } else expect_true(all(is.na(unlist(spec$metrics[[1]]$cells[[1]]$linear))))
+      expect_equal(spec$frames, "Model")
+      expect_length(spec$views[[1]]$cells[[1]]$data, 0L)
+    } else {
+      expect_equal(spec$models, "Model")
+      expect_true(all(is.na(unlist(spec$metrics[[1]]$cells[[1]]$linear))))
+    }
   }
 })
 
@@ -79,26 +82,27 @@ test_that("one matrix provides NFM metrics, shared limits and model-specific M b
   expect_equal(spec$initial_metric, 1L)
 })
 
-test_that("bubble frames use supplied values, stable sign traces and one size scale", {
+test_that("process bubbles use supplied values and one size scale", {
   out <- .process_view_fixture()
   spec <- plot_process_residuals(out)$jsHooks$render[[1L]]$data
-  expect_equal(spec$models, c("scaa", "sam", "ncam"))
-  expect_equal(c(spec$component, spec$model), c(0L, 1L))
+  expect_equal(spec$frames, c("scaa", "sam", "ncam"))
+  expect_equal(c(spec$view, spec$frame), c(0L, 1L))
   scales <- numeric()
-  for (i in seq_along(spec$components)) {
-    component <- spec$components[[i]]
+  for (i in seq_along(spec$views)) {
+    component <- spec$views[[i]]
     expect_equal(component$name, c("N", "F", "M")[i])
     expect_equal(component$cells[[1]]$layout$annotations[[1]]$text, "Unavailable for this model component")
-    expect_true(all(vapply(component$cells[[1]]$data, function(trace) length(trace$x) == 0L, logical(1))))
+    expect_length(component$cells[[1]]$data, 0L)
     for (j in 2:3) {
       cell <- component$cells[[j]]
       values <- out$process_residuals[[component$name]]
-      z <- values[values$model == spec$models[j], ]
-      for (k in 1:2) {
-        trace <- cell$data[[k]]
-        expect_identical(trace$name, c("-", "+")[k])
-        expect_equal(as.numeric(trace$marker$size), abs(z$est[if (k == 1) z$est <= 0 else z$est > 0]))
-        expect_equal(trace$marker$color, c(tail(tam_cols(), 1), tam_cols()[1])[k])
+      z <- values[values$model == spec$frames[j], ]
+      expect_equal(sort(unlist(lapply(cell$data, function(trace) trace$marker$size))), sort(abs(z$est)))
+      for (trace in cell$data) {
+        positive <- trace$name == "+"
+        expect_equal(as.numeric(trace$marker$size), abs(z$est[if (positive) z$est > 0 else z$est <= 0]))
+        expect_equal(trace$marker$color, if (positive) tam_cols()[1] else tail(tam_cols(), 1))
+        expect_equal(trace$marker$line$width, 0)
         scales <- c(scales, trace$marker$sizeref)
       }
       if (component$name == "M") expect_equal(cell$layout$yaxis$ticktext, unique(z$age_block))
@@ -107,13 +111,16 @@ test_that("bubble frames use supplied values, stable sign traces and one size sc
   expect_equal(unique(scales), 4 / 900)
 })
 
-test_that("bubble component buttons and native model frames coordinate independently", {
+test_that("process and model menus coordinate independently", {
   node <- Sys.which("node"); skip_if(!nzchar(node))
   config <- tempfile(fileext = ".json"); on.exit(unlink(config))
-  jsonlite::write_json(plot_process_residuals(.process_view_fixture())$jsHooks$render[[1L]]$data,
-    config, auto_unbox = TRUE, na = "null", null = "null", digits = NA)
-  result <- system2(node, c(shQuote(test_path("process-bubbles-controls.js")),
-    shQuote(system.file("js", "process-bubbles.js", package = "tinyAM")), shQuote(config)), stdout = TRUE, stderr = TRUE)
+  out <- .process_view_fixture()
+  m <- out$process_residuals$M
+  out$process_residuals$M <- m[m$model != "ncam" | m$age_block == "2", ]
+  spec <- plot_process_residuals(out)$jsHooks$render[[1L]]$data
+  jsonlite::write_json(list(process = spec), config, auto_unbox = TRUE, na = "null", null = "null", digits = NA)
+  result <- system2(node, c(shQuote(test_path("residual-selection-controls.js")),
+    shQuote(system.file("js", "residual-selection.js", package = "tinyAM")), shQuote(config)), stdout = TRUE, stderr = TRUE)
   expect_null(attr(result, "status"))
   expect_match(paste(result, collapse = "\n"), "Process bubble controls passed")
 })
