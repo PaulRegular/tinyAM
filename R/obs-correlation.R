@@ -20,23 +20,22 @@
 .prepare_obs_correlation <- function(dat, surveys = unique(as.character(dat$obs$index$survey))) {
   catch <- .obs_cor_structure(dat$catch_settings$cor_struct, dat$fleets, "catch_settings$cor_struct")
   index <- .obs_cor_structure(dat$index_settings$cor_struct, surveys, "index_settings$cor_struct")
-  for (s in dat$pld$series) {
-    structure <- if (s$type == "catch") catch else index
-    if (structure[[s$name]] == "ar1") {
-      cli::cli_abort("PLD series {.val {s$name}} requires independent observation errors. Remove its {.code cor_struct = 'ar1'} setting.")
-    }
-  }
   if (!any(c(catch, index) == "ar1")) return(NULL)
 
   d <- dat$obs_map
   series <- ifelse(d$type == "catch", if (dat$has_fleet) as.character(d$fleet) else "Fishery",
                    as.character(d$survey))
+  lognormal <- if (is.null(d$family)) rep(TRUE, nrow(d)) else d$family == "lognormal"
   groups <- character()
   blocks <- list()
   for (type in c("catch", "index")) {
     structures <- if (type == "catch") catch else index
     for (name in names(structures)[structures == "ar1"]) {
-      rows <- which(d$type == type & series == name & dat$is_observed)
+      rows <- which(d$type == type & series == name)
+      if (any(!lognormal[rows])) {
+        cli::cli_abort("Series {.val {name}} requires independent observation errors for its family. Remove its {.code cor_struct = 'ar1'} setting.")
+      }
+      rows <- rows[dat$is_observed[rows]]
       by_year <- split(rows, d$year[rows])
       by_year <- by_year[lengths(by_year) > 1L]
       if (!length(by_year)) {
@@ -53,7 +52,7 @@
   if (!length(groups)) return(NULL)
 
   # Likelihood indices refer to the compact vector of observed values.
-  observed <- which(if (.obs_has_pld(dat)) dat$pld$lognormal else dat$is_observed)
+  observed <- which(dat$is_observed & lognormal)
   positions <- lapply(blocks, function(b) match(b$rows, observed))
   from <- unlist(lapply(positions, utils::head, -1L), use.names = FALSE)
   to <- unlist(lapply(positions, function(i) i[-1L]), use.names = FALSE)
@@ -100,14 +99,25 @@
                     sd = sqrt(-expm1(2 * log_phi)), log = TRUE) - log(sd[to]))
 }
 
-.draw_log_observations <- function(dat, par, mean, sd, pld = NULL) {
-  draw <- if (.obs_has_pld(dat)) dat$pld$lognormal else dat$is_observed
+.draw_log_observations <- function(dat, par, mean, sd, predictions = NULL) {
+  draw <- dat$is_observed
   log_obs <- dat$log_obs
-  if (!is.null(pld)) {
-    rows <- which(dat$is_observed & dat$pld$group > 0L)
-    positive <- rows[log(stats::runif(length(rows))) < pld$log_p_positive[rows]]
-    log_obs[rows] <- -Inf
-    log_obs[positive] <- stats::rnorm(length(positive), pld$log_pred_positive[positive], sd[positive])
+  if (!is.null(predictions)) {
+    family <- dat$obs_map$family
+    draw <- draw & family == "lognormal"
+    delta <- which(dat$is_observed & .is_pld_family(family))
+    positive <- delta[log(stats::runif(length(delta))) < predictions$log_p_positive[delta]]
+    log_obs[delta] <- -Inf
+    lognormal <- positive[family[positive] == "pld_lognormal"]
+    log_obs[lognormal] <- stats::rnorm(length(lognormal),
+      predictions$log_pred_positive[lognormal], sd[lognormal])
+    gamma <- c(positive[family[positive] != "pld_lognormal"],
+      which(dat$is_observed & family %in% c("gamma", "gengamma")))
+    for (kind in unique(family[gamma])) {
+      rows <- gamma[family[gamma] == kind]
+      log_obs[rows] <- .draw_positive_log_obs(kind, predictions$log_obs_positive_mean[rows],
+        sd[rows], predictions$observation_Q[rows])
+    }
   }
   if (!.obs_has_correlation(dat)) {
     log_obs[draw] <- stats::rnorm(sum(draw), mean[draw], sd[draw])

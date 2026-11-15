@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Add Gamma and generalized gamma observations, including Poisson-link delta
+  forms. Use `stats::Gamma(link = "log")`, `gengamma()`, `pld_gamma()`, or
+  `pld_gengamma()` in catch and index settings.
+
 * Use `pld_lognormal()` in catch or index settings to fit sampled zeros with
   one fixed or estimated half-detection scale per fleet or survey. The default
   `lognormal()` continues to fit positive observations. PLD outputs include

@@ -245,7 +245,7 @@ plot_obs_pred <- function(
   }
   args <- list(...)
   if (is.null(args$text) && is.null(args$hovertemplate) &&
-      any(data$family == "pld_lognormal", na.rm = TRUE)) {
+      any(!is.na(data$family) & data$family != "lognormal")) {
     data$.obs_pred_hover <- paste0(.obs_family_hover(data), .forecast_hover(data))
     args$text <- stats::reformulate(".obs_pred_hover")
   } else {
@@ -310,8 +310,10 @@ plot_obs_pred <- function(
 
 .obs_family_hover <- function(data) {
   hover <- rep("", nrow(data))
-  pld <- which(data$family == "pld_lognormal")
-  if (!length(pld)) return(hover)
+  pld <- which(.is_pld_family(data$family))
+  mean <- which(data$family %in% c("gamma", "gengamma"))
+  if (!length(c(pld, mean))) return(hover)
+  hover[mean] <- "Prediction: arithmetic mean"
   hover[pld] <- "Prediction: mean including zeros"
   if (all(c("p_zero", "pred_positive_mean") %in% names(data))) {
     hover[pld] <- paste0(hover[pld], "<br>Probability of zero: ", signif(data$p_zero[pld], 4),

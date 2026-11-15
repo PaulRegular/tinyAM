@@ -82,6 +82,10 @@
       if (length(start[[parameter]])) {
         start[[parameter]] <- .y50_starts(start[[parameter]], source$dat, dat, type)
       }
+      shape <- paste0("eta_gengamma_Q_", type)
+      if (length(start[[shape]])) {
+        start[[shape]] <- .gengamma_starts(start[[shape]], source$dat, dat, type)
+      }
     }
     if (identical(source$dat$rec$type, "off") && !is.null(source$rep$recruitment)) {
       years <- source$dat$rec$eligible
@@ -109,6 +113,25 @@
     }
     smooth_start <- .smooth_warm_starts(start, source$dat, dat)
     start <- smooth_start$parameters
+    for (type in c("catch", "index")) {
+      dispersion <- function(d) {
+        x <- d$obs_map[d$obs_map$type == type, , drop = FALSE]
+        kind <- if (is.null(x$family)) rep("lognormal", nrow(x)) else sub("^pld_", "", x$family)
+        species <- .observation_series(x, type)
+        vapply(split(kind, species), function(z) z[1L], character(1))
+      }
+      before <- dispersion(source$dat)
+      after <- dispersion(dat)
+      same <- intersect(names(before), names(after))
+      if (any(before[same] != after[same])) {
+        component <- paste0("sd_", type)
+        terms <- source$dat[[paste0(component, "_terms")]]
+        term_parameters <- unlist(lapply(terms, function(x) {
+          unlist(x[c("parameter", "sd_parameter", "phi_parameter")], use.names = FALSE)
+        }), use.names = FALSE)
+        start[c(paste0("log_", component), term_parameters)] <- NULL
+      }
+    }
     for (component in c("N", "F", "M", "rec", "q", "sd_catch", "sd_index")) {
       is_sd <- startsWith(component, "sd_")
       if (is_sd) {
@@ -312,8 +335,8 @@ fit_tam <- function(
     catch_settings = catch_settings, index_settings = index_settings,
     proj_settings = proj_settings
   )
-  if (isTRUE(add_osa_res) && .obs_has_pld(dat)) {
-    cli::cli_abort("One-step-ahead residuals are unavailable for PLD fits. Use quantile residuals.")
+  if (isTRUE(add_osa_res) && .obs_has_non_lognormal(dat)) {
+    cli::cli_abort("One-step-ahead residuals are unavailable for PLD, Gamma or generalized gamma fits. Use quantile residuals.")
   }
   par <- make_par(dat)
   formula_advisories <- rbind(

@@ -4,26 +4,37 @@
 \alias{observation_families}
 \alias{lognormal}
 \alias{pld_lognormal}
+\alias{pld_gamma}
+\alias{gengamma}
+\alias{pld_gengamma}
 \title{Observation families for catch and survey data}
 \usage{
 lognormal(link = "log")
 
 pld_lognormal(y50 = NULL)
+
+pld_gamma(y50 = NULL)
+
+gengamma(link = "log", Q = NULL)
+
+pld_gengamma(y50 = NULL, Q = NULL)
 }
 \arguments{
-\item{link}{Link for the lognormal observation prediction. Only \code{"log"} is supported.}
+\item{link}{Link for the observation prediction. Only \code{"log"} is supported.}
 
 \item{y50}{Optional positive detection scale in observation units. At this
 predicted level the probability of observing zero is one half. The default
 estimates a separate value for each selected fleet or survey.}
+
+\item{Q}{Optional fixed Prentice shape parameter for generalized gamma.
+The default estimates a separate signed shape for each selected series.}
 }
 \value{
 A family specification for \code{\link[=fit_tam]{fit_tam()}} or \code{\link[=prepare_tam]{prepare_tam()}}.
 }
 \description{
-The default lognormal family fits positive observations. The Poisson-link
-delta lognormal family also uses sampled zeros to inform catch or survey
-predictions.
+Lognormal, Gamma and generalized gamma families fit positive observations.
+Poisson-link delta (PLD) families also use sampled zeros.
 }
 \details{
 Supply a family in \code{catch_settings$family} or \code{index_settings$family}.
@@ -31,16 +42,35 @@ A single family applies to the whole observation type. A named list selects
 families by fleet or survey, with the default lognormal for unlisted series.
 Unlabelled catches use the name \code{"Fishery"}.
 
-With \code{lognormal()}, the prediction is the conditional median and sampled
-zeros are excluded. With \code{pld_lognormal()}, the prediction \eqn{\widetilde Y}
-is the arithmetic mean over zeros and positives conditional on population
-states. The probability of zero is
+With \code{lognormal()}, the prediction is the conditional median. Use
+\code{\link[stats:family]{stats::Gamma()}} with \code{link = "log"} for Gamma observations. For that family
+and \code{gengamma()}, the prediction is the arithmetic mean. Positive-only
+families exclude sampled zeros.
+
+With a PLD family, the prediction \eqn{\widetilde Y} is the arithmetic mean
+over zeros and positives conditional on population states. The probability
+of zero is
 \deqn{P(Y=0)=\exp[-\log(2)\widetilde Y/\widetilde Y_{50}].}
 Writing \eqn{p = P(Y>0)}, the mean of positive observations is
-\eqn{\widetilde Y/p}. Their lognormal log location is
-\eqn{\log(\widetilde Y/p)-\sigma^2/2}. The observation SD settings specify
-\eqn{\sigma}, the log-SD of positive observations. The \code{q_link} setting
-continues to determine how the catchability formula maps to catchability.
+\eqn{\widetilde Y/p}. For PLD lognormal, their log location is
+\eqn{\log(\widetilde Y/p)-\sigma^2/2}. The \code{q_link} setting continues to
+determine how the catchability formula maps to catchability.
+
+For lognormal families, the observation SD settings specify the log-SD of
+positives. For Gamma families, they specify the coefficient of variation of
+positives. Gamma shape is the inverse squared coefficient of variation.
+For generalized gamma, these settings specify the Prentice scale
+\eqn{\sigma}. Use one constant scale per generalized gamma series. If a
+fixed \eqn{Q} is negative, supply its scale, with no fitted multiplier,
+satisfying \eqn{1+\sigma Q>0}. Estimated shapes satisfy this finite-mean
+condition by construction.
+
+Generalized gamma becomes Gamma at \eqn{Q=\sigma} and mean-parameterized
+lognormal at \eqn{Q=0}. The latter is the same distribution family as
+\code{lognormal()}, with the population prediction representing the mean rather
+than the median. \code{pld_gengamma(Q = 0)} gives \code{pld_lognormal()}.
+Gamma, generalized gamma and PLD observations are conditionally independent.
+Use separate SD coefficients for series whose dispersion scales differ.
 
 Use zero for a sampled nondetection and \code{NA} for a missing observation.
 Estimating the detection scale requires both sampled zeros and positives.
@@ -61,7 +91,11 @@ the positive mean approaches \eqn{\widetilde Y_{50}/\log(2)}.
 }
 \examples{
 lognormal()
+stats::Gamma(link = "log")
+gengamma()
 pld_lognormal()
+pld_gamma(y50 = 100)
+pld_gengamma(Q = 0)
 list(RV = pld_lognormal(y50 = 100), Sentinel = lognormal())
 }
 \references{
@@ -69,6 +103,23 @@ Thorson, J. T. (2018). Three problems with the conventional delta-model for
 biomass sampling data, and a computationally efficient alternative.
 Canadian Journal of Fisheries and Aquatic Sciences.
 \doi{10.1139/cjfas-2017-0266}
+
+Prentice, R. L. (1974). A log gamma model and its maximum likelihood
+estimation. Biometrika. \doi{10.1093/biomet/61.3.539}
+
+Dunic, J. C., Conner, J., Anderson, S. C. and Thorson, J. T. (2025).
+The generalized gamma is a flexible distribution that outperforms
+alternatives when modelling catch rate data. ICES Journal of Marine Science.
+\doi{10.1093/icesjms/fsaf040}
+
+Albertsen, C. M., Nielsen, A. and Thygesen, U. H. (2017).
+Choosing the observational likelihood in state-space stock assessment
+models. Canadian Journal of Fisheries and Aquatic Sciences.
+\doi{10.1139/cjfas-2015-0532}
+
+Monnahan et al. (2025). Testing the validity of lognormal likelihoods for
+abundance indices in stock assessment models using the generalized gamma
+distribution. ICES Journal of Marine Science. \doi{10.1093/icesjms/fsaf071}
 }
 \seealso{
 \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=residuals.tam_fit]{residuals.tam_fit()}}

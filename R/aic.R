@@ -15,12 +15,12 @@
 #'
 #' @details
 #' **Likelihood scale.** Lognormal densities are evaluated on log observations
-#' without a natural-scale Jacobian. For Poisson-link delta observations the
-#' likelihood includes the probability of zero and evaluates the positive
-#' component on log observations. Multiple-model calls require identical
-#' included observations, units and observation families for each series.
-#' Use [fit_hindcast()] to compare predictions across families. cAIC is
-#' currently unavailable for fits using a Poisson-link delta family.
+#' without a natural-scale Jacobian. Gamma and generalized gamma densities
+#' use the same log-observation scale. Poisson-link delta likelihoods include
+#' the probability of zero and evaluate the positive component on log
+#' observations. Multiple-model calls require identical included observations,
+#' units and observation families for each series. Use [fit_hindcast()] to
+#' compare predictions across families. cAIC requires an all-lognormal fit.
 #'
 #' **Marginal AIC.** `logLik()` returns the optimized Laplace approximation to
 #' the marginal log-likelihood. Its `df` counts all estimated outer parameters,
@@ -134,10 +134,12 @@ NULL
   d[] <- lapply(d, as.character)
   d$family <- if (is.null(dat$obs_map$family)) rep("lognormal", nrow(d)) else
     as.character(dat$obs_map$family[dat$is_observed])
-  pld <- d$family == "pld_lognormal"
+  lognormal <- d$family == "lognormal"
   d$observed <- numeric(nrow(d))
-  d$observed[!pld] <- as.numeric(dat$observed)
-  if (any(pld)) d$observed[pld] <- dat$obs_values[dat$is_observed][pld]
+  d$observed[lognormal] <- as.numeric(dat$observed)
+  if (any(!lognormal)) {
+    d$observed[!lognormal] <- dat$obs_values[dat$is_observed][!lognormal]
+  }
   d <- d[do.call(order, c(unname(d[cols]), list(na.last = TRUE))), , drop = FALSE]
   rownames(d) <- NULL
   d
@@ -149,12 +151,12 @@ NULL
     cli::cli_abort("All models must be fitted {.cls tam_fit} objects.")
   }
   lapply(models, .aic_validate_fit)
-  has_pld <- vapply(models, function(model) .obs_has_pld(model$dat), logical(1))
-  if (conditional && any(has_pld)) {
-    cli::cli_abort("cAIC is currently unavailable for Poisson-link delta models. Use marginal AIC for fits with the same observation families, or compare forecasts with {.fn fit_hindcast}.")
+  other <- vapply(models, function(model) .obs_has_non_lognormal(model$dat), logical(1))
+  if (conditional && any(other)) {
+    cli::cli_abort("cAIC is currently unavailable for Poisson-link delta, Gamma and generalized gamma models. Use marginal AIC for fits with the same observation families, or compare forecasts with {.fn fit_hindcast}.")
   }
-  if (any(has_pld) && !all(has_pld)) {
-    cli::cli_abort("Models must use the same observation families for AIC comparison. Use {.fn fit_hindcast} to compare Poisson-link delta and lognormal predictions.")
+  if (any(other) && !all(other)) {
+    cli::cli_abort("Models must use the same observation families for AIC comparison. Use {.fn fit_hindcast} to compare predictions across families.")
   }
   reference <- .aic_observations(object)
   for (model in models[-1L]) {

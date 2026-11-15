@@ -56,6 +56,8 @@ controls variation in those observations.
 Both components use the same assessment prediction. Missing records carry
 no likelihood contribution. By comparison, the default lognormal family
 interprets the assessment prediction as the median of positive observations.
+The same encounter model can be paired with Gamma or generalized gamma for
+the positive amounts using `pld_gamma()` or `pld_gengamma()`.
 [Observation family reference](../reference/observation_families.html)
 
 ## Apply PLD to Northern cod

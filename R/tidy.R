@@ -77,14 +77,16 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #'
 #' @details
 #' For lognormal observations, `pred` is the median and `sd` is the marginal
-#' SD of log observations. Standardized residuals are
-#' `(log(obs) - log(pred)) / sd` for positive observations. For Poisson-link
-#' delta lognormal observations, `pred` is the arithmetic mean including
-#' zeros, and `sd` and `std_res` describe the positive component. These fits
-#' also report `family`, the estimand of `pred` in `pred_scale`, the fitted
-#' arithmetic mean in `pred_mean`, and zero and positive probabilities (`p_zero`,
-#' `p_positive` and their logs), the positive-component mean and median, and
-#' `quantile_res` for stochastic observations, including exact zeros.
+#' SD of log observations. For Gamma and generalized gamma, `pred` is the
+#' arithmetic mean. For Poisson-link delta families, `pred` is the arithmetic
+#' mean including zeros. In those families, `sd` describes the positive
+#' component. The `sd_scale` column identifies a log SD, CV or Prentice scale.
+#' Fits using these families also report the `family`, the scale of `pred` in
+#' `pred_scale`, the arithmetic mean in `pred_mean`, the positive-component
+#' mean and median, and `quantile_res` for stochastic observations. Poisson-link
+#' delta rows include zero and positive probabilities (`p_zero`, `p_positive`
+#' and their logs). Generalized gamma rows include the signed `gengamma_Q`.
+#' Standardized residuals use the positive component's log mean and log SD.
 #' Standardized and quantile residuals condition on fitted states. With
 #' correlated lognormal observations, both use marginal distributions.
 #' One-step-ahead residuals use a different predictive calculation and are
@@ -179,7 +181,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   obs_pred$index$std_res <- if (!n_index) numeric() else
     with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
-  if (.obs_has_pld(fit$dat)) {
+  if (.obs_has_non_lognormal(fit$dat)) {
     if (is.null(residual_seed)) residual_seed <- attr(fit$obs_pred, "residual_seed", exact = TRUE)
     map <- fit$dat$obs_map
     for (name in names(obs_pred)) {
@@ -195,19 +197,46 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       d$log_pred_positive <- fit$rep$log_pred_positive[rows]
       d$p_zero <- exp(d$log_p_zero)
       d$p_positive <- exp(d$log_p_positive)
-      d$pred_positive_median <- exp(d$log_pred_positive)
-      d$pred_positive_mean <- exp(d$log_pred_positive + d$sd^2 / 2)
-      pld <- d$family == "pld_lognormal"
+      gamma <- d$family %in% c("gamma", "pld_gamma")
+      gengamma <- .is_gengamma_family(d$family)
+      d$sd_scale <- rep("log SD", nrow(d))
+      d$sd_scale[gamma] <- "CV"
+      d$sd_scale[gengamma] <- "Prentice scale"
+      d$gengamma_Q <- rep(NA_real_, nrow(d))
+      if (any(gengamma)) d$gengamma_Q[gengamma] <- fit$rep$observation_Q[rows[gengamma]]
+      d$log_obs_positive_mean <- d$log_pred_positive + d$sd^2 / 2
+      if (any(gamma | gengamma)) {
+        d$log_obs_positive_mean[gamma | gengamma] <-
+          fit$rep$log_obs_positive_mean[rows[gamma | gengamma]]
+      }
+      log_center <- d$log_pred_positive
+      log_sd <- d$sd
+
+      other <- which((gamma | gengamma) & !d$is_structural)
+      for (family in unique(d$family[other])) {
+        i <- other[d$family[other] == family]
+        moments <- .positive_log_summary(family, d$log_obs_positive_mean[i],
+          d$sd[i], d$gengamma_Q[i])
+        d$log_pred_positive[i] <- moments$median_log
+        log_center[i] <- moments$mean_log
+        log_sd[i] <- moments$sd_log
+      }
+
+      mean_prediction <- d$family != "lognormal"
       d$pred_scale <- rep("median", nrow(d))
-      d$pred_scale[pld] <- "mean"
+      d$pred_scale[mean_prediction] <- "mean"
+      d$pred_positive_mean <- exp(d$log_obs_positive_mean)
+      d$pred_positive_median <- exp(d$log_pred_positive)
       d$pred_mean <- d$pred_positive_mean
-      d$pred_mean[pld] <- d$pred[pld]
+      d$pred_mean[mean_prediction] <- d$pred[mean_prediction]
       d$pred_mean[d$is_structural] <- 0
-      d$log_res <- rep(NA_real_, nrow(d))
+      d$log_res <- d$std_res <- rep(NA_real_, nrow(d))
       positive <- which(d$is_observed & d$obs > 0)
-      d$log_res[positive] <- log(d$obs[positive]) - d$log_pred_positive[positive]
-      d$std_res <- d$log_res / d$sd
+      log_obs <- log(d$obs[positive])
+      d$log_res[positive] <- log_obs - d$log_pred_positive[positive]
+      d$std_res[positive] <- (log_obs - log_center[positive]) / log_sd[positive]
       d$log_pred_positive[d$is_structural] <- NA_real_
+      d$log_obs_positive_mean[d$is_structural] <- NA_real_
       d$pred_positive_median[d$is_structural] <- NA_real_
       d$pred_positive_mean[d$is_structural] <- NA_real_
       obs_pred[[name]] <- d
@@ -277,7 +306,8 @@ tidy_rep <- function(fit) {
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth)$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
-  keep[names(keep) %in% c("log_q_base", "q_power")] <- FALSE
+  keep[names(keep) %in% c("log_q_base", "q_power", "gengamma_Q_report",
+    "observation_Q", "log_obs_positive_mean")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -395,6 +425,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth))$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
+  vals$gengamma_Q_report <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     if (length(dim(vals[[i]])) >= 2L) {
@@ -551,6 +582,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
+#' - For generalized gamma, `gengamma_Q` shows the signed shape by fleet or
+#'   survey. Estimated shapes use standard errors on the reported scale.
 #' - For `log_r`, `year` contains eligible recruitment process years (by default
 #'   years 2:Y). Fixed early `log_r_init` states also carry year labels.
 #'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
@@ -595,7 +628,8 @@ tidy_par <- function(fit, interval = 0.95) {
   nms <- nms[lengths(est[nms]) > 0L]
 
   ran_nms <- intersect(fit$obj$env$.random, nms)
-  fix_nms <- setdiff(nms, c(ran_nms, "log_y50_index", "log_y50_catch"))
+  fix_nms <- setdiff(nms, c(ran_nms, "log_y50_index", "log_y50_catch",
+    "eta_gengamma_Q_catch", "eta_gengamma_Q_index"))
   z <- stats::qnorm(0.5 + interval / 2)
   smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
     if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
@@ -711,6 +745,8 @@ tidy_par <- function(fit, interval = 0.95) {
   if (is.data.frame(y50) && nrow(y50)) {
     fixed <- stack_list(list(fixed, y50), label = NULL)
   }
+  shape <- .tidy_gengamma_Q(fit, z)
+  if (!is.null(shape)) fixed <- stack_list(list(fixed, shape), label = NULL)
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
   fixed <- fixed[, c(
@@ -724,6 +760,25 @@ tidy_par <- function(fit, interval = 0.95) {
   attr(random, "interval") <- interval
 
   list(fixed = fixed, random = random)
+}
+
+.tidy_gengamma_Q <- function(fit, z) {
+  series <- fit$dat$gengamma$series
+  if (!length(series)) return(NULL)
+  name <- vapply(series, `[[`, character(1), "name")
+  type <- vapply(series, `[[`, character(1), "type")
+  fixed <- vapply(series, `[[`, logical(1), "fixed")
+  est <- unname(fit$rep$gengamma_Q_report)
+  se <- rep(NA_real_, length(series))
+  if (!is.null(fit[["sdrep"]])) {
+    report_se <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$gengamma_Q_report
+    if (!is.null(report_se)) se[!fixed] <- report_se[!fixed]
+  }
+  data.frame(par = "gengamma_Q", coef = name,
+    fleet = ifelse(type == "catch", name, NA_character_),
+    survey = ifelse(type == "index", name, NA_character_),
+    unit = "unitless", is_fixed = fixed, est = est,
+    lwr = est - z * se, upr = est + z * se, se = se, se_scale = "reported")
 }
 
 .tam_parameter_summary <- function(fit, what) {
@@ -1108,7 +1163,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     !is.null(stored) && isTRUE(all.equal(stored, interval))
   }
   mixed_families <- any(vapply(model_list, function(fit) {
-    inherits(fit, "tam_fit") && .obs_has_pld(fit$dat)
+    inherits(fit, "tam_fit") && .obs_has_non_lognormal(fit$dat)
   }, logical(1)))
   obs_list <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
@@ -1120,11 +1175,11 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
       if (is.null(metadata)) metadata <- fit$osa
       tables <- .preserve_observation_extras(tables, fit$obs_pred, metadata)
-    } else if (!is.null(residual_seed) && .obs_has_pld(fit$dat) &&
+    } else if (!is.null(residual_seed) && .obs_has_non_lognormal(fit$dat) &&
                !identical(attr(tables, "residual_seed", exact = TRUE), residual_seed)) {
       tables <- .add_quantile_residuals(tables, residual_seed)
     }
-    if (mixed_families && !.obs_has_pld(fit$dat)) {
+    if (mixed_families && !.obs_has_non_lognormal(fit$dat)) {
       for (name in names(tables)) {
         tables[[name]]$family <- rep("lognormal", nrow(tables[[name]]))
         tables[[name]]$pred_scale <- rep("median", nrow(tables[[name]]))

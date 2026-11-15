@@ -48,14 +48,16 @@ from a fitted TAM object, and adds standardized residuals on the log scale.
 }
 \details{
 For lognormal observations, \code{pred} is the median and \code{sd} is the marginal
-SD of log observations. Standardized residuals are
-\code{(log(obs) - log(pred)) / sd} for positive observations. For Poisson-link
-delta lognormal observations, \code{pred} is the arithmetic mean including
-zeros, and \code{sd} and \code{std_res} describe the positive component. These fits
-also report \code{family}, the estimand of \code{pred} in \code{pred_scale}, the fitted
-arithmetic mean in \code{pred_mean}, and zero and positive probabilities (\code{p_zero},
-\code{p_positive} and their logs), the positive-component mean and median, and
-\code{quantile_res} for stochastic observations, including exact zeros.
+SD of log observations. For Gamma and generalized gamma, \code{pred} is the
+arithmetic mean. For Poisson-link delta families, \code{pred} is the arithmetic
+mean including zeros. In those families, \code{sd} describes the positive
+component. The \code{sd_scale} column identifies a log SD, CV or Prentice scale.
+Fits using these families also report the \code{family}, the scale of \code{pred} in
+\code{pred_scale}, the arithmetic mean in \code{pred_mean}, the positive-component
+mean and median, and \code{quantile_res} for stochastic observations. Poisson-link
+delta rows include zero and positive probabilities (\code{p_zero}, \code{p_positive}
+and their logs). Generalized gamma rows include the signed \code{gengamma_Q}.
+Standardized residuals use the positive component's log mean and log SD.
 Standardized and quantile residuals condition on fitted states. With
 correlated lognormal observations, both use marginal distributions.
 One-step-ahead residuals use a different predictive calculation and are

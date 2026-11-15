@@ -270,8 +270,9 @@
 #' Survey log-RMSE pools observation errors. MASE compares absolute log errors
 #' with persistence on identical cases; see [compute_hindcast_mase()]. Overall
 #' MASE averages ages within survey, surveys within horizon, then horizons.
-#' Poisson-link delta models use their positive conditional medians for both log
-#' scores. Age-summed log scores are available for lognormal surveys with
+#' Poisson-link delta, Gamma and generalized gamma models use their positive
+#' conditional medians for both log scores. Age-summed log scores are available
+#' for lognormal surveys with
 #' complete, consistent age coverage. Catch proportions
 #' and mean modeled age (plus age coded by its lower bound) are scored separately
 #' on their natural scale; genuine zeros are retained. Overlapping forecasts are

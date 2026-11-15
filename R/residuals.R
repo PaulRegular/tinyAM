@@ -22,9 +22,10 @@
 #' together, using one algorithm at fitted parameter values. It can be expensive,
 #' but does not rerun [fit_tam()] or re-estimate fixed parameters. Temporary
 #' objectives protect the fitted object's state. Other residual types remain
-#' simple extractors. Poisson-link delta lognormal fits use the positive
-#' component for log and standardized residuals and the full mean for response
-#' residuals. Quantile residuals use the fitted cumulative distribution,
+#' simple extractors. For Gamma and generalized gamma, standardized residuals
+#' use the mean and SD of the log of positive observations. Log residuals use
+#' the positive median. For any Poisson-link delta family, response residuals
+#' use the mean including zeros. Quantile residuals use the fitted cumulative distribution,
 #' drawing uniformly across its probability step at each observed zero. These
 #' residuals condition on fitted states. For lognormal observations they equal
 #' marginal standardized residuals. Missing and projected observations have
@@ -78,7 +79,7 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
   out <- .bind_rows(lapply(names(tables), function(name) {
     d <- tables[[name]]
     if (!is.data.frame(d) || !nrow(d)) return(NULL)
-    pld <- which(d$family == "pld_lognormal")
+    pld <- which(.is_pld_family(d$family))
     residual <- switch(type, standardized = d$std_res, osa = d$osa_res,
       quantile = if (is.null(d$quantile_res)) d$std_res else d$quantile_res,
       response = d$obs - d$pred, log = {
@@ -173,29 +174,35 @@ add_residuals <- function(fit, type = c("quantile", "osa"), ..., residual_seed =
 .add_quantile_residuals <- function(tables, seed = NULL) {
   if (is.null(seed)) seed <- attr(tables, "residual_seed", exact = TRUE)
   seed <- .observation_residual_seed(seed)
-  index <- lapply(tables, function(d) which(d$family == "pld_lognormal" &
+  index <- lapply(tables, function(d) which(.is_pld_family(d$family) &
     d$is_observed & !d$is_structural & d$obs == 0))
   uniforms <- .residual_uniform(sum(lengths(index)), seed)
   offset <- 0L
   for (name in names(tables)) {
     d <- tables[[name]]
     values <- if (is.null(d$std_res)) rep(NA_real_, nrow(d)) else d$std_res
-    positive <- which(d$family == "pld_lognormal" & d$is_observed &
+    positive <- which(d$family != "lognormal" & d$is_observed &
       !d$is_structural & d$obs > 0)
-    if (length(positive)) {
-      z <- values[positive]
-      p_zero <- d$log_p_zero[positive]
-      p_positive <- d$log_p_positive[positive]
-      upper <- p_positive + stats::pnorm(z, lower.tail = FALSE, log.p = TRUE)
-      use_lower <- which(upper > log(.5))
-      values[positive] <- stats::qnorm(upper, lower.tail = FALSE, log.p = TRUE)
+    for (family in unique(d$family[positive])) {
+      rows <- positive[d$family[positive] == family]
+      tail <- if (family == "pld_lognormal") {
+        function(lower) stats::pnorm(values[rows], lower.tail = lower, log.p = TRUE)
+      } else {
+        function(lower) .positive_log_cdf(family, log(d$obs[rows]),
+          d$log_obs_positive_mean[rows], d$sd[rows], d$gengamma_Q[rows], lower.tail = lower)
+      }
+      log_lower <- tail(TRUE)
+      log_upper <- d$log_p_positive[rows] + tail(FALSE)
+      values[rows] <- stats::qnorm(log_upper, lower.tail = FALSE, log.p = TRUE)
+      use_lower <- which(log_upper > log(.5))
       if (length(use_lower)) {
-        lower_component <- p_positive[use_lower] + stats::pnorm(z[use_lower], log.p = TRUE)
-        zero_component <- p_zero[use_lower]
+        i <- rows[use_lower]
+        lower_component <- d$log_p_positive[i] + log_lower[use_lower]
+        zero_component <- d$log_p_zero[i]
         largest <- pmax(zero_component, lower_component)
         lower <- largest + log1p(exp(pmin(zero_component, lower_component) - largest))
-        lower[largest == -Inf] <- -Inf
-        values[positive[use_lower]] <- stats::qnorm(lower, log.p = TRUE)
+        lower[which(largest == -Inf)] <- -Inf
+        values[i] <- stats::qnorm(lower, log.p = TRUE)
       }
     }
     zero <- index[[name]]

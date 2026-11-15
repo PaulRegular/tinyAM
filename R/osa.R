@@ -155,10 +155,10 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
 }
 
 .check_osa_family <- function(fit) {
-  if (.obs_has_pld(fit$dat)) {
+  if (.obs_has_non_lognormal(fit$dat)) {
     cli::cli_abort(c(
       "One-step-ahead residuals require an all-lognormal fit.",
-      "i" = "Use residuals(fit, type = 'quantile') for Poisson-link delta lognormal observations."
+      "i" = "Use residuals(fit, type = 'quantile') for Poisson-link delta, Gamma and generalized gamma observations."
     ))
   }
 }

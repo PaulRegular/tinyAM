@@ -341,11 +341,13 @@
 #' Check that the data support separate estimation of observation and population
 #' process correlations when both are enabled.
 #'
-#' With [pld_lognormal()] the same population prediction \eqn{\widetilde Y}
+#' With a Poisson-link delta family the same population prediction \eqn{\widetilde Y}
 #' represents the conditional arithmetic mean over sampled zeros and positives.
 #' The predicted probability of zero is
 #' \eqn{\exp[-\log(2)\widetilde Y / \widetilde Y_{50}]}.
-#' The observation SD applies to positive log observations. PLD series use
+#' Gamma uses the positive coefficient of variation and generalized gamma uses
+#' the Prentice scale. These distributions also support positive-only fits
+#' whose predictions are arithmetic means. Non-lognormal and PLD series use
 #' independent observation errors conditional on the modeled states. See
 #' [observation families][observation_families] for the full specification.
 #'

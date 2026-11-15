@@ -469,7 +469,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       # Constant observation-specific variance is exactly the same component
       # as a freely estimated observation SD on those rows (for the log link).
       index_family <- dat$obs_map$family[which(dat$obs_map$type == "index")[which(rows)[active]]]
-      if (!any(index_family == "pld_lognormal") && identical(dat$index_settings$q_link, "log") &&
+      if (all(index_family == "lognormal") && identical(dat$index_settings$q_link, "log") &&
         length(unique(diagonal[active])) == 1L) {
         s <- dat$sd_index_modmat[rows, , drop = FALSE]
         if (ncol(s) && qr(cbind(s, as.numeric(active)))$rank == qr(s)$rank) {
@@ -1286,9 +1286,64 @@ mono <- function(x, by = NULL) {
   ), simulate = simulate)
 }
 
+.prepare_family_dispersion <- function(dat, type) {
+  rows <- which(dat$obs_map$type == type)
+  family <- dat$obs_map$family[rows]
+  dispersion <- sub("^pld_", "", family)
+  if (!any(dispersion %in% c("gamma", "gengamma"))) return(dat)
+  design <- dat[[paste0("sd_", type, "_modmat")]]
+  terms <- dat[[paste0("sd_", type, "_terms")]]
+  setting <- paste0(type, "_settings$sd_form")
+  check_shared <- function(x) {
+    shared <- vapply(seq_len(ncol(x)), function(j) {
+      length(unique(dispersion[x[, j] != 0])) > 1L
+    }, logical(1))
+    if (any(shared)) {
+      group <- if (type == "catch") "fleet" else "survey"
+      cli::cli_abort(c(
+        "{setting} shares a dispersion coefficient across different positive distributions.",
+        "i" = "Give each distribution its own coefficient, for example {.code ~ 0 + {group}}."
+      ))
+    }
+  }
+  check_shared(design)
+  for (term in terms) {
+    z <- .q_term_design(term, length(rows))
+    if (any(z[dispersion == "gengamma", , drop = FALSE] != 0)) {
+      cli::cli_abort("{setting} cannot use random effects or smooths on a generalized gamma series. Use one constant Prentice scale within the series.")
+    }
+    check_shared(z)
+  }
+  supplied <- rep_len(dat[[paste0("log_sd_", type, "_supplied")]], length(rows))
+  for (j in seq_along(dat$gengamma$series)) {
+    s <- dat$gengamma$series[[j]]
+    if (s$type != type) next
+    selected <- dat$gengamma$group[rows] == j
+    d <- design[selected, , drop = FALSE]
+    if ((ncol(d) && nrow(unique(d)) > 1L) ||
+        length(unique(supplied[selected])) != 1L) {
+      cli::cli_abort("Generalized gamma series {.val {s$name}} needs one constant Prentice scale across ages and years.")
+    }
+    fixed_scale <- !any(d != 0)
+    if (fixed_scale) {
+      dat$gengamma$series[[j]]$supplied_scale <- exp(as.numeric(supplied[selected][1L]))
+    }
+    if (isTRUE(s$fixed) && s$Q < 0) {
+      formula <- dat[[paste0(type, "_settings")]]$sd_supplied
+      if (is.null(formula) || !fixed_scale) {
+        cli::cli_abort("Fixed negative Q for series {.val {s$name}} requires a supplied Prentice scale without an estimated multiplier.")
+      }
+      if (1 + dat$gengamma$series[[j]]$supplied_scale * s$Q <= 0) {
+        cli::cli_abort("The supplied Prentice scale and fixed Q for series {.val {s$name}} require {.code 1 + sigma * Q > 0} for a finite mean.")
+      }
+    }
+  }
+  dat
+}
+
 .check_sd_terms <- function(dat, component) {
   map <- dat$obs_map[dat$obs_map$type == component, , drop = FALSE]
-  if (any(map$family == "pld_lognormal")) {
+  if (any(map$family != "lognormal")) {
     design <- dat[[paste0("sd_", component, "_modmat")]]
     positive <- which(map$is_observed & dat$obs[[component]]$obs > 0)
     if (ncol(design) && qr(design[positive, , drop = FALSE])$rank < ncol(design)) {

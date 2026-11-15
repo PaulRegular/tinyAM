@@ -81,13 +81,14 @@ plot_resid <- function(
   standardized <- values("std_res")
   osa <- values("osa_res")
   quantile <- values("quantile_res")
-  pld <- seq_len(nrow(data)) %in% which(data$family == "pld_lognormal")
-  quantile[!pld] <- standardized[!pld]
+  pld <- seq_len(nrow(data)) %in% which(.is_pld_family(data$family))
+  quantile_family <- pld | seq_len(nrow(data)) %in% which(data$family %in% c("gamma", "gengamma"))
+  quantile[!quantile_family] <- standardized[!quantile_family]
   eligible <- rep(TRUE, nrow(data))
   if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | pld & data$obs == 0)
   if ("is_proj" %in% names(data)) eligible <- eligible & !is.na(data$is_proj) & !data$is_proj
   osa[!eligible] <- standardized[!eligible] <- NA_real_
-  osa[pld] <- NA_real_
+  osa[quantile_family] <- NA_real_
   if ("obs" %in% names(data)) standardized[which(data$obs == 0)] <- NA_real_
   quantile[!eligible] <- NA_real_
   quantile[which(data$is_structural %in% TRUE)] <- NA_real_
@@ -103,8 +104,9 @@ plot_resid <- function(
   status <- lapply(models, function(name) {
     rows <- which(model == name)
     has_pld <- any(pld[rows])
+    has_quantile_family <- any(quantile_family[rows])
     selected <- if (type == "auto" && !is.null(selection)) selection[[name]] else if (type == "auto") {
-      if (has_pld) "quantile" else if (any(is.finite(osa[rows]))) "osa" else "standardized"
+      if (has_quantile_family) "quantile" else if (any(is.finite(osa[rows]))) "osa" else "standardized"
     } else type
     data$.residual_value[rows] <<- switch(selected, osa = osa[rows],
       quantile = quantile[rows], standardized = standardized[rows])
@@ -116,7 +118,8 @@ plot_resid <- function(
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
       osa_method = if (selected == "osa" && length(finite)) paste(unique(method[finite]), collapse = ", ") else NA_character_,
-      has_pld = has_pld, n = length(finite), stringsAsFactors = FALSE)
+      has_pld = has_pld, has_quantile_family = has_quantile_family,
+      n = length(finite), stringsAsFactors = FALSE)
   })
   list(data = data, status = do.call(rbind, status))
 }
@@ -131,8 +134,9 @@ plot_resid <- function(
 }
 
 .zero_frequency_data <- function(data) {
-  if (!any(data$family == "pld_lognormal", na.rm = TRUE)) return(NULL)
-  rows <- which(data$family == "pld_lognormal" & data$is_observed &
+  pld <- .is_pld_family(data$family)
+  if (!any(pld)) return(NULL)
+  rows <- which(pld & data$is_observed &
     !data$is_structural & is.finite(data$p_zero))
   if (!length(rows)) return(NULL)
   d <- data[rows, , drop = FALSE]
@@ -247,9 +251,9 @@ plot_resid <- function(
   args$frame <- NULL
   available <- .observation_residual_data(data, "auto")$status
   types <- c("standardized", "osa")
-  if (any(available$has_pld) || type == "quantile") types <- c(types, "quantile")
+  if (any(available$has_quantile_family) || type == "quantile") types <- c(types, "quantile")
   # Resolve once for the complete panel, never from a partially observed frame.
-  default_type <- if (any(available$has_pld)) "quantile" else
+  default_type <- if (any(available$has_quantile_family)) "quantile" else
     if (all(available$residual_type == "osa")) "osa" else "standardized"
   defaults <- if (model_frame) {
     available$residual_type[match(frame$levels, available$model)]
@@ -302,7 +306,7 @@ plot_resid <- function(
     compactHeader = kind == "bubbles" && is.null(title),
     selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
     showSelector = length(selectors) > 1L && (type != "osa" ||
-      any(available$residual_type == "osa") || any(available$has_pld)))
+      any(available$residual_type == "osa") || any(available$has_quantile_family)))
   initial <- views[[initial_view + 1L]]$cells[[1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data

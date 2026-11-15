@@ -50,9 +50,10 @@ or method are supplied. Otherwise both catch and index residuals are calculated
 together, using one algorithm at fitted parameter values. It can be expensive,
 but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
 objectives protect the fitted object's state. Other residual types remain
-simple extractors. Poisson-link delta lognormal fits use the positive
-component for log and standardized residuals and the full mean for response
-residuals. Quantile residuals use the fitted cumulative distribution,
+simple extractors. For Gamma and generalized gamma, standardized residuals
+use the mean and SD of the log of positive observations. Log residuals use
+the positive median. For any Poisson-link delta family, response residuals
+use the mean including zeros. Quantile residuals use the fitted cumulative distribution,
 drawing uniformly across its probability step at each observed zero. These
 residuals condition on fitted states. For lognormal observations they equal
 marginal standardized residuals. Missing and projected observations have

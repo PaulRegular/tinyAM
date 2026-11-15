@@ -46,9 +46,10 @@ On the natural scale,
 With \code{log = TRUE}, both values are logged first. Log RMSE measures departures
 on a relative scale and is often more useful when catch and survey units differ.
 It still combines errors from different series and is not a likelihood score.
-Zeros and missing pairs are omitted for log RMSE. Poisson-link delta fits
-use the positive conditional median for log RMSE and the unconditional mean
-for natural-scale RMSE. Natural-scale scores retain genuine zeros.
+Zeros and missing pairs are omitted for log RMSE. Poisson-link delta, Gamma
+and generalized gamma fits use the positive conditional median for log RMSE
+and the arithmetic mean for natural-scale RMSE. Natural-scale scores retain
+genuine zeros.
 Predictions beyond the available observations do not contribute.
 All projection rows are eligible; use \code{\link[=fit_hindcast]{fit_hindcast()}} for one-year horizons
 or subset the input to the desired forecast horizon.

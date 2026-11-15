@@ -45,9 +45,9 @@ Use these draws to explore uncertainty or test whether simulated data resemble
 the observations. Results are tidy data frames with a \verb{sim = 1..n} column.
 }
 \details{
-Missing observations and zeros excluded by the default lognormal family
-remain \code{NA} in the simulated tables. PLD draws can be zero or positive at
-each sampled age. Population states and
+Missing observations and zeros excluded by positive-only families remain
+\code{NA} in the simulated tables. PLD draws can be zero or positive at each
+sampled age. Population states and
 predictions are still calculated throughout the modeled period, including
 projection years. Missing observations are not estimated as extra parameters.
 Observation draws preserve fitted age correlations within each fleet-year
@@ -65,7 +65,7 @@ The simulation has two orthogonal controls:
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:
 \itemize{
 \item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
-\item \code{"fixed"} — sample \strong{fixed effects} \verb{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
+\item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
 \item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
 Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 When no random effects are integrated, this is the same as \code{"fixed"}.

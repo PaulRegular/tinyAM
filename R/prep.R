@@ -458,12 +458,14 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param catch_settings A list with elements:
 #' - `family`: [Observation family][observation_families] for all catch data or
 #'   a named list by fleet. The default lognormal fits positive observations.
-#' - `sd_form`: formula for log observation SD for catch-at-age data. Use
-#'   ordinary terms, Gaussian [formula_effects] such as `~ iid(age)`, or
-#'   penalized [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
-#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
-#'   scale of the log-observation residuals) for catch-at-age data. When provided,
-#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
+#' - `sd_form`: formula for log dispersion. The [observation family][observation_families]
+#'   determines whether dispersion is a log-SD, coefficient of variation, or
+#'   Prentice scale. Supported families allow ordinary terms, Gaussian
+#'   [formula_effects] such as `~ iid(age)`, and penalized
+#'   [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
+#' - `sd_supplied`: optional one-sided formula giving positive values on the
+#'   family's dispersion scale. Supplied values act as offsets, with the
+#'   intercept removed from `sd_form`.
 #' - `cor_struct`: correlation of log observation errors among modeled ages
 #'   in each fleet and year. The default is `"independent"`. Use `"ar1"` for
 #'   positive correlation that decays with age distance in every fleet, or a
@@ -473,12 +475,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param index_settings A list with elements:
 #' - `family`: [Observation family][observation_families] for all index data or
 #'   a named list by survey.
-#' - `sd_form`: formula for log observation SD for index-at-age data. It uses the
-#'   same syntax as catch observation SD. For example,
+#' - `sd_form`, `sd_supplied`: as for catch. For example, for lognormal series
 #'   `~ survey + s(age, k = 5, by = survey)` gives each survey its own age curve.
-#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
-#'   scale of the log-observation residuals) for index-at-age data. When provided,
-#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `cor_struct`: as for catch, with names taken from the `survey` column.
 #'   Each selected survey or fleet estimates its own correlation from
 #'   years with at least two observed ages. If there are no such years, the
@@ -653,7 +651,7 @@ prepare_tam <- function(
   if (max(all_obs_ages) > max(dat$ages)) {
     for (type in names(families)) {
       d <- obs[[type]]
-      pld <- names(Filter(function(x) x$name == "pld_lognormal", families[[type]]))
+      pld <- names(Filter(function(x) .is_pld_family(x$name), families[[type]]))
       if (any(d$age > max(dat$ages) & d$year %in% dat$years & !is.na(d$obs) &
           .observation_series(d, type) %in% pld)) {
         cli::cli_abort("Supply pooled {.val {type}} observations at the modeled plus age for PLD series. Older biological inputs may be retained.")
@@ -837,8 +835,10 @@ prepare_tam <- function(
   dat$sd_index_modmat <- sd_design$matrix
   dat$sd_index_terms <- sd_design$terms
 
-  .check_sd_terms(dat, "catch")
-  .check_sd_terms(dat, "index")
+  for (type in c("catch", "index")) {
+    dat <- .prepare_family_dispersion(dat, type)
+    .check_sd_terms(dat, type)
+  }
   q_data <- dat$obs$index
   attr(q_data, "observation_support") <- dat$is_observed[dat$obs_map$type == "index"]
   q_design <- if (has_index) .parse_q_formula(dat$index_settings$q_form, q_data, scope="survey") else

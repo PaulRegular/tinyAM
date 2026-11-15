@@ -306,6 +306,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index", "sd_catch_smooth_fixed", "sd_index_smooth_fixed")] <- "Observation SDs"
   category[par %in% c("y50_catch", "y50_index")] <- "Detection scales"
+  category[par == "gengamma_Q"] <- "Observation shape"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope|peak|scale|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
@@ -316,7 +317,8 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
-    "Process SDs", "Smoothing SDs", "Process SD coefficients", "Observation SDs", "Detection scales",
+    "Process SDs", "Smoothing SDs", "Process SD coefficients", "Observation SDs",
+    "Detection scales", "Observation shape",
     "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))

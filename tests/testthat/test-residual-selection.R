@@ -144,6 +144,26 @@ test_that("overlay defaults require eligible OSA in every displayed model", {
   expect_true(all(vapply(traces, function(trace) identical(trace$marker$line$width, 0), logical(1))))
 })
 
+test_that("Gamma residuals select quantiles and only PLD includes sampled zeros", {
+  d <- residual_plot_data()
+  d$osa_res <- NA_real_
+  d$family <- ifelse(d$model == "B", "gamma", "lognormal")
+  d$quantile_res <- d$std_res + 1
+  d$is_structural <- FALSE
+  d$obs[7L] <- 0
+  config <- residual_config(plot_bubbles(d, frame = ~model))
+  expect_identical(config$defaultViews, c(0L, 2L))
+  expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 5L)
+  d$family[d$model == "B"] <- "pld_gengamma"
+  d$is_observed <- TRUE
+  d$p_zero <- 0.2
+  config <- residual_config(plot_bubbles(d, frame = ~model))
+  expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 6L)
+  frequency <- .zero_frequency_data(d)
+  expect_true(all(frequency$model == "B"))
+  expect_equal(sum(frequency$n), 6L)
+})
+
 test_that("explicit hover vectors follow model frames and partial OSA rows", {
   d <- residual_plot_data()
   labels <- paste0("row-", seq_len(nrow(d)))

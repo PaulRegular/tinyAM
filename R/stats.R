@@ -114,9 +114,11 @@ compute_mohns_rho <- function(data) {
   prediction <- rep(NA_real_, length(d$pred))
   prediction[positive] <- log(d$pred[positive])
   if (!is.null(d$log_pred_positive)) {
-    pld <- d$family %in% "pld_lognormal"
-    prediction[pld] <- d$log_pred_positive[pld]
-    if (!is.null(d$is_structural)) prediction[pld & d$is_structural %in% TRUE] <- NA_real_
+    has_positive_median <- !is.na(d$family) & d$family != "lognormal"
+    prediction[has_positive_median] <- d$log_pred_positive[has_positive_median]
+    if (!is.null(d$is_structural)) {
+      prediction[has_positive_median & d$is_structural %in% TRUE] <- NA_real_
+    }
   }
   prediction
 }
@@ -148,8 +150,8 @@ compute_mohns_rho <- function(data) {
   .bind_rows(lapply(split(data, interaction(data[groups], drop = TRUE)), function(d) {
     ages <- supports[[as.character(d$survey[1])]]
     if (anyDuplicated(d$age) || !setequal(d$age, ages)) return(NULL)
-    # Age-specific medians do not give the median of a summed delta observation.
-    if (any(d$family %in% "pld_lognormal")) return(NULL)
+    # The summed index score currently uses the lognormal prediction convention.
+    if (any(!is.na(d$family) & d$family != "lognormal")) return(NULL)
     values <- d$obs
     if (any(!is.finite(values) | values <= 0)) return(NULL)
     out <- d[1, groups, drop = FALSE]
@@ -202,7 +204,7 @@ compute_mohns_rho <- function(data) {
   if (!nrow(pairs) || is.null(pairs$p_zero)) return(data.frame())
   structural <- pairs$is_structural %in% TRUE
   if (!length(structural)) structural <- rep(FALSE, nrow(pairs))
-  eligible <- pairs$family %in% "pld_lognormal" & !structural &
+  eligible <- .is_pld_family(pairs$family) & !structural &
     is.finite(pairs$obs) & pairs$obs >= 0 &
     is.finite(pairs$p_zero) & pairs$p_zero >= 0 & pairs$p_zero <= 1
   out <- pairs[eligible, , drop = FALSE]
@@ -309,9 +311,10 @@ compute_mohns_rho <- function(data) {
 #' With `log = TRUE`, both values are logged first. Log RMSE measures departures
 #' on a relative scale and is often more useful when catch and survey units differ.
 #' It still combines errors from different series and is not a likelihood score.
-#' Zeros and missing pairs are omitted for log RMSE. Poisson-link delta fits
-#' use the positive conditional median for log RMSE and the unconditional mean
-#' for natural-scale RMSE. Natural-scale scores retain genuine zeros.
+#' Zeros and missing pairs are omitted for log RMSE. Poisson-link delta, Gamma
+#' and generalized gamma fits use the positive conditional median for log RMSE
+#' and the arithmetic mean for natural-scale RMSE. Natural-scale scores retain
+#' genuine zeros.
 #' Predictions beyond the available observations do not contribute.
 #' All projection rows are eligible; use [fit_hindcast()] for one-year horizons
 #' or subset the input to the desired forecast horizon.
@@ -370,7 +373,7 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
 #'   For multiple horizons the baseline remains fixed at the origin. This is
 #'   an extension of the paper's one-year calculation. Log MASE uses the same
 #'   predictions as log RMSE, including the positive conditional median for
-#'   Poisson-link delta fits.
+#'   Poisson-link delta, Gamma and generalized gamma fits.
 #' @references Carvalho et al. (2021). A cookbook for using model diagnostics in
 #'   integrated stock assessments. Fisheries Research 240, 105959.
 #'   \doi{10.1016/j.fishres.2021.105959}.
