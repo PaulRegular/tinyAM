@@ -101,6 +101,19 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
 
   expect_equal(out$catch$std_res, expected_catch_res)
   expect_equal(out$index$std_res, expected_index_res)
+  expect_identical(attr(out, "quantile")$method, "mle-mvn")
+  expect_identical(fit$obs_pred$catch$quantile_res, out$catch$quantile_res)
+  expect_identical(fit$obs_pred$index$quantile_res, out$index$quantile_res)
+  expect_false(identical(out$catch$quantile_res, out$catch$std_res))
+
+  retained <- add_residuals(fit, method = "mle-eb")
+  stacked <- tidy_tam(model_list = list(sampled = fit, fitted = retained),
+    interval = .8, process_residuals = FALSE)$obs_pred
+  expect_identical(vapply(attr(stacked, "quantile"), `[[`, character(1), "method"),
+    c(sampled = "mle-mvn", fitted = "mle-eb"))
+  expect_equal(subset(stacked$catch, model == "sampled")$quantile_res, out$catch$quantile_res)
+  fitted <- subset(stacked$catch, model == "fitted")
+  expect_identical(fitted$quantile_res, fitted$std_res)
 })
 
 test_that("tidy_obs_pred forwards OSA controls and maps included observations", {

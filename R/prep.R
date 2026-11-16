@@ -211,42 +211,62 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' summed for `catch` and `index` data. Weight and maturity tables retain all
 #' ages for abundance-based aggregation inside [nll_fun()]. Other catch/index
 #' columns retain their values from the plus age or first available older age.
+#' Native PLD observations require a complete sampled bin.
 #'
 #' @param obs Named list with data.frames `catch`, `index`, `weight`, `maturity`.
 #' @param plus_age Integer specifying the terminal age to be modeled.
 #'   All ages greater than or equal to this value are combined into a plus group.
+#' @param families Normalized observation families by catch fleet or survey.
 #' @return A list with the same structure as `obs`, with catch/index observations
 #'   aggregated into the specified plus group and biological tables unchanged.
 #' @keywords internal
 #'
 #' @noRd
-.plus_fun <- function(obs, plus_age) {
-  .aggregate_one <- function(df, plus_age, fun, groups = "year") {
+.plus_fun <- function(obs, plus_age, families = NULL) {
+  .aggregate_one <- function(df, type, groups) {
     plus_df <- df[df$age >= plus_age, , drop = FALSE]
-    if (nrow(plus_df) == 0) {
-      return(df)
-    } else {
-      plus_group <- stats::aggregate(plus_df["obs"], plus_df[groups], FUN = function(x) {
-        if (all(is.na(x))) NA_real_ else fun(x, na.rm = TRUE)
-      })
-      # Retain metadata at the plus age, or the first available older age.
-      template <- plus_df[order(plus_df$age), , drop = FALSE]
-      template <- template[!duplicated(template[groups]), , drop = FALSE]
-      template$age <- plus_age
-      plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
-                         plus_group,
-                         by = groups
-      )
-      df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
-      for (column in names(df)[vapply(df, is.factor, logical(1))]) {
-        attr(df_out[[column]], "contrasts") <- attr(df[[column]], "contrasts")
+    if (!nrow(plus_df)) return(df)
+
+    # Infer the input resolution across the supplied series once, including
+    # years outside the fitting window. A legacy pooled series may retain NA
+    # placeholders for every older age.
+    pld <- names(Filter(function(spec) .is_pld_family(spec$name), families[[type]]))
+    series <- .observation_series(plus_df, type)
+    native_pld <- unique(series[series %in% pld & plus_df$age > plus_age & !is.na(plus_df$obs)])
+    values <- plus_df["obs"]
+    if (length(native_pld)) {
+      keys <- c(groups, "age")
+      if (anyDuplicated(plus_df[series %in% native_pld, keys, drop = FALSE])) {
+        cli::cli_abort("Native PLD {.val {type}} plus groups require one row per year, age and series.")
       }
-      return(df_out[order(df_out$age, df_out$year), ])
+      values$n_sampled <- as.integer(!is.na(plus_df$obs))
     }
+    plus_group <- stats::aggregate(values, plus_df[groups], FUN = function(x) {
+      if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
+    })
+    if (length(native_pld)) {
+      n_ages <- max(obs$weight$age) - plus_age + 1L
+      incomplete <- .observation_series(plus_group, type) %in% native_pld &
+        plus_group$n_sampled != n_ages
+      plus_group$obs[incomplete] <- NA_real_
+      plus_group$n_sampled <- NULL
+    }
+
+    # Retain metadata at the plus age, or the first available older age.
+    template <- plus_df[order(plus_df$age), , drop = FALSE]
+    template <- template[!duplicated(template[groups]), , drop = FALSE]
+    template$age <- plus_age
+    plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
+                       plus_group, by = groups)
+    df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
+    for (column in names(df)[vapply(df, is.factor, logical(1))]) {
+      attr(df_out[[column]], "contrasts") <- attr(df[[column]], "contrasts")
+    }
+    df_out[order(df_out$age, df_out$year), ]
   }
 
-  obs$catch <- .aggregate_one(obs$catch, plus_age, sum, c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
-  obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
+  obs$catch <- .aggregate_one(obs$catch, "catch", c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
+  obs$index <- .aggregate_one(obs$index, "index", c("year", "survey"))
   obs
 }
 
@@ -274,7 +294,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' See [as_tam_data()] for table keys, units, fleet-specific catch weights and
 #' covariate routing, and [cod_obs] for example data. Catch and survey zeros and
 #' missing values are excluded from the lognormal observation likelihood;
-#' complete predictions are still calculated.
+#' complete predictions are still calculated. When using a [PLD family][observation_families],
+#' native catch and survey observations are pooled into a terminal observation
+#' only when every biological age in that bin has an observation.
 #'
 #' Biological ages above the modeled plus age are retained in `W_plus_input`,
 #' `W_catch_plus_input` and `P_plus_input`. The population calculation derives
@@ -456,12 +478,16 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param catch_settings A list with elements:
-#' - `sd_form`: formula for log observation SD for catch-at-age data. Use
-#'   ordinary terms, Gaussian [formula_effects] such as `~ iid(age)`, or
-#'   penalized [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
-#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
-#'   scale of the log-observation residuals) for catch-at-age data. When provided,
-#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
+#' - `family`: [Observation family][observation_families] for all catch data or
+#'   a named list by fleet. The default lognormal fits positive observations.
+#' - `sd_form`: formula for log dispersion. The [observation family][observation_families]
+#'   determines whether dispersion is a log-SD, coefficient of variation, or
+#'   Prentice scale. Supported families allow ordinary terms, Gaussian
+#'   [formula_effects] such as `~ iid(age)`, and penalized
+#'   [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
+#' - `sd_supplied`: optional one-sided formula giving positive values on the
+#'   family's dispersion scale. Supplied values act as offsets, with the
+#'   intercept removed from `sd_form`.
 #' - `cor_struct`: correlation of log observation errors among modeled ages
 #'   in each fleet and year. The default is `"independent"`. Use `"ar1"` for
 #'   positive correlation that decays with age distance in every fleet, or a
@@ -469,12 +495,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   stay independent. A catch table without fleet labels has one series named
 #'   `"Fishery"`.
 #' @param index_settings A list with elements:
-#' - `sd_form`: formula for log observation SD for index-at-age data. It uses the
-#'   same syntax as catch observation SD. For example,
+#' - `family`: [Observation family][observation_families] for all index data or
+#'   a named list by survey.
+#' - `sd_form`, `sd_supplied`: as for catch. For example, for lognormal series
 #'   `~ survey + s(age, k = 5, by = survey)` gives each survey its own age curve.
-#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
-#'   scale of the log-observation residuals) for index-at-age data. When provided,
-#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `cor_struct`: as for catch, with names taken from the `survey` column.
 #'   Each selected survey or fleet estimates its own correlation from
 #'   years with at least two observed ages. If there are no such years, the
@@ -538,8 +562,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   retained age represents a hidden plus group. Effective modeled W/P and hidden
 #'   abundance `N_plus` can then be inspected in the likelihood report (`fit$rep`).
 #' - `obs_map` — stack of `obs$catch` and `obs$index` mapping variables
-#' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
-#'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
+#' - `obs_values`, `log_obs`, `is_observed` - raw observations, log observations
+#'   and a logical vector identifying the stochastic likelihood rows. Sampled
+#'   PLD zeros have log value `-Inf`. `observed` contains the compact lognormal
+#'   likelihood observations.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `mu_m` (or `log_mu_supplied_m`)
 #' - process settings: `N_settings`, `rec_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
@@ -577,8 +603,8 @@ prepare_tam <- function(
       process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
     ),
-    catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
-    index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent",
+    catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal()),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal(),
                           q_form = ~q_block, q_link = "log"),
     proj_settings = NULL
 ) {
@@ -637,9 +663,16 @@ prepare_tam <- function(
   if (any(diff(dat$ages) != 1L)) {
     cli::cli_abort("{.arg ages} must be consecutive ages.")
   }
+  series <- lapply(c("catch", "index"), function(type) unique(.observation_series(obs[[type]], type)))
+  names(series) <- c("catch", "index")
+  families <- lapply(names(series), function(type) {
+    setting <- paste0(type, "_settings$family")
+    .obs_families(dat[[paste0(type, "_settings")]]$family, series[[type]], setting)
+  })
+  names(families) <- names(series)
   if (max(all_obs_ages) > max(dat$ages)) {
     .check_f_plus_covariates(dat$obs, max(dat$ages), dat$F_settings, dat$years)
-    dat$obs <- .plus_fun(dat$obs, max(dat$ages))
+    dat$obs <- .plus_fun(dat$obs, max(dat$ages), families)
   }
   dat$obs <- stats::setNames(lapply(names(dat$obs), function(nm) {
     d <- dat$obs[[nm]]
@@ -769,10 +802,6 @@ prepare_tam <- function(
   catch$type <- rep("catch", nrow(catch))
   index$type <- rep("index", nrow(index))
   obs_fit <- rbind(catch, index)
-  obs_fit$log_obs <- log(obs_fit$obs)
-  obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # zero observations are treated as missing
-  obs_fit$is_missing <- is.na(obs_fit$log_obs)
-  obs_fit$is_observed <- !obs_fit$is_missing
 
   dat$catch_settings <- catch_settings
   dat$index_settings <- index_settings
@@ -783,12 +812,8 @@ prepare_tam <- function(
     cli::cli_abort("index_settings$q_link must be either {.val log} or {.val logit}.")
   }
 
-  dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
-  dat$log_obs <- obs_fit$log_obs
-  dat$is_missing <- obs_fit$is_missing
-  dat$is_observed <- obs_fit$is_observed
-  dat$observed <- dat$log_obs[!dat$is_missing]
-  dat$obs_correlation <- .prepare_obs_correlation(dat, unique(as.character(obs$index$survey)))
+  dat <- .prepare_observation_rows(dat, obs_fit, families)
+  dat$obs_correlation <- .prepare_obs_correlation(dat, series$index)
 
   sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
   if (!is.null(dat$catch_settings$sd_supplied)) {
@@ -824,9 +849,13 @@ prepare_tam <- function(
   dat$sd_index_modmat <- sd_design$matrix
   dat$sd_index_terms <- sd_design$terms
 
-  .check_sd_terms(dat, "catch")
-  .check_sd_terms(dat, "index")
-  q_design <- if (has_index) .parse_q_formula(dat$index_settings$q_form, dat$obs$index, scope="survey") else
+  for (type in c("catch", "index")) {
+    dat <- .prepare_family_dispersion(dat, type)
+    .check_sd_terms(dat, type)
+  }
+  q_data <- dat$obs$index
+  attr(q_data, "observation_support") <- dat$is_observed[dat$obs_map$type == "index"]
+  q_design <- if (has_index) .parse_q_formula(dat$index_settings$q_form, q_data, scope="survey") else
     list(q_modmat = matrix(numeric(), 0L, 0L), q_terms = list())
   dat[names(q_design)] <- q_design
   if (!is.null(dat$q_power) && dat$index_settings$q_link != "log") {

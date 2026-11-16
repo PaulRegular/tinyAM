@@ -40,7 +40,7 @@ htmltools::tagList(htmltools::tags$style(htmltools::HTML('
 ```{r data, include=FALSE}
 
 tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval,
-  process_seed = process_seed)
+  process_seed = process_seed, residual_seed = residual_seed)
 set_model_levels <- function(x, model_names) {
   if (is.data.frame(x) && "model" %in% names(x)) {
     x$model <- factor(as.character(x$model), levels = model_names)
@@ -72,6 +72,15 @@ ssb_label <- "SSB"
 ```{r helpers, include = FALSE}
 
 cols <- tam_pal(length(fits))
+
+historical_years <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), function(fit) {
+  fit$dat$years[!fit$dat$is_proj]
+})
+dashboard_zero_counts <- function(d) {
+  if (!is.data.frame(d)) return(NULL)
+  d <- d[d$model %in% names(historical_years), , drop = FALSE]
+  tinyAM:::.annual_zero_counts(d, years = historical_years)
+}
 
 plot_rows <- function(d, columns) {
   if (!is.data.frame(d)) return(NULL)

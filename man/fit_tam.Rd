@@ -14,9 +14,9 @@ fit_tam(
         mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", q_form = ~q_block,
-        q_link = "log"),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal()),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal(),
+        q_form = ~q_block, q_link = "log"),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
@@ -204,12 +204,16 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for log observation SD for catch-at-age data. Use
-ordinary terms, Gaussian \link{formula_effects} such as \code{~ iid(age)}, or
-penalized \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
-\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
-scale of the log-observation residuals) for catch-at-age data. When provided,
-the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
+\item \code{family}: \link[=observation_families]{Observation family} for all catch data or
+a named list by fleet. The default lognormal fits positive observations.
+\item \code{sd_form}: formula for log dispersion. The \link[=observation_families]{observation family}
+determines whether dispersion is a log-SD, coefficient of variation, or
+Prentice scale. Supported families allow ordinary terms, Gaussian
+\link{formula_effects} such as \code{~ iid(age)}, and penalized
+\link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
+\item \code{sd_supplied}: optional one-sided formula giving positive values on the
+family's dispersion scale. Supplied values act as offsets, with the
+intercept removed from \code{sd_form}.
 \item \code{cor_struct}: correlation of log observation errors among modeled ages
 in each fleet and year. The default is \code{"independent"}. Use \code{"ar1"} for
 positive correlation that decays with age distance in every fleet, or a
@@ -220,12 +224,10 @@ stay independent. A catch table without fleet labels has one series named
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for log observation SD for index-at-age data. It uses the
-same syntax as catch observation SD. For example,
+\item \code{family}: \link[=observation_families]{Observation family} for all index data or
+a named list by survey.
+\item \code{sd_form}, \code{sd_supplied}: as for catch. For example, for lognormal series
 \code{~ survey + s(age, k = 5, by = survey)} gives each survey its own age curve.
-\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
-scale of the log-observation residuals) for index-at-age data. When provided,
-the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{cor_struct}: as for catch, with names taken from the \code{survey} column.
 Each selected survey or fleet estimates its own correlation from
 years with at least two observed ages. If there are no such years, the

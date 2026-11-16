@@ -1,5 +1,23 @@
 # tinyAM 0.1.1.9001
 
+* Pool complete native-age observations for Poisson-link delta plus groups.
+  Keep incomplete tail observations missing and preserve native counts for
+  observed-catch hindcasts.
+
+* Default to quantile residuals from a conditional Gaussian draw in state-space
+  fits. Keep fitted-state quantiles available through `method = "mle-eb"` and
+  standardized residuals for lognormal fits without random effects.
+
+* Add Gamma and generalized gamma observations, including Poisson-link delta
+  forms. Use `stats::Gamma(link = "log")`, `gengamma()`, `pld_gamma()`, or
+  `pld_gengamma()` in catch and index settings.
+
+* Use `pld_lognormal()` in catch or index settings to fit sampled zeros with
+  one fixed or estimated soft detection scale per fleet or survey. PLD
+  constructors expose `link = "log"` for the overall arithmetic mean.
+  The default `lognormal()` continues to fit positive observations. PLD outputs
+  include fitted zero probabilities and randomized quantile residuals.
+
 * Rename the catchability marker `power()` to `q_power()` to avoid masking
   `stats::power()`. Use `q_power(N)` in catchability formulas.
 

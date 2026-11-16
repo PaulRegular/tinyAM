@@ -12,14 +12,17 @@ dashboard_plots <- function(file) {
     json <- substr(script, start, end)
     jsonlite::fromJSON(json, simplifyVector = FALSE)
   })
-  lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), `[[`, "x")
+  lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), function(widget) {
+    plot <- widget$x
+    for (hook in widget$jsHooks$render) {
+      if (identical(hook$data$viewLabel, "Residuals")) attr(plot, "residual_controls") <- hook$data
+    }
+    plot
+  })
 }
 
 dashboard_residuals <- function(plots) {
-  Filter(function(plot) {
-    title <- unlist(c(plot$layout$title, plot$layout$yaxis$title))
-    any(grepl("residuals", title, fixed = TRUE))
-  }, plots)
+  Filter(function(plot) !is.null(attr(plot, "residual_controls", exact = TRUE)), plots)
 }
 
 dashboard_metric <- function(plot) {
@@ -57,9 +60,10 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, 'data-default-view="profile"', fixed = TRUE)
   expect_match(html, "<h3>Average F</h3>", fixed = TRUE)
   expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
+  plots <- dashboard_plots(tmpfile)
   age_year_plots <- Filter(
     function(p) any(dashboard_metric(p) %in% c("N", "F", "M", "Selectivity", "Catch", "Abundance index")),
-    dashboard_plots(tmpfile)
+    plots
   )
   for (metric in c("N", "F", "M", "Selectivity", "Catch", "Abundance index")) {
     views <- Filter(function(p) identical(dashboard_metric(p), metric), age_year_plots)
@@ -90,7 +94,7 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, "<h3>Initial abundance</h3>", fixed = TRUE)
   parameter_plots <- Filter(
     function(p) identical(unlist(p$layout$xaxis$title), "Estimate"),
-    dashboard_plots(tmpfile)
+    plots
   )
   initial <- Filter(
     function(p) any(grepl("r0", unlist(lapply(p$data, `[[`, "y")), fixed = TRUE)),
@@ -99,17 +103,47 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_length(initial, 1L)
   expect_false(any(grepl("sd_|phi_|q", unlist(lapply(initial[[1]]$data, `[[`, "y")))))
 
-  residuals <- dashboard_residuals(dashboard_plots(tmpfile))
+  residuals <- dashboard_residuals(plots)
   expect_gt(length(residuals), 0L)
+  sampled <- unname(vapply(fits, function(fit) {
+    identical(attr(fit$obs_pred, "quantile")$method, "mle-mvn")
+  }, logical(1)))
+  expect_true(any(sampled))
+  expected_types <- c("standardized", "osa", if (any(sampled)) "quantile")
   for (plot in residuals) {
-    expect_gt(length(plot$data), 0L)
-    expect_true(any(is.finite(unlist(lapply(plot$data, `[[`, "y")))))
-    frame_names <- vapply(plot$frames, `[[`, character(1), "name")
-    expect_setequal(frame_names, names(fits))
-    expect_true(all(vapply(
-      plot$frames, function(frame) length(frame$traces) > 0L,
-      logical(1)
-    )))
+    expect_length(plot$frames, 0L)
+    controls <- attr(plot, "residual_controls", exact = TRUE)
+    expect_identical(controls$frameLabel, "Model")
+    expect_identical(unlist(controls$frames), names(fits))
+    expect_identical(unlist(controls$defaultViews), ifelse(sampled, 2L, 0L))
+    expect_true(controls$showSelector)
+    expect_identical(lapply(controls$viewOptions, function(options) unlist(options$labels)),
+      lapply(sampled, function(x) if (x) c("Standardized", "Quantile") else "Standardized / Quantile"))
+    views <- controls$views
+    expect_identical(vapply(views, `[[`, character(1), "type"), expected_types)
+    for (view in views) {
+      expect_length(view$cells, length(fits))
+      for (i in seq_along(view$cells)) {
+        cell <- view$cells[[i]]
+        expect_length(cell$status, 1L)
+        status <- cell$status[[1L]]
+        expect_identical(status$model, names(fits)[i])
+        expect_identical(status$residual_type, view$type)
+        x <- unlist(lapply(cell$data, `[[`, "x"))
+        y <- unlist(lapply(cell$data, `[[`, "y"))
+        expect_length(x, status$n)
+        expect_length(y, status$n)
+        if (view$type %in% c("standardized", "quantile")) {
+          expect_gt(status$n, 0L)
+          expect_true(all(is.finite(y)))
+        } else {
+          expect_length(cell$data, 0L)
+        }
+      }
+    }
+    initial <- views[[controls$view + 1L]]$cells[[controls$frame + 1L]]
+    expect_identical(lapply(plot$data, `[`, c("x", "y")),
+      lapply(initial$data, `[`, c("x", "y")))
   }
 })
 

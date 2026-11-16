@@ -106,6 +106,11 @@ plot_model <- function(..., model_list = NULL) {
   }
   fleets <- if (isTRUE(dat$has_fleet)) dat$fleets else "Aggregate fishery"
   surveys <- unique(as.character(dat$obs$index$survey))
+  family_label <- function(type) {
+    pld <- Filter(function(s) s$type == type, dat$pld$series)
+    if (!length(pld)) return("Lognormal")
+    paste("Poisson-link delta lognormal for", paste(vapply(pld, `[[`, character(1), "name"), collapse = ", "))
+  }
   curve <- dat$rec$curve
   predictors <- function(forms, table, data, exclude = character()) {
     forms <- Filter(function(x) inherits(x, "formula"), forms)
@@ -178,12 +183,14 @@ plot_model <- function(..., model_list = NULL) {
       paste("Age blocks:", block_text(dat$M_settings$age_blocks)),
       if (!identical(dat$M_settings$process, "off")) paste("First process year:", dat$M_settings$first_dev_year),
       "Shared age blocks share actual M; other cells retain their mean."), "tinyAM-model"),
-    catch = card("Catch observations", c("Lognormal numbers at age, conditional on population and F.",
+    catch = card("Catch observations", c("Numbers at age, conditional on population and F.",
+      paste("Family:", family_label("catch")),
       paste("Observation SD:", form(dat$catch_settings$sd_form)),
       paste("Supplied SD:", form(dat$catch_settings$sd_supplied)),
-      "Zero and missing observations are excluded from the lognormal likelihood."), "fit_tam"),
+      "Poisson-link delta fits sampled zeros. All families exclude missing observations."), "observation_families"),
     survey = card("Survey indices and catchability", c(
       paste("Surveys:", paste(surveys, collapse = ", ")),
+      paste("Family:", family_label("index")),
       paste("q formula:", form(dat$index_settings$q_form)),
       paste("q link:", dat$index_settings$q_link),
       paste("Gaussian q terms:", {

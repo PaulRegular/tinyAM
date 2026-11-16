@@ -72,6 +72,40 @@ test_that("comparison checks observations and units, allowing row reordering", {
   expect_identical(tinyAM:::.aic_observations(f), tinyAM:::.aic_observations(changed))
 })
 
+test_that("delta comparisons require matching families and included zero values", {
+  data <- cod_obs
+  data$index <- data$index[data$index$age <= 5, ]
+  data$index$obs[data$index$year == 1983 & data$index$age == 3] <- 0
+  baseline <- ic_test_fit(data = data)
+  pld <- ic_test_fit(data = data, index_settings = list(family = pld_lognormal(y50 = 1e3)))
+  expect_equal(attr(suppressWarnings(logLik(pld)), "nobs"), sum(pld$dat$is_observed))
+  expect_true(is.finite(suppressWarnings(AIC(pld))))
+  expect_error(AIC(baseline, pld), "same observation families")
+  expect_error(cAIC(pld), "unavailable for Poisson-link delta")
+  expect_error(cAIC(baseline, pld), "unavailable for Poisson-link delta")
+  expect_no_warning(suppressWarnings(AIC(pld, pld)))
+  changed <- pld
+  changed$dat$obs_values[pld$dat$pld$zero[1]] <- 1
+  expect_error(AIC(pld, changed), "same included")
+})
+
+test_that("simulation preserves the distinction between sampled and structural zeros", {
+  data <- cod_obs
+  data$catch$obs[data$catch$age > 5] <- NA_real_
+  data$catch$obs[data$catch$age == 2] <- 0
+  data$catch$obs[data$catch$year == 1983 & data$catch$age == 3] <- NA_real_
+  fit <- ic_test_fit(data = data, F_settings = list(process = "iid", mu_form = ~1,
+    age_breaks = 3:6), catch_settings = list(family = pld_lognormal(y50 = 1e3)))
+  sims <- sim_tam(fit, n = 2L, par_uncertainty = "none", progress = FALSE, seed = 12)
+  catch <- sims$catch
+  missing <- catch$year == 1983 & catch$age == 3
+  sampled <- catch$age > 2 & !missing
+  expect_true(all(catch$obs[catch$age == 2] == 0))
+  expect_identical(is.na(catch$obs), missing)
+  expect_true(any(catch$obs[sampled] == 0))
+  expect_true(any(catch$obs[sampled] > 0))
+})
+
 test_that("sparse trace agrees with independently calculated Gaussian EDF", {
   s <- c(.2, .4, .6, .8, 1)
   covariance <- outer(s, s) * .4^abs(outer(1:5, 1:5, "-"))

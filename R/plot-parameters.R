@@ -5,6 +5,14 @@ plot_par <- function(data, ...) {
   data$coef <- factor(ifelse(is.na(data$coef), data$par, paste0(data$par, ": ", data$coef)))
 
   args <- list(...)
+  if (all(data$par %in% c("y50_catch", "y50_index")) &&
+      all(c("is_fixed", "unit") %in% names(data)) &&
+      is.null(args$text) && is.null(args$hovertemplate)) {
+    data$.detection_label <- paste0(ifelse(data$is_fixed, "Fixed", "Estimated"), " soft detection scale",
+      ifelse(is.na(data$unit), "", paste0(" (", data$unit, ")")))
+    args$text <- stats::reformulate(".detection_label")
+    args$hovertemplate <- "%{x}<br>%{y}<br>%{text}<extra>%{fullData.name}</extra>"
+  }
   if (is.null(args$color)) {
     args$color <- I("#377EB8")
   }

@@ -91,11 +91,24 @@
     # Conditional observation draws keep the supplied latent realization.
     make_nll_fun <- function(f, d) function(p) f(p, d)
     rep <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, silent = TRUE)$report()
-    sims <- list(log_obs = .draw_log_observations(dat, par, rep$log_pred, rep$sd_obs))
+    predictions <- if (.obs_has_non_lognormal(dat)) {
+      rep[c("log_p_zero", "log_p_positive", "log_pred_positive",
+        "log_obs_positive_mean", "observation_Q")]
+    }
+    sims <- list(log_obs = .draw_log_observations(dat, par, rep$log_pred, rep$sd_obs, predictions))
   }
 
   # Rebuild report with simulated obs (+ maybe simulated RE)
   dat$log_obs <- sims$log_obs
+  dat$obs_values <- exp(dat$log_obs)
+  if (.obs_has_pld(dat)) {
+    rows <- which(dat$is_observed & dat$pld$group > 0L)
+    dat$pld$positive <- rows[is.finite(dat$log_obs[rows])]
+    dat$pld$zero <- rows[dat$log_obs[rows] == -Inf]
+  }
+  gaussian <- if (is.null(dat$obs_map$family)) dat$is_observed else
+    dat$is_observed & dat$obs_map$family == "lognormal"
+  dat$observed <- dat$log_obs[gaussian]
   make_nll_fun <- function(f, d) function(p) f(p, d)
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par)
   rep <- obj$report()
@@ -123,8 +136,9 @@
 #' the observations. Results are tidy data frames with a `sim = 1..n` column.
 #'
 #' @details
-#' Missing observations, including zeros treated as missing by the likelihood,
-#' remain `NA` in the simulated catch and index tables. Population states and
+#' Missing observations and zeros excluded by positive-only families remain
+#' `NA` in the simulated tables. PLD draws can be zero or positive at each
+#' sampled age. Population states and
 #' predictions are still calculated throughout the modeled period, including
 #' projection years. Missing observations are not estimated as extra parameters.
 #' Observation draws preserve fitted age correlations within each fleet-year

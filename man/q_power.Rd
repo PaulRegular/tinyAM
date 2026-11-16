@@ -41,7 +41,7 @@ Without \code{by}, one exponent is shared across all index observations. With
 \code{by}, labels define separate exponents, even when labels are numeric. Missing
 labels mean no adjustment (p = 1); these observations remain in the likelihood.
 Use a separate grouping column to apply powers to selected survey ages.
-Groups need fitted positive observations. Limited abundance variation and
+Groups need observations included in the likelihood. Limited abundance variation and
 flexible q effects can make exponents weakly identified; inspect uncertainty.
 
 Projections and simulations use their own current abundance, not terminal

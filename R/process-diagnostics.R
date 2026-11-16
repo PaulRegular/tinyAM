@@ -103,14 +103,7 @@
   as.integer(seed)
 }
 
-# Q = P' L L' P; delta = P' L'^(-1) z has covariance Q^(-1).
-.process_perturbation <- function(precision, seed) {
-  # Matrix caches Cholesky factors in its input. Give it a fresh sparse object
-  # so the fitted object's stored uncertainty remains byte-for-byte unchanged.
-  precision <- precision * 1
-  precision <- methods::as(Matrix::forceSymmetric(precision), "CsparseMatrix")
-  factor <- withCallingHandlers(Matrix::Cholesky(precision, LDL = FALSE, super = FALSE),
-    warning = function(w) invokeRestart("muffleWarning"))
+.with_diagnostic_seed <- function(seed, code) {
   kind <- RNGkind()
   had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
   if (had_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv)
@@ -119,10 +112,44 @@
     if (had_seed) assign(".Random.seed", old_seed, envir = .GlobalEnv)
     else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) rm(".Random.seed", envir = .GlobalEnv)
   }, add = TRUE)
-  RNGkind("Mersenne-Twister", "Inversion", "Rejection")
-  set.seed(seed)
+  set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  force(code)
+}
+
+# Q = P' L L' P and the covariance of P' L'^(-1) z is Q^(-1).
+.precision_perturbation <- function(precision) {
+  # Factor a copy because Matrix can cache the Cholesky factor in its input.
+  precision <- methods::as(Matrix::forceSymmetric(precision * 1), "CsparseMatrix")
+  factor <- withCallingHandlers(Matrix::Cholesky(precision, LDL = FALSE, super = FALSE),
+    warning = function(w) invokeRestart("muffleWarning"))
   z <- stats::rnorm(nrow(precision))
   as.numeric(Matrix::solve(factor, Matrix::solve(factor, z, system = "Lt"), system = "Pt"))
+}
+
+.process_perturbation <- function(precision, seed) {
+  .with_diagnostic_seed(seed, .precision_perturbation(precision))
+}
+
+.diagnostic_joint_precision <- function(fit) {
+  mode <- fit$parameter_values
+  Q <- fit$sdrep$jointPrecision
+  if (!length(mode) || any(!is.finite(mode)) || !inherits(Q, "sparseMatrix") ||
+      !identical(dim(Q), c(length(mode), length(mode))) ||
+      !identical(names(mode), rownames(Q)) || !identical(rownames(Q), colnames(Q)) ||
+      any(!is.finite(Q@x)) || !isTRUE(Matrix::isSymmetric(Q))) {
+    cli::cli_abort("Stored joint precision or parameter ordering is unavailable or inconsistent.")
+  }
+  random <- fit$obj$env$lrandom()
+  if (length(random) != length(mode) || anyNA(random)) {
+    cli::cli_abort("Stored random/fixed parameter ordering is inconsistent.")
+  }
+  for (part in c("fixed", "random")) {
+    stored <- fit$sdrep[[paste0("par.", part)]]
+    if (!is.null(stored) && !isTRUE(all.equal(stored, mode[if (part == "random") random else !random]))) {
+      cli::cli_abort("Joint precision was evaluated at a different parameter mode or ordering.")
+    }
+  }
+  Q
 }
 
 .tidy_process_residuals <- function(fit, seed, enabled = TRUE) {
@@ -134,22 +161,8 @@
   if (!length(active) || all(active == "off")) return(status("deterministic", "No stochastic historical processes."))
   tryCatch({
     mode <- fit$parameter_values
-    Q <- fit$sdrep$jointPrecision
-    if (!length(mode) || any(!is.finite(mode)) || is.null(Q) ||
-        !identical(dim(Q), c(length(mode), length(mode))) ||
-        !identical(names(mode), rownames(Q)) || !identical(rownames(Q), colnames(Q)) ||
-        any(!is.finite(Q@x)) || !isTRUE(Matrix::isSymmetric(Q))) {
-      cli::cli_abort("Stored joint precision or parameter ordering is unavailable or inconsistent.")
-    }
+    Q <- .diagnostic_joint_precision(fit)
     if (identical(fit$sdrep$pdHess, FALSE)) cli::cli_abort("The stored uncertainty calculation has a non-positive-definite Hessian.")
-    random <- fit$obj$env$lrandom()
-    if (length(random) != length(mode)) cli::cli_abort("Stored random/fixed parameter ordering is inconsistent.")
-    for (part in c("fixed", "random")) {
-      stored <- fit$sdrep[[paste0("par.", part)]]
-      if (!is.null(stored) && !isTRUE(all.equal(stored, mode[if (part == "random") random else !random]))) {
-        cli::cli_abort("Joint precision was evaluated at a different parameter mode or ordering.")
-      }
-    }
     par <- fit$obj$env$parList(par = mode)
     dat <- fit$dat
     layout <- .process_layout(par, dat)

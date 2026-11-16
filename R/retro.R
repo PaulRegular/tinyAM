@@ -72,7 +72,7 @@
     if (n_proj && r$is_converged) {
       d <- r$obs_pred$index; d$fold <- terminal; d$horizon <- d$year - terminal
       p <- .forecast_pairs(d, fit$obs_pred$index)
-      diagnostic$n_scored_index <- sum(is.finite(p$pred) & p$pred > 0 & is.finite(p$obs) & p$obs > 0)
+      diagnostic$n_scored_index <- sum(.forecast_log_cases(p))
     }
     r
   }, error = function(e) { diagnostic$error <<- conditionMessage(e); NULL }),
@@ -120,6 +120,7 @@
     forecast_pairs = list(index = data.frame(), aggregate_index = data.frame(), catch = data.frame(), mean_age = data.frame()),
     hindcast = hindcast, proj_settings = settings)
   stacks <- list(pop = list(), obs_pred = list()); signatures <- list()
+  occurrence_pairs <- list(); occurrence_scores <- list(); occurrence_signatures <- list()
   for (i in seq_along(models)) {
     label <- names(models)[i]; fit <- models[[i]]
     attempt <- results[jobs$model_index == i]; terminals <- jobs$fold[jobs$model_index == i]
@@ -157,6 +158,18 @@
       if (is.null(p) || !nrow(p)) next
       p$fold <- as.numeric(as.character(p$fold)); p$horizon <- ifelse(p$is_proj, p$year - p$fold, 0)
       matched <- .forecast_pairs(p, fit$obs_pred[[type]])
+      occurrence <- .occurrence_forecasts(matched)
+      if (nrow(occurrence)) {
+        s <- .occurrence_score_table(occurrence, if (type == "index") "survey" else "fleet")
+        s$type <- occurrence$type <- type
+        s$model <- occurrence$model <- label
+        occurrence_scores <- c(occurrence_scores, list(s))
+        occurrence_pairs <- c(occurrence_pairs, list(occurrence))
+        fields <- intersect(c("fold", "horizon", "year", "age", "survey", "fleet", "obs", "unit"), names(occurrence))
+        signature <- occurrence[do.call(order, occurrence[fields]), fields, drop = FALSE]
+        rownames(signature) <- NULL
+        occurrence_signatures[[label]][[type]] <- signature
+      }
       scored <- if (type == "index") .index_score_tables(matched, fit$obs_pred$index) else .catch_compositions(matched, fit$obs_pred$catch, fit$dat$ages)
       pairs[[type]] <- scored$pairs
       if (type == "index") pairs$aggregate_index <- scored$aggregate else pairs$mean_age <- scored$mean_age
@@ -170,8 +183,8 @@
     }
     signatures[[label]] <- Map(function(d, type) {
       if (!nrow(d)) return(data.frame())
-      valid <- is.finite(d$obs) & is.finite(d$pred)
-      if (type %in% c("index", "aggregate_index")) valid <- valid & d$obs > 0 & d$pred > 0
+      valid <- if (type %in% c("index", "aggregate_index")) .forecast_log_cases(d) else
+        is.finite(d$obs) & is.finite(d$pred)
       fields <- intersect(c("fold", "horizon", "year", "age", "survey", "fleet", "obs", "baseline", "baseline_year", "unit"), names(d))
       signature <- d[valid, fields, drop = FALSE]
       if (nrow(signature)) signature <- signature[do.call(order, signature), , drop = FALSE]
@@ -180,8 +193,19 @@
   }
   for (section in names(stacks)) out[[section]] <- lapply(stacks[[section]], .bind_rows)
   out$comparable <- length(models) == 1 || all(vapply(signatures[-1], identical, logical(1), signatures[[1]]))
+  if (length(occurrence_pairs)) {
+    out$forecast_pairs$occurrence <- .bind_rows(occurrence_pairs)
+    out$occurrence_scores <- .bind_rows(occurrence_scores)
+    per_model <- occurrence_signatures[names(models)]
+    out$occurrence_comparable <- all(vapply(per_model[-1L], identical, logical(1), per_model[[1L]]))
+    if (!out$occurrence_comparable) {
+      cli::cli_inform("Models differ in which Poisson-link delta observations can be scored. Compare Brier scores only for matching cases.")
+    }
+  }
   if (any(!out$fold_diagnostics$is_converged)) cli::cli_warn("Some retrospective fits or projections failed. See fold_diagnostics; failed fits are excluded from scores.")
-  if (hindcast && !out$comparable) cli::cli_warn("Models have different forecast observations, units or retained folds. Scores are not directly comparable; no ranking is provided.")
+  if (hindcast && !out$comparable) {
+    cli::cli_warn("Models have different forecast scoring cases, units or retained folds. Scores are not directly comparable. No ranking is provided.")
+  }
   class(out) <- c("tam_retro", "list"); out
 }
 
@@ -226,6 +250,9 @@
 #' estimated at each fold's terminal year. Any scalar multiplier applies to
 #' that terminal profile at every available horizon, rather than compounding
 #' annually. Controls therefore follow each fold's shifting calendar window.
+#' Use `F_mult` if catch counts were supplied only for a pooled plus group
+#' and separate weights for its constituent ages are retained. The pooled
+#' counts alone cannot recover observed catch biomass for those ages.
 #'
 #' **Printed summary.** One row per model shows Mohn's rho for SSB, recruitment
 #' and average F, relative to the unpeeled reference fit. Hindcasts also show
@@ -243,13 +270,24 @@
 #' Survey log-RMSE pools observation errors. MASE compares absolute log errors
 #' with persistence on identical cases; see [compute_hindcast_mase()]. Overall
 #' MASE averages ages within survey, surveys within horizon, then horizons.
-#' Aggregate indices require complete, consistent age coverage. Catch proportions
+#' Poisson-link delta, Gamma and generalized gamma models use their positive
+#' conditional medians for both log scores. Age-summed log scores are available
+#' for lognormal surveys with
+#' complete, consistent age coverage. Catch proportions
 #' and mean modeled age (plus age coded by its lower bound) are scored separately
 #' on their natural scale; genuine zeros are retained. Overlapping forecasts are
-#' distinct origin/horizon cases, not independent observations. These are
-#' conditional point-forecast diagnostics, not probability scores.
+#' distinct origin/horizon cases from the same data history.
+#'
+#' For Poisson-link delta models, `occurrence_scores` reports the mean squared
+#' error of predicted zero probabilities (Brier score), with numbers of scored
+#' observations and zeros. This score includes observed zeros and positives at
+#' eligible ages. It excludes missing and known structural-zero rows. Survey
+#' and catch scores are separate. Catch occurrence predictions with
+#' `catch = "observed"` are conditional on the observed total removal.
 #'
 #' Compare equivalent observations and age definitions. No ranking is produced.
+#' For a cross-family comparison, use the matched survey-age cases in
+#' `forecast_pairs$index`. Age-summed scores may be unavailable for some models.
 #' Missing baselines or zero persistence error make MASE unavailable. Failed
 #' numerical fits remain in `fits`, but not in stacked results or scores.
 #' Supplied fits and fitted objectives are unchanged.
@@ -263,6 +301,9 @@
 #'   stacked `pop` and `obs_pred` with model, fold and horizon (zero historically);
 #'   `mohns_rho`; detailed `scores`; matched `forecast_pairs`; `fold_diagnostics`;
 #'   and resolved `projection_controls`. Failed references make rho unavailable.
+#'   When there are eligible Poisson-link delta forecasts, also returns
+#'   `occurrence_scores`, `occurrence_comparable` and
+#'   `forecast_pairs$occurrence` with the individual cases.
 #'   All-failed runs still return diagnostics.
 #' @examples
 #' \dontrun{

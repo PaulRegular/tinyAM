@@ -25,7 +25,7 @@
 #' `by`, labels define separate exponents, even when labels are numeric. Missing
 #' labels mean no adjustment (p = 1); these observations remain in the likelihood.
 #' Use a separate grouping column to apply powers to selected survey ages.
-#' Groups need fitted positive observations. Limited abundance variation and
+#' Groups need observations included in the likelihood. Limited abundance variation and
 #' flexible q effects can make exponents weakly identified; inspect uncertainty.
 #'
 #' Projections and simulations use their own current abundance, not terminal
@@ -64,10 +64,12 @@ q_power <- function(x, by = NULL) {
   if (any(!is.na(group) & !nzchar(trimws(group)))) cli::cli_abort("q_power() group labels must be nonempty or NA.")
   levels <- unique(group[!is.na(group)])
   index <- match(group, levels, nomatch = 0L)
-  active <- is.finite(data$obs) & data$obs > 0
+  active <- .q_observation_support(data)
   if ("is_proj" %in% names(data)) active <- active & !data$is_proj
   absent <- setdiff(levels, group[active])
-  if (length(absent)) cli::cli_abort("q_power() groups need fitted positive observations: {paste(absent, collapse = ', ')}.")
+  if (length(absent)) {
+    cli::cli_abort("q_power() groups need fitted positive observations or sampled PLD zeros: {paste(absent, collapse = ', ')}.")
+  }
   list(by = spec$by, levels = levels, index = index)
 }
 
@@ -101,7 +103,7 @@ q_power <- function(x, by = NULL) {
   spec <- fit$dat$q_power
   if (is.null(spec)) return(out)
   d <- fit$dat$obs$index
-  active <- is.finite(d$obs) & d$obs > 0 & !d$is_proj
+  active <- fit$dat$is_observed[fit$dat$obs_map$type == "index"]
   ii <- fit$dat$obs_map$type == "index"
   abundance <- fit$rep$log_pred[ii] - fit$rep$log_q_obs
   for (i in seq_along(spec$levels)) {

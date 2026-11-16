@@ -14,10 +14,13 @@
 #'   counts and effective degrees of freedom (EDF)?
 #'
 #' @details
-#' **Likelihood scale.** Densities are evaluated on log observations, as in
-#' [nll_fun()]. No natural-scale lognormal Jacobian is added. Absolute values
-#' should not be compared with criteria calculated on a different response
-#' scale. Multiple-model calls require identical included observations and units.
+#' **Likelihood scale.** Lognormal densities are evaluated on log observations
+#' without a natural-scale Jacobian. Gamma and generalized gamma densities
+#' use the same log-observation scale. Poisson-link delta likelihoods include
+#' the probability of zero and evaluate the positive component on log
+#' observations. Multiple-model calls require identical included observations,
+#' units and observation families for each series. Use [fit_hindcast()] to
+#' compare predictions across families. cAIC requires an all-lognormal fit.
 #'
 #' **Marginal AIC.** `logLik()` returns the optimized Laplace approximation to
 #' the marginal log-likelihood. Its `df` counts all estimated outer parameters,
@@ -129,22 +132,36 @@ NULL
   for (nm in setdiff(cols, names(d))) d[[nm]] <- NA_character_
   d <- d[, cols, drop = FALSE]
   d[] <- lapply(d, as.character)
-  d$log_obs <- as.numeric(dat$observed)
+  d$family <- if (is.null(dat$obs_map$family)) rep("lognormal", nrow(d)) else
+    as.character(dat$obs_map$family[dat$is_observed])
+  lognormal <- d$family == "lognormal"
+  d$observed <- numeric(nrow(d))
+  d$observed[lognormal] <- as.numeric(dat$observed)
+  if (any(!lognormal)) {
+    d$observed[!lognormal] <- dat$obs_values[dat$is_observed][!lognormal]
+  }
   d <- d[do.call(order, c(unname(d[cols]), list(na.last = TRUE))), , drop = FALSE]
   rownames(d) <- NULL
   d
 }
 
-.aic_models <- function(object, dots, labels) {
+.aic_models <- function(object, dots, labels, conditional = FALSE) {
   models <- c(list(object), dots)
   if (any(!vapply(models, inherits, logical(1), "tam_fit"))) {
     cli::cli_abort("All models must be fitted {.cls tam_fit} objects.")
   }
   lapply(models, .aic_validate_fit)
+  other <- vapply(models, function(model) .obs_has_non_lognormal(model$dat), logical(1))
+  if (conditional && any(other)) {
+    cli::cli_abort("cAIC is currently unavailable for Poisson-link delta, Gamma and generalized gamma models. Use marginal AIC for fits with the same observation families, or compare forecasts with {.fn fit_hindcast}.")
+  }
+  if (any(other) && !all(other)) {
+    cli::cli_abort("Models must use the same observation families for AIC comparison. Use {.fn fit_hindcast} to compare predictions across families.")
+  }
   reference <- .aic_observations(object)
   for (model in models[-1L]) {
     if (!identical(reference, .aic_observations(model))) {
-      cli::cli_abort("Models must use the same included catch and survey observations, identities and units. Compare models fitted to a common dataset.")
+      cli::cli_abort("Models must use the same included catch and survey observations, identities, units and observation families. Compare models fitted to a common dataset with the same families.")
     }
   }
   names(models) <- make.unique(labels)
@@ -267,7 +284,9 @@ AIC.tam_fit <- function(object, ..., k = 2) {
 cAIC <- function(object, ..., details = FALSE) {
   if (!is.logical(details) || length(details) != 1L || is.na(details)) cli::cli_abort("{.arg details} must be TRUE or FALSE.")
   expressions <- as.list(substitute(list(object, ...)))[-1L]
-  models <- .aic_models(object, list(...), vapply(expressions, function(x) paste(deparse(x), collapse = ""), character(1)))
+  models <- .aic_models(object, list(...),
+    vapply(expressions, function(x) paste(deparse(x), collapse = ""), character(1)),
+    conditional = TRUE)
   results <- do.call(rbind, lapply(models, .caic_fit))
   results$delta <- results$cAIC - min(results$cAIC)
   results <- results[order(results$cAIC), , drop = FALSE]
