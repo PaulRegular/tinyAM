@@ -1,9 +1,9 @@
 param(
   [Parameter(Mandatory)][string] $Rscript,
-  [Parameter(Mandatory)][string] $SimSurveySource,
-  [ValidateSet('audit','spatial')]
-  [string] $Phase = 'spatial',
-  [string] $Results = 'analysis/formula_expansion/results/pld-whole-area'
+  [string] $SimSurveySource,
+  [ValidateSet('audit','spatial','controlled','comparison')]
+  [string] $Phase = 'comparison',
+  [string] $Results
 )
 $ErrorActionPreference = 'Stop'
 $rscriptPath = (Resolve-Path -LiteralPath $Rscript).Path
@@ -11,7 +11,18 @@ $rBin = Split-Path -Parent $rscriptPath
 $rtermPath = @((Join-Path $rBin 'Rterm.exe'), (Join-Path $rBin 'x64/Rterm.exe')) |
   Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (!$rtermPath) { throw 'Cannot find Rterm.exe beside the supplied Rscript installation.' }
-$env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
+if ($Phase -in 'audit','spatial') {
+  if (!$SimSurveySource) { throw 'Specify -SimSurveySource for the spatial simulation.' }
+  $env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
+}
+if (!$Results) {
+  $folder = switch ($Phase) {
+    'comparison' { 'pld-family-comparison' }
+    'controlled' { 'pld-controlled' }
+    default { 'pld-whole-area' }
+  }
+  $Results = Join-Path 'analysis/family_expansion/results' $folder
+}
 $directory = (New-Item -ItemType Directory -Path $Results -Force).FullName
 $archive = Join-Path $directory 'supervisor'
 New-Item -ItemType Directory -Force -Path $archive | Out-Null
@@ -19,7 +30,7 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $resources = Join-Path $archive "resources-$stamp.csv"
 $launch = @{
   FilePath = $rtermPath
-  ArgumentList = @('--vanilla', '--slave', '--file=analysis/formula_expansion/simulate_pld.R',
+  ArgumentList = @('--vanilla', '--slave', '--file=analysis/family_expansion/simulate_pld.R',
     '--args', $Phase, ('"{0}"' -f $directory))
   WindowStyle = 'Hidden'
   WorkingDirectory = (Get-Location).Path

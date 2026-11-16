@@ -1,12 +1,12 @@
 # Run from the package root:
-# Rscript --vanilla analysis/formula_expansion/validate_sampled_quantile_residuals.R [histories] [output]
+# Rscript --vanilla analysis/family_expansion/validate_sampled_quantile_residuals.R [histories] [output]
 pkgload::load_all(".", helpers = FALSE, quiet = TRUE)
 
 args <- commandArgs(trailingOnly = TRUE)
 n_histories <- if (length(args)) as.integer(args[1L]) else 40L
 if (is.na(n_histories) || n_histories < 1) stop("histories must be a positive integer")
 out_dir <- if (length(args) > 1L) args[2L] else
-  "analysis/formula_expansion/results/sampled-quantile-residuals"
+  "analysis/family_expansion/results/sampled-quantile-residuals"
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 years <- 1981:2012

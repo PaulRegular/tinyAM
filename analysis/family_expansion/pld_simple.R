@@ -107,9 +107,8 @@ pld_simple_observations <- function(truth, calibration, finite = FALSE) {
 
 pld_simple_settings <- function(input, truth, calibration, arm, stage) {
   model <- function(component) {
-    if (arm == "lognormal") return(tinyAM::lognormal())
     scale <- calibration$values$y50[match(component, calibration$values$component)]
-    tinyAM::pld_lognormal(y50 = if (stage != "finite") scale else NULL)
+    pld_study_family(arm, y50 = if (stage == "finite") NULL else scale)
   }
   precision <- function(component) {
     if (stage == "finite") return(list(sd_form = ~ 1))
@@ -241,8 +240,10 @@ pld_simple_fit <- function(input, truth, calibration, arm, stage, optimizer = "d
   spec <- pld_simple_settings(input, truth, calibration, arm, stage)
   fit <- do.call(fitter, spec)
   checks <- tinyAM::check_tam(fit)
+  inputs <- lapply(fit$obs_pred[c("catch", "index")], function(d) d[c("year", "age", "obs")])
   list(converged = isTRUE(checks$is_converged), numerical = checks$numerical,
     gradient = checks$max_gradient, optimizer = fit$opt$convergence,
     study_newton = isTRUE(fit$opt$study_newton), objective = fit$opt$objective,
-    values = if (isTRUE(checks$is_converged)) pld_simple_metrics(fit, truth, stage))
+    values = if (isTRUE(checks$is_converged)) pld_simple_metrics(fit, truth, stage),
+    parameters = pld_study_parameters(fit), merged_observations = inputs)
 }

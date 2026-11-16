@@ -57,6 +57,7 @@ analysis/*.rds
 # Local assessment source documents and model/data files
 analysis/comp_assessments/source_cache/
 analysis/formula_expansion/results/
+analysis/family_expansion/results/
 analysis/information_criteria/results/
 analysis/sam_equivalence/results/
 

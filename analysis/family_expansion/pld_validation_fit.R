@@ -30,7 +30,7 @@ pld_occurrence_ablated_fit <- function() {
 }
 
 pld_spatial_fit <- function(simulation, plus_age, arm) {
-  family <- if (arm == "PLD") tinyAM::pld_lognormal() else tinyAM::lognormal()
+  family <- pld_study_family(arm)
   fit <- tinyAM::fit_tam(simulation$data, ages = seq_len(plus_age), silent = TRUE,
     N_settings = list(process = "off", init = "exp"),
     rec_settings = list(process = "rw", sd = 0.50),
@@ -80,6 +80,18 @@ pld_spatial_fit <- function(simulation, plus_age, arm) {
   list(converged = isTRUE(checks$is_converged), numerical = checks$numerical,
     gradient = checks$max_gradient, optimizer = fit$opt$convergence, objective = fit$opt$objective,
     merged_observations = input, metrics = quantities, F = fishing_annual, ssb = ssb,
-    recruitment = recruitment, N = numbers, y50 = fit$fixed_par[fit$fixed_par$par %in%
-      c("y50_catch", "y50_index"), , drop = FALSE])
+    recruitment = recruitment, N = numbers, parameters = pld_study_parameters(fit))
+}
+pld_study_family <- function(arm, y50 = NULL) {
+  switch(arm,
+    lognormal = tinyAM::lognormal(),
+    full = tinyAM::pld_lognormal(y50 = y50),
+    positive = tinyAM::pld_lognormal(y50 = y50),
+    gengamma = tinyAM::pld_gengamma(y50 = y50),
+    stop("Unknown study arm: ", arm))
+}
+
+pld_study_parameters <- function(fit) {
+  fit$fixed_par[fit$fixed_par$par %in% c("y50_catch", "y50_index", "gengamma_Q"), ,
+    drop = FALSE]
 }

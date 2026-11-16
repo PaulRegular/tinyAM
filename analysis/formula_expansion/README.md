@@ -23,7 +23,6 @@ Full studies are explicit analyses, not routine CI tests.
 | F/M mean effects | `simulate_mean_effects.R` | `mean_effects_report.Rmd` |
 | Observation SD effects | `simulate_sd_effects.R`, `sd_validation.R` | `sd_effects_report.Rmd` |
 | RV observation covariance | `benchmark_rv_covariance.R` | [RV covariance benchmark](rv_covariance_benchmark.md) |
-| Poisson-link delta recovery | `simulate_pld.R` | [PLD validation report](pld_validation_report.Rmd) |
 | Recruitment recovery | `simulate_recruitment.R`, `recruitment_validation.R` | `recruitment_report.Rmd` |
 | Recruitment self-/cross-tests | `simulate_recruitment_cross.R`, `recruitment_cross_validation.R` | `recruitment_cross_report.Rmd` |
 | BH noise and parent-SSB contrast | `simulate_recruitment_noise.R` | `recruitment_cross_report.Rmd` |
@@ -54,52 +53,7 @@ tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
 
-## Do sampled zeros improve stock estimates?
-
-The [PLD validation report](pld_validation_report.Rmd) combines a controlled
-comparison with a whole-area SimSurvey experiment. The controlled study
-isolates encounter information under exact PLD, tests robustness with finite
-age samples and compares recovery of rising and constant natural mortality.
-The final controlled run used one common damped Newton refinement after the
-usual optimizer. The original and tighter-tolerance pilots remain available
-for comparison.
-
-The spatial experiment uses one dome-selected fishery and one RV survey over
-30 years. It supplies constant M, default SimSurvey recruitment and biology,
-and a random walk in fully selected F with a temporary pulse. It simulates
-a true age-20+ group. The principal comparison fits PLD and ordinary
-lognormal to the same data for each history. The first eight histories also
-fit age 14+ as the terminal group. Age-14+ abundance in years 16–23 is the
-primary recovery measure at both resolutions.
-
-Use the SimSurvey source at [29a1b03](https://github.com/PaulRegular/SimSurvey/commit/29a1b03350c274f88dac108fb95f9446eac79233).
-Run these commands from the tinyAM root. The audit checks two histories,
-and the spatial run expands from eight to 24 only if its accounting and
-paired-convergence checks pass. Each history and fit is checkpointed. On
-Windows the launcher runs a single below-normal worker and logs CPU and RAM.
-It pauses the worker after two consecutive checks below 2 GiB of available
-RAM. Resume by running the same command with the same source trees.
-
-```powershell
-$runner = './analysis/formula_expansion/run_pld_study.ps1'
-& $runner -Rscript $rscript -SimSurveySource $simsurvey -Phase audit
-& $runner -Rscript $rscript -SimSurveySource $simsurvey -Phase spatial
-& $rscript analysis/formula_expansion/simulate_pld.R report
-```
-
-The report reads the completed controlled results from
-`results/pld-simple-refined`. To reproduce them into a new directory, run
-`Rscript analysis/formula_expansion/simulate_pld.R controlled` and supply
-`results/pld-controlled` as the controlled results directory after the spatial
-directory in the report command. To use another tinyAM source tree for an
-analysis run, set `TINYAM_PLD_PACKAGE_SOURCE`. Each run records source hashes,
-warnings and fit failures.
-
-[Consolidated report](results/pld-whole-area/pld_validation_report.html)
-The earlier controlled and spatial implementations are recorded in commits
-`3e4ee03e` and `5a7f6a0d`.
-
-
+Observation-family recovery and sampled-state diagnostics are documented in [the family studies](../family_expansion/README.md).
 
 ## Gillnet and RV observation error
 

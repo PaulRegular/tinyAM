@@ -1,0 +1,460 @@
+---
+title: "Do sampled zeros improve stock estimates?"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+params:
+  result: null
+  spatial_result: null
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+controlled <- readRDS(params$result)
+spatial <- readRDS(params$spatial_result)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 7.8, fig.height = 4, dpi = 120)
+theme_set(theme_bw(base_size = 11) + theme(panel.grid.minor = element_blank(),
+  legend.position = "bottom"))
+models <- c(lognormal = "Lognormal", full = "PLD lognormal",
+  gengamma = "PLD generalized gamma", positive = "PLD positive density only")
+colours <- setNames(c("#126782", "#C44C27", "#258375", "#735391"), models)
+experiments <- c(exact = "Exact PLD", finite = "Finite samples", pulse = "M rises",
+  constant_m = "M constant", spatial20 = "SimSurvey 20+", spatial14 = "SimSurvey 14+")
+label_experiment <- function(x) factor(experiments[x], levels = unname(experiments))
+label_model <- function(x) factor(models[x], levels = unname(models))
+fit_records <- unlist(lapply(controlled$stages, function(histories) {
+  unlist(lapply(histories, "[[", "fits"), recursive = FALSE)
+}), recursive = FALSE)
+spatial_fit_records <- unlist(lapply(spatial$histories, function(history) {
+  unlist(lapply(names(history$fits), function(age) {
+    lapply(names(history$fits[[age]]), function(arm) {
+      x <- history$fits[[age]][[arm]]
+      list(stage = paste0("spatial", age), id = history$id, arm = arm,
+        converged = isTRUE(x$value$converged), numerical = x$value$numerical,
+        error = x$error, warnings = x$warnings, elapsed = x$elapsed,
+        values = list(metrics = if (x$ok) rename(x$value$metrics, metric = quantity)),
+        parameters = x$value$parameters)
+    })
+  }), recursive = FALSE)
+}), recursive = FALSE)
+fit_records <- c(fit_records, spatial_fit_records)
+fits <- bind_rows(lapply(fit_records, function(fit) {
+  failures <- if (is.data.frame(fit$numerical)) filter(fit$numerical, status != "pass")$check
+  data.frame(stage = fit$stage, id = fit$id, arm = fit$arm, passed = fit$converged,
+    elapsed = fit$elapsed, warning = length(fit$warnings) > 0L,
+    reason = if (nzchar(fit$error)) fit$error else paste(failures, collapse = ", "))
+}))
+passed <- Filter(function(x) isTRUE(x$converged), fit_records)
+value_rows <- function(name) {
+  bind_rows(lapply(passed, function(fit) {
+    data <- fit$values[[name]]
+    if (is.data.frame(data)) mutate(data, stage = fit$stage, id = fit$id, arm = fit$arm)
+  }))
+}
+metrics <- value_rows("metrics")
+mortality <- value_rows("mortality")
+interval <- function(x) {
+  half <- if (length(x) >= 2L) qt(0.975, length(x) - 1L) * sd(x) / sqrt(length(x)) else NA_real_
+  c(mean = mean(x), lower = mean(x) - half, upper = mean(x) + half)
+}
+paired_difference <- function(table, value, compare, reference, keys) {
+  arm <- table[table$arm %in% compare, c(keys, "arm", value)]
+  base <- table[table$arm == reference, c(keys, value)]
+  merge(arm, base, by = keys, suffixes = c("_arm", "_base")) |>
+    mutate(delta = .data[[paste0(value, "_arm")]] - .data[[paste0(value, "_base")]]) |>
+    filter(is.finite(delta)) |>
+    group_by(across(all_of(c(setdiff(keys, "id"), "arm")))) |>
+    summarise(pairs = n(), change = interval(delta)[["mean"]],
+      lower = interval(delta)[["lower"]], upper = interval(delta)[["upper"]], .groups = "drop")
+}
+older <- filter(metrics, metric == "Age 14+ abundance")
+older_pairs <- paired_difference(older, "absolute", c("full", "gengamma"), "lognormal", c("stage", "id"))
+ablation_older <- paired_difference(older, "absolute", "full", "positive", c("stage", "id"))
+gg_pairs <- paired_difference(older, "absolute", "gengamma", "full", c("stage", "id"))
+ablation_mortality <- paired_difference(mortality, "absolute", "full", "positive", c("stage", "id"))
+describe <- function(row, subject) {
+  if (!nrow(row)) return(paste0(subject, " had no successful pairs."))
+  interval_text <- if (is.finite(row$lower[1L])) {
+    sprintf(", 95%% interval %+.4f to %+.4f", row$lower[1L], row$upper[1L])
+  } else ""
+  sprintf("%s changed the mean error by %+.4f (%d pairs%s).",
+    subject, row$change[1L], row$pairs[1L], interval_text)
+}
+plot_effect <- function(d, x, y = "metric", scales = "free_y") {
+  dodge <- position_dodge(width = 0.52)
+  ggplot(mutate(d, model = label_model(arm), experiment = label_experiment(stage)),
+    aes(change, .data[[y]], colour = model)) +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "grey55") +
+    geom_errorbar(aes(xmin = lower, xmax = upper), orientation = "y",
+      position = dodge, width = 0.15, na.rm = TRUE) +
+    geom_point(position = dodge, size = 2.1) +
+    facet_wrap(~experiment, scales = scales) +
+    scale_colour_manual(values = colours) + labs(x = x, y = NULL, colour = NULL)
+}
+```
+
+## Abstract
+
+Age-structured stock assessments often omit sampled zeros when using a
+lognormal observation model. Poisson-link delta (PLD) uses the predicted
+catch or survey index to explain both encounters and positive amounts. The
+question is whether this improves estimates of older fish and mortality,
+especially when the sampling distribution departs from the fitted model.
+This study fits ordinary lognormal, PLD lognormal, and PLD generalized gamma
+to paired 30-year histories with exact PLD observations, finite age samples,
+and a whole-area SimSurvey pilot. A separate exact comparison holds the
+positive likelihood fixed and drops the encounter contribution.
+`r describe(filter(older_pairs, stage == "exact", arm == "full"), "Using PLD lognormal rather than ordinary lognormal under exact PLD")`
+`r describe(filter(ablation_older, stage == "exact"), "Adding the encounter contribution to the same positive-value likelihood")`
+The changes refer to mean absolute log error in age-14+ abundance.
+Replacing the PLD lognormal positive density with generalized gamma changed
+that error by less than 0.002 in each controlled experiment. Generalized
+gamma passed in seven of eight SimSurvey 20+ histories, compared with five
+for PLD lognormal. Only four histories passed both, leaving the effect on
+recovery uncertain. PLD remains a sensitivity analysis when sampled zeros
+are common. In these experiments the gains in recovery were mainly
+associated with the positive-value model, and the extra shape parameter
+showed no consistent benefit for estimating older abundance.
+
+## What did the fits compare?
+
+The ordinary lognormal uses positive observations and treats its prediction
+as their conditional median. In PLD, the predicted catch or index
+\(\widetilde{Y}_i\) is the arithmetic mean across zeros and positives. The
+soft detection scale \(\widetilde{Y}_{50,j}\) for catch or survey series \(j\)
+is the predicted level at which half of observations are expected to be zero.
+The two PLD families use the same encounter probability
+\(p_{+,i} = \Pr(Y_i > 0) = 1 - 2^{-\widetilde{Y}_i/\widetilde{Y}_{50,j}}\).
+Their positive arithmetic mean is \(\widetilde{Y}_i/p_{+,i}\). Changing the
+positive density from lognormal to generalized gamma adds a signed shape
+\(Q\) for each series. At \(Q=0\), those positive densities agree at the same
+dispersion value. The generalized gamma fits estimate \(Q\) starting at zero.
+The encounter ablation, fitted only to exact PLD data, keeps the same fixed
+soft detection scales and positive lognormal likelihood, dropping the
+Bernoulli terms for recording zero or a positive value.
+([Thorson 2018](https://repository.library.noaa.gov/view/noaa/54874),
+see also the [sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html))
+
+### Controlled samples
+
+Each 30-year history follows ages 1–14+, with survivors carried into the
+oldest group. Recruitment drops to 40% of normal in years 5–7 and 16–18.
+Fully selected fishing mortality is 0.06 per year in years 1–7, 0.22 in
+years 8–12, and 0.035 thereafter. The survey index equals abundance before
+fishing. Natural mortality (M) is 0.25 through year 13 and 0.60 thereafter.
+The constant-M control keeps it at 0.25. Its random draws are paired with
+those for the mortality rise. The fits estimate the F levels and the
+shared dome-shaped selectivity, and fix survey catchability at one.
+
+- **Exact PLD** and **finite age samples** compare abundance recovery under
+  known M, each using 32 histories. Exact PLD generates positives from a
+  lognormal. Finite samples generate age proportions by drawing a fixed
+  number of fish each year and expanding by a noisy annual total centered on
+  the generating total. This creates dependence across ages. The finite-sample
+  fits estimate dispersion and, for PLD, the soft detection scale for each series.
+- **M rises** and **M constant** each use 16 histories and the exact
+  observation generator. The year of the potential change is supplied.
+  These fits estimate one M level before the change and one after. In all
+  exact-likelihood experiments, both the PLD soft detection scale and
+  dispersion values are supplied. The generalized gamma uses the same
+  numerical values for its Prentice scale. Six independent calibration
+  histories established the scales and sample sizes for the targeted zero
+  rates of 10% in catch and 15% in survey at ages 2–14+.
+
+```{r controlled-zeros, fig.cap="Sampled zeros concentrate at old ages in the survey and at the tails of the dome-shaped fishery. The last age combines ages 14 and older."}
+zeros <- bind_rows(lapply(c("exact", "finite"), function(stage) {
+  bind_rows(lapply(controlled$stages[[stage]], function(x) mutate(x$zeros, stage = stage)))
+}))
+zeros |>
+  group_by(stage, component, age) |>
+  summarise(zero = sum(zeros) / sum(observed), .groups = "drop") |>
+  mutate(experiment = label_experiment(stage), program = recode(component, catch = "Catch", index = "Survey")) |>
+  ggplot(aes(age, zero, colour = experiment)) +
+  geom_line(linewidth = 0.75) + geom_point(size = 1.4) +
+  facet_wrap(~program) + scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_continuous(breaks = c(1, 4, 7, 10, 14), labels = c(1, 4, 7, 10, "14+")) +
+  scale_colour_manual(values = c("Exact PLD" = "#126782", "Finite samples" = "#C44C27")) +
+  labs(x = "Age", y = "Sampled zeros", colour = NULL)
+```
+
+### Whole-area samples
+
+The eight original SimSurvey histories combine a dome-selected fishery and an
+ascending logistic RV survey on a 40 × 40 grid. Fishery monitoring covers
+half of operations and samples up to 150 fish per sampled operation. The
+survey uses two sets per 1,000 km², measures up to 100 fish per set, and
+ages up to three per length group and set. SimSurvey generates default
+recruitment, growth, weight, maturity and age–year–space distribution. The
+20+ group accumulates survivors starting in year two. Fully selected F
+starts at 0.12 per year, follows a log random walk with innovation SD 0.10,
+and triples above that path in years 14–16.
+[SimSurvey study](https://doi.org/10.1371/journal.pone.0232822)
+
+The fits use annual fishing levels, a common dome, logistic survey
+catchability, survival without deviations, and random-walk recruitment with
+SD 0.50. Both age resolutions use
+`M_settings = list(process = "off", mu_supplied = ~ I(0.30))`, fixing M
+at the prescribed simulation value. Positive dispersion is estimated
+for each series, as are the PLD soft detection scales. The fit at 14+
+sums the modeled observations into one terminal bin. The model treats that
+bin as sharing age-14 selectivity. The 20+ fit uses each age through age 20
+and shares terminal selectivity for the fish aged 20 and older.
+
+```{r spatial-rates, fig.cap="Prescribed and realized fishing and natural mortality across ages 5–10, using true abundance to weight each age. Each line is one history. The shaded band marks the three-year fishing pulse."}
+rates <- bind_rows(lapply(spatial$histories, function(h) mutate(h$reference, id = h$id))) |>
+  filter(age %in% 5:10, N > 0) |>
+  group_by(id, year) |>
+  summarise(F_prescribed = weighted.mean(F_reference, N), F_realized = weighted.mean(F_realized, N),
+    M_prescribed = spatial$M, M_realized = weighted.mean(M_realized, N), .groups = "drop") |>
+  tidyr::pivot_longer(-c(id, year), names_to = c("rate", "path"), names_sep = "_") |>
+  mutate(rate = recode(rate, F = "Fishing mortality", M = "Natural mortality"))
+ggplot(rates, aes(year, value, colour = path, group = interaction(id, path))) +
+  annotate("rect", xmin = min(spatial$pulse) - 0.5, xmax = max(spatial$pulse) + 0.5,
+    ymin = -Inf, ymax = Inf, alpha = 0.13) +
+  geom_line(alpha = 0.55) + facet_wrap(~rate, scales = "free_y") +
+  scale_colour_manual(values = c(prescribed = "#126782", realized = "#C44C27"),
+    labels = c("Prescribed", "Realized")) +
+  labs(x = "Year", y = "Mortality rate (per year)", colour = NULL)
+```
+
+```{r spatial-zeros, fig.cap="Proportion of sampled observations recorded as zero across the eight SimSurvey histories. Crosses mark age–years with missing observations. Age 20 includes all older fish."}
+observed <- bind_rows(lapply(spatial$histories, "[[", "observed")) |>
+  group_by(component, year, age) |>
+  summarise(available = sum(!is.na(obs)), missing = sum(is.na(obs)), zeros = sum(obs == 0, na.rm = TRUE),
+    .groups = "drop") |>
+  mutate(zero = ifelse(available > 0, zeros / available, NA_real_),
+    program = recode(component, catch = "Catch", index = "RV index"))
+ggplot(observed, aes(year, age, fill = zero)) +
+  geom_tile() + geom_point(data = filter(observed, missing > 0), shape = 4, size = 0.85) +
+  facet_wrap(~program) +
+  scale_y_continuous(breaks = c(1, 5, 10, 14, 20), labels = c(1, 5, 10, 14, "20+")) +
+  scale_fill_gradient(low = "#f4f9f9", high = "#126782", limits = c(0, 1),
+    labels = scales::label_percent(), na.value = "grey85") +
+  labs(x = "Year", y = "Age", fill = "Sampled zeros")
+```
+
+SimSurvey targets a total catch. Realized removals within each age also
+depend on how the fishery allocates effort and where it encounters fish.
+The implied M is prescribed Z minus realized F. In the original pilot, only
+one of eight histories had a population-weighted mean absolute departure
+from 0.30 within 0.03 per year over ages 5–10 and no annual mean more than
+0.06 away. That audit and the numerical gate stopped expansion. The re-fit
+keeps the same eight frozen histories. Comparisons in the pilot therefore
+retain a mismatch between realized age-specific M and prescribed M.
+
+
+## How often did fits pass?
+
+All fits used the same starting-value policy for shared parameters within
+an experiment and the package's numerical checks, including a maximum
+gradient of 0.01. Controlled fits had one common damped Newton refinement,
+accepted if it reduced the objective and the maximum absolute gradient.
+The SimSurvey re-fit used the package optimizer directly, as in the
+original pilot. All input values, including exact zeros and missing rows,
+were verified to match across prepared data for completed fits in each
+history. Checkpoints retain every attempt, warning and error.
+
+```{r reliability, fig.cap="Successful fits over all attempts. A family contributes to a paired recovery comparison only where both fits pass. The encounter ablation is shown separately below."}
+fit_summary <- fits |>
+  group_by(stage, arm) |>
+  summarise(attempts = n(), successes = sum(passed), warnings = sum(warning), .groups = "drop")
+fit_summary |>
+  filter(arm != "positive") |>
+  mutate(experiment = label_experiment(stage), model = label_model(arm)) |>
+  ggplot(aes(experiment, model, fill = successes / attempts)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = paste(successes, attempts, sep = "/"))) +
+  scale_fill_gradient(low = "#f8e2d9", high = "#a6d8cd", limits = c(0, 1),
+    labels = scales::label_percent()) +
+  labs(x = NULL, y = NULL, fill = "Pass rate") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r reliability-detail, results='asis'}
+warnings <- sum(fits$warning)
+failed <- filter(fits, !passed)
+cat(sprintf("%d of %d attempts returned at least one warning. %d failed numerical checks or stopped with an error.\n\n",
+  warnings, nrow(fits), nrow(failed)))
+if (nrow(failed)) {
+  print(knitr::kable(count(failed, reason, sort = TRUE),
+    col.names = c("Recorded reason", "Attempts")))
+}
+```
+
+## Which models recovered stock trajectories?
+
+The primary outcome is mean absolute log error in abundance at ages 14
+and older during years 16–23. A log error of zero is exact recovery.
+For the 20+ fits, ages 14 through 20+ are summed before scoring. The
+same comparison also uses weak cohorts, recruitment, SSB, and mean
+fishing mortality over ages 5–10 where available. Differences and their
+Monte Carlo intervals use the independent histories successful in
+both fits. Small common samples, especially the SimSurvey pilot, give
+descriptive comparisons.
+
+```{r primary-recovery, fig.cap="Change in age-14+ absolute log error for each PLD fit relative to ordinary lognormal. Values below zero favor PLD. The bars give 95% Monte Carlo intervals and the horizontal scales vary by experiment. Labels give the number of common successful histories."}
+primary <- mutate(older_pairs, comparison = paste0(ifelse(arm == "full", "LN", "GG"),
+  " (", pairs, " pairs)"))
+plot_effect(primary, "PLD minus lognormal absolute log error", "comparison", scales = "free")
+```
+
+```{r other-stock, fig.cap="Changes in absolute log error for secondary population outcomes on common successful histories, relative to ordinary lognormal. The zero line denotes equal error. Fishing mortality uses the true abundance weights.", fig.height=4.8}
+secondary <- paired_difference(filter(metrics, metric != "Age 14+ abundance"),
+  "absolute", c("full", "gengamma"), "lognormal", c("stage", "id", "metric"))
+plot_effect(filter(secondary, stage %in% c("exact", "finite", "spatial20", "spatial14")),
+  "PLD minus lognormal absolute log error")
+```
+
+```{r signed-bias, fig.cap="Signed log error in older-age abundance and spawning biomass among each model's successful fits. Values below zero indicate underestimation. Intervals give uncertainty across histories. The number of usable fits varies by model as shown above."}
+bias <- metrics |>
+  filter(arm != "positive", metric %in% c("Age 14+ abundance", "SSB", "Spawning biomass")) |>
+  mutate(metric = ifelse(metric == "SSB", "Spawning biomass", metric)) |>
+  group_by(stage, arm, metric) |>
+  summarise(change = interval(bias)[["mean"]], lower = interval(bias)[["lower"]],
+    upper = interval(bias)[["upper"]], .groups = "drop")
+plot_effect(bias, "Mean signed log error")
+```
+
+```{r coverage, fig.cap="Coverage of recruitment and spawning biomass intervals, averaged over the years scored within each successful history. For controlled fits only weak recruitment years are scored. The dashed line marks nominal 95% coverage. The study does not calculate intervals for age-specific abundance.", fig.height=4.6}
+metrics |>
+  filter(arm != "positive", is.finite(coverage)) |>
+  mutate(metric = ifelse(metric == "SSB", "Spawning biomass", metric),
+    experiment = label_experiment(stage), model = label_model(arm)) |>
+  group_by(experiment, model, metric) |>
+  summarise(coverage = mean(coverage), .groups = "drop") |>
+  ggplot(aes(coverage, metric, colour = model)) +
+  geom_vline(xintercept = 0.95, linetype = "dashed", colour = "grey55") +
+  geom_point(position = position_dodge(width = 0.55), size = 2.0) +
+  facet_wrap(~experiment, scales = "free_y") + scale_colour_manual(values = colours) +
+  scale_x_continuous(labels = scales::label_percent(), limits = c(0, 1)) +
+  labs(x = "Mean interval coverage", y = NULL, colour = NULL)
+```
+
+```{r spatial-example, fig.cap="Fitted and generating fishing mortality and abundance for the first SimSurvey 20+ history where all three fits passed. Fishing mortality averages ages 5–10 with true abundance weights. The shaded band marks the fishing pulse."}
+common20 <- fits |>
+  filter(stage == "spatial20") |>
+  group_by(id) |>
+  summarise(all_passed = all(passed), .groups = "drop") |>
+  filter(all_passed)
+if (nrow(common20)) {
+  example <- spatial$histories[[match(min(common20$id), vapply(spatial$histories, "[[", integer(1L), "id"))]]
+  example_fits <- example$fits[["20"]]
+  fitted <- bind_rows(lapply(names(example_fits), function(arm) {
+    x <- example_fits[[arm]]$value
+    bind_rows(transmute(x$F, year, value = F_est, quantity = "Fishing mortality (per year)"),
+      filter(x$N, age >= 14L) |>
+        group_by(year) |>
+        summarise(value = sum(est), quantity = "Age 14+ (thousand fish)", .groups = "drop")) |>
+      mutate(model = models[[arm]])
+  }))
+  truth <- bind_rows(
+    transmute(example_fits[[1L]]$value$F, year, value = F_realized,
+      quantity = "Fishing mortality (per year)"),
+    filter(example$reference, age >= 14L) |>
+      group_by(year) |>
+      summarise(value = sum(N), quantity = "Age 14+ (thousand fish)", .groups = "drop")) |>
+    mutate(model = "Truth")
+  ggplot(bind_rows(fitted, truth), aes(year, value, colour = model)) +
+    annotate("rect", xmin = min(spatial$pulse) - 0.5, xmax = max(spatial$pulse) + 0.5,
+      ymin = -Inf, ymax = Inf, alpha = 0.13) +
+    geom_line(linewidth = 0.7) +
+    facet_wrap(~quantity, scales = "free_y") +
+    scale_colour_manual(values = c(colours, Truth = "#333333")) +
+    labs(x = "Year", y = NULL, colour = NULL)
+}
+```
+
+## Did the encounter term improve recovery of natural mortality?
+
+The change is late M minus early M. A false increase occurs in the constant-M
+control when a 95% Wald interval for that contrast lies above zero. For the
+exact PLD observations, the family comparisons change the positive
+likelihood. The ablation isolates what recording zero or positive contributes
+while preserving the positive density.
+
+```{r mortality, fig.cap="Estimated changes in annual natural mortality for individual successful histories. Bars mark 95% Wald intervals. Dashed lines are the generating changes. The fourth fit keeps the positive PLD lognormal density and drops the encounter terms."}
+mortality |>
+  mutate(experiment = label_experiment(stage), model = label_model(arm)) |>
+  ggplot(aes(id, estimate, colour = model)) +
+  geom_hline(data = distinct(mutate(mortality, experiment = label_experiment(stage)), experiment, truth),
+    aes(yintercept = truth), inherit.aes = FALSE, colour = "grey55", linetype = "dashed") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.15,
+    position = position_dodge(width = 0.65)) +
+  geom_point(position = position_dodge(width = 0.65), size = 1.4) +
+  facet_wrap(~experiment, scales = "free_y") + scale_colour_manual(values = colours) +
+  labs(x = "History", y = "Late minus early M (per year)", colour = NULL)
+```
+
+```{r mortality-summary}
+mortality |>
+  group_by(stage, arm) |>
+  summarise(passed = n(), error = mean(absolute), bias = mean(bias), coverage = mean(coverage),
+    positive = sum(positive), .groups = "drop") |>
+  mutate(stage = label_experiment(stage), arm = label_model(arm)) |>
+  knitr::kable(digits = 3, col.names = c("Scenario", "Model", "Passes", "Absolute error",
+    "Signed error", "95% coverage", "Intervals above zero"))
+```
+
+`r describe(filter(ablation_mortality, stage == "pulse"), "Adding the encounter terms under the same positive likelihood")`
+Here the units are annual M. These fits supply the year of the change
+and fix catchability, so mortality is better anchored than in an
+assessment where timing and stock scale must both be estimated.
+
+## Was an extra shape parameter informative?
+
+```{r shape, fig.cap="Estimated generalized gamma shape by series and experiment, using only successful fits. Points are individual histories and bars show 95% Wald intervals. The generating shape is zero in the exact PLD experiments. Neither finite sampling nor SimSurvey defines a generalized gamma shape.", fig.height=4.8}
+shapes <- bind_rows(lapply(passed, function(x) {
+  if (x$arm == "gengamma" && !is.null(x$parameters)) filter(x$parameters, par == "gengamma_Q") |>
+    mutate(stage = x$stage, id = x$id, series = ifelse(is.na(survey), "Catch", "Survey"))
+}))
+if (nrow(shapes)) {
+  ggplot(mutate(shapes, experiment = label_experiment(stage)), aes(id, est, colour = series)) +
+    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey55") +
+    geom_errorbar(aes(ymin = lwr, ymax = upr), position = position_dodge(width = 0.5),
+      width = 0.12, alpha = 0.65, na.rm = TRUE) +
+    geom_point(size = 1.2, position = position_dodge(width = 0.5)) +
+    facet_wrap(~experiment, ncol = 3, scales = "free") +
+    scale_colour_manual(values = c(Catch = "#C44C27", Survey = "#126782")) +
+    labs(x = "History", y = "Generalized gamma shape (Q)", colour = NULL)
+}
+```
+
+```{r shape-summary}
+if (nrow(shapes)) {
+  shapes |>
+    group_by(stage, series) |>
+    summarise(n = n(), estimate = median(est),
+      includes_zero = sum(lwr <= 0 & upr >= 0, na.rm = TRUE),
+      intervals = sum(is.finite(lwr) & is.finite(upr)), .groups = "drop") |>
+    mutate(stage = label_experiment(stage)) |>
+    knitr::kable(digits = 3, col.names = c("Experiment", "Series", "Fits", "Median Q",
+      "Intervals spanning zero", "Available intervals"))
+}
+```
+
+## Conclusion
+
+Under exact PLD sampling, the comparison with ordinary lognormal tests both
+the encounter terms and how the positive observations are modeled.
+`r describe(filter(ablation_older, stage == "exact"), "Adding the encounter terms to a fixed positive density")`
+Both PLD fits substantially reduced older-age error in the rising-M scenario.
+Most of the improvement remained when the encounter term was removed.
+Finite-sample differences were smaller and less precise. The SimSurvey pilot
+favored PLD on average across the available pairs, with intervals that
+included both improvement and worsening. Where pairs are sparse and
+realized M departs from its prescribed value, family comparisons remain
+uncertain.
+
+PLD is useful as a sensitivity analysis when catch or survey inputs have
+many sampled zeros. Check where zeros enter the fitted data after pooling,
+inspect fit reliability, and compare on common held-out observations. The
+controlled study gives limited evidence that adding the encounter likelihood
+alone improves stock estimates consistently. Generalized gamma gives a way
+to assess positive-tail sensitivity. Its shape estimates differed from zero
+more often under finite age sampling than under exact PLD, with little
+corresponding change in older-age error. It passed more often than PLD
+lognormal in the SimSurvey pilot, but the four common age-20+ pairs were too
+few to distinguish their recovery.

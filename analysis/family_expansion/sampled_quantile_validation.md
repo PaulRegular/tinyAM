@@ -5,10 +5,10 @@ In 80 correctly specified tinyAM fits, drawing the random effects once restored 
 Run from the package root with R and the tinyAM development dependencies available.
 
 ```sh
-Rscript --vanilla analysis/formula_expansion/validate_sampled_quantile_residuals.R
+Rscript --vanilla analysis/family_expansion/validate_sampled_quantile_residuals.R
 ```
 
-The script generates 40 independent 32-year histories with ages 1–4+, constant recruitment and mortality, and IID deviations from predicted survivors. Each history supplies the same catch and stock to two scenarios. The survey observes the population through either a lognormal or a Poisson-link delta lognormal distribution. The fits estimate fishing mortality, recruitment and the cohort-process SD. They use known natural mortality, survey catchability, observation SDs and the PLD detection scale to focus this check on the diagnostic. Each fit supplies one paired comparison of fitted-state (`mle-eb`) and sampled-state (`mle-mvn`) quantile residuals. Both use the same random numbers for PLD zeros.
+The script generates 40 independent 32-year histories with ages 1–4+, constant recruitment and mortality, and IID deviations from predicted survivors. Each history supplies the same catch and stock to two scenarios. The survey observes the population through either a lognormal or a Poisson-link delta lognormal distribution. The fits estimate fishing mortality, recruitment and the cohort-process SD. They use known natural mortality, survey catchability, observation SDs and the PLD soft detection scale to focus this check on the diagnostic. Each fit supplies one paired comparison of fitted-state (`mle-eb`) and sampled-state (`mle-mvn`) quantile residuals. Both use the same random numbers for PLD zeros.
 
 All 40 pairs completed in each scenario without warnings. The table averages within-history SD and tail frequency across the 40 histories. For a calibrated standard normal diagnostic, SD is one and 5% of residuals fall outside ±1.96.
 
