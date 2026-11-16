@@ -1,5 +1,5 @@
 ---
-title: "Poisson-link delta observations in tinyAM"
+title: "Poisson-link delta observations"
 output: rmarkdown::html_document
 ---
 
@@ -23,32 +23,64 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
 
 When fish are scarce, a catch or survey sample can record zero for an age
 even if fish of that age are present. The default lognormal family uses
-positive observations. The Poisson-link delta (PLD) families also use
-recorded zeros to inform the predicted catch or index. Thorson's Poisson-link
-model uses a shared quantity to explain both encounter probability and the
-size of positive observations. tinyAM links both to the assessment's predicted
-catch or index. [Thorson (2018)](https://repository.library.noaa.gov/view/noaa/54874) ·
-[sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html)
+positive observations and treats zeros as missing values. Poisson-link delta
+(PLD) families use recorded zeros to inform the predicted catch or index.
+These families use a shared quantity to explain both encounter probability
+and the size of positive observations (Thorson 2018, see also the
+[sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html)).
+tinyAM adapts Thorson's parameterization so the assessment's predicted catch
+or index supplies that shared quantity. PLD can be used for catch, survey
+indices, or both.
 
 ## The observation model
 
-Let \(Y\) be a recorded catch or index and \(\widetilde Y\) the predicted
-arithmetic mean across zeros and positives. Each survey or fleet has one
-detection scale \(\widetilde Y_{50}\), in the same units as the prediction.
+For one age and year, let \(Y\) be the recorded catch or survey index.
+The assessment supplies a prediction \(\widetilde Y\). For catch, it comes
+from the Baranov catch equation. For a survey index, it is abundance at the
+time of sampling scaled by catchability. PLD treats \(\widetilde Y\) as the
+average over all possible observations, including zeros.
+
+The encounter part of the likelihood asks whether the sample recorded any
+fish of that age. Given the population states and model parameters, the
+indicator \(D=\mathbf{1}(Y>0)\) follows a binomial distribution with one trial,
+also called a Bernoulli distribution. The probability of a positive is
+\(1-p_0\). To calculate \(p_0\), the Poisson link divides the assessment
+prediction by a **soft detection scale** \(\widetilde Y_{50}\) and uses the
+chance of zero events from a Poisson distribution with mean \(\lambda\).
+Each fleet or survey has its own scale, in the same units as its prediction.
 
 \[
-p_0 = P(Y=0) = 2^{-\widetilde Y/\widetilde Y_{50}},
-\qquad
-E[Y\mid Y>0] = \frac{\widetilde Y}{1-p_0}.
+\lambda = \log(2)\frac{\widetilde Y}{\widetilde Y_{50}},
+\qquad p_0 = P(Y=0) = e^{-\lambda} = 2^{-\widetilde Y/\widetilde Y_{50}}.
 \]
 
-When the predicted catch or index equals \(\widetilde Y_{50}\), half the
-observations are expected to be zero. Doubling the prediction lowers that
-probability to 25%. The positive mean is larger than the overall mean because
-it averages only observations above zero. The positive component models the
-spread around that mean. Use `pld_lognormal()`, `pld_gamma()`, or
-`pld_gengamma()` to specify its distribution. Each uses the same equation for
-encounter probability.
+At \(\widetilde Y=\widetilde Y_{50}\), the chance of recording zero is 50%.
+At twice that prediction it is 25%. The probability changes gradually as
+the prediction changes.
+
+The second part describes how large a positive observation is. Dividing
+the prediction by the probability of a positive gives the positive mean
+\(m_+=\widetilde Y/(1-p_0)\). Averaging over zeros and positives gives
+\((1-p_0)m_+=\widetilde Y\), the original assessment prediction.
+
+A recorded zero contributes its probability from the binomial part. A
+positive record contributes both its probability of occurring and the
+density of its size. With \(g_+\) denoting the density of \(\log Y\) given a
+positive observation, the log-likelihood for one sample is
+
+\[
+\ell(Y)=
+\begin{cases}
+\log p_0, & Y=0,\\
+\log(1-p_0)+\log g_+(\log Y), & Y>0.
+\end{cases}
+\]
+
+For `pld_lognormal()`, \(\log Y\) given a positive observation follows
+\(N(\log m_+-\sigma^2/2,\sigma^2)\). The log-scale SD \(\sigma\) controls
+the spread of positive values. Subtracting \(\sigma^2/2\) gives the
+positives an arithmetic mean of \(m_+\). The PLD Gamma and generalized
+Gamma options use the same \(p_0\) and \(m_+\) with different positive densities.
 [Observation family reference](../reference/observation_families.html)
 
 ## Apply PLD to Northern cod
@@ -62,8 +94,8 @@ zero_count <- function(x) sum(x$obs == 0 & x$year %in% years & x$age %in% ages,
 
 Northern cod has **`r zero_count(cod_obs$catch)` recorded catch zeros** and
 **`r zero_count(cod_obs$index)` Fall 2J3KL survey zeros** at ages 2–20+ in
-1983–2025. We fit two observation families to this case, the default
-lognormal and the Poisson-link delta lognormal.
+1983–2025. This example compares fits using the default lognormal and
+the Poisson-link delta lognormal.
 
 ```{r fits, cache=TRUE, results="hide"}
 ncam <- fit_tam(cod_obs, years = 1983:2025, ages = 2:20,
@@ -102,7 +134,7 @@ knitr::kable(scales[c("series", "est", "lwr", "upr", "unit")], digits = 2, row.n
 For each series, a fitted mean near its half-detection level gives a zero
 probability near 50%. The table uses the same units as the matrices below.
 
-### Which observations are likely to be zero?
+### Which observations are likely to be zero? {.tabset}
 
 The numbers in the cells are the observations, in thousands of fish. The
 colour shows the probability of zero calculated from the fitted mean. Darker
@@ -110,9 +142,9 @@ cells have higher probabilities. Grey cells mark missing observations. Hover
 over a cell for the full recorded value, fitted mean, and probability. In the
 cell labels, `k` means one thousand of the displayed units.
 
-```{r observation-matrices, echo=FALSE}
+```{r observation-matrices, include=FALSE}
 d <- tidy_obs_pred(ncam_pld)
-observation_matrix <- function(data, title) {
+observation_matrix <- function(data) {
   cells <- expand.grid(year = years, age = ages)
   key <- match(paste(cells$year, cells$age), paste(data$year, data$age))
   observed <- data$obs[key]
@@ -148,8 +180,7 @@ observation_matrix <- function(data, title) {
       textfont = list(size = 10, color = if (on_dark) "white" else "#15252d"),
       inherit = FALSE)
   }
-  p <- plotly::layout(p, title = list(text = paste0(title, " (thousands of fish)")),
-    margin = list(t = 105), plot_bgcolor = "#e3e5e8",
+  p <- plotly::layout(p, margin = list(t = 70), plot_bgcolor = "#e3e5e8",
     xaxis = list(title = "Age", side = "top", tickvals = ages, ticktext = age_labels,
       showgrid = FALSE, zeroline = FALSE, automargin = TRUE),
     yaxis = list(title = "Year", range = c(max(years) + .5, min(years) - .5),
@@ -157,50 +188,82 @@ observation_matrix <- function(data, title) {
   htmltools::div(style = "overflow-x: auto;",
     htmltools::div(style = "min-width: 865px;", plotly::config(p, displayModeBar = FALSE)))
 }
-observation_matrix(d$catch, "Commercial catch")
-observation_matrix(d$index, "Fall 2J3KL survey")
+annual_zero_counts <- function(data) {
+  eligible <- subset(data, is_observed & !is_structural & !is_proj &
+    is.finite(obs) & is.finite(p_zero))
+  counts <- aggregate(cbind(obs = as.integer(obs == 0), pred = p_zero, n = 1L) ~ year,
+    data = eligible, FUN = sum)
+  counts <- counts[match(years, counts$year), ]
+  counts$year <- years
+  counts
+}
+zero_counts <- lapply(d[c("catch", "index")], annual_zero_counts)
 ```
 
-Across sampled cells, the fitted probabilities sum to
-`r round(sum(d$catch$p_zero[!is.na(d$catch$obs)]))` expected catch zeros and
-`r round(sum(d$index$p_zero[!is.na(d$index$obs)]))` expected survey zeros.
+The catch recorded `r sum(zero_counts$catch$obs, na.rm = TRUE)` zeros, with
+`r round(sum(zero_counts$catch$pred, na.rm = TRUE))` expected under PLD.
+The survey recorded `r sum(zero_counts$index$obs, na.rm = TRUE)` zeros, with
+`r round(sum(zero_counts$index$pred, na.rm = TRUE))` expected.
+
+#### Catch
+
+```{r catch-matrix, echo=FALSE}
+observation_matrix(d$catch)
+```
+
+#### Index
+
+```{r index-matrix, echo=FALSE}
+observation_matrix(d$index)
+```
+
+### How many zeros occur each year? {#annual-zero-counts .tabset}
+
+Dots count the ages with a recorded zero. The line sums the fitted
+probabilities of zero over the same sampled ages. Years without observations
+leave a gap.
+
+```{r annual-zero-plots, include=FALSE}
+plot_annual_zeros <- function(counts) {
+  hover <- "Year: %{x}<br>Zeros: %{y:.2f}<br>Ages sampled: %{text}<extra>%{fullData.name}</extra>"
+  plotly::plot_ly(counts, x = ~year, text = ~n, height = 320, hovertemplate = hover) |>
+    plotly::add_markers(data = subset(counts, is.finite(obs)), y = ~obs,
+      name = "Observed", marker = list(color = "#666666")) |>
+    plotly::add_lines(data = counts, y = ~pred, name = "Expected", line = list(color = tam_cols()[1L]),
+      connectgaps = FALSE) |>
+    plotly::layout(xaxis = list(title = "Year"),
+      yaxis = list(title = "Number of zeros", rangemode = "tozero"), showlegend = FALSE)
+}
+```
+
+#### Catch {#catch-zero-counts}
+
+```{r catch-zero-counts, echo=FALSE}
+plot_annual_zeros(zero_counts$catch)
+```
+
+#### Index {#index-zero-counts}
+
+```{r index-zero-counts, echo=FALSE}
+plot_annual_zeros(zero_counts$index)
+```
 
 ## Compare the assessments
 
-```{r sensitivity, include=FALSE, cache=TRUE, dependson="fits"}
-ncam14 <- update(ncam, ages = 2:14,
-  M_settings = list(age_breaks = c(2, 5, 8, 15)), silent = TRUE)
-ncam14_pld <- update(ncam14,
-  catch_settings = list(family = pld_lognormal()),
-  index_settings = list(family = pld_lognormal()),
-  silent = TRUE
-)
-```
-
 Only six catches and two survey observations are positive at age 20+.
 The 20+ estimates therefore draw heavily on the fitted population dynamics.
-We also compare the estimated number of fish aged 14 and older. This is a
-sum across model ages in the 20+ fits and a single age group in the 14+ fits.
-Both abundance plots show point estimates. Shading marks the low-stock years
-from 1992 to 2010.
+The abundance plot shows point estimates on a log scale so differences are
+visible when the stock was low. Shading marks the low-stock years from 1992
+to 2010.
 
 ```{r trajectories, echo=FALSE}
 fits <- list(Lognormal = ncam, PLD = ncam_pld)
 terminal <- stack_list(lapply(fits, function(fit) subset(fit$pop$N, age == 20)),
   label = "model")
-older_fish <- function(fit) {
-  d <- subset(fit$pop$N, age >= 14)
-  stats::aggregate(est ~ year + unit, d, sum)
-}
-older <- stack_list(lapply(list(
-  "Lognormal, fit to 20+" = ncam, "PLD, fit to 20+" = ncam_pld,
-  "Lognormal, fit to 14+" = ncam14, "PLD, fit to 14+" = ncam14_pld
-), older_fish), label = "model")
 ssb <- get_ssb(Lognormal = ncam, PLD = ncam_pld)
-terminal_ssb_change <- function(lognormal, pld) {
-  last <- function(fit) tail(get_ssb(fit)$est, 1L)
-  sprintf("%+.0f%%", 100 * (last(pld) / last(lognormal) - 1))
-}
+terminal_ssb <- subset(ssb, year == max(years))
+ssb_change <- with(terminal_ssb,
+  sprintf("%+.0f%%", 100 * (est[model == "PLD"] / est[model == "Lognormal"] - 1)))
 low_stock <- list(type = "rect", xref = "x", yref = "paper",
   x0 = 1992, x1 = 2010, y0 = 0, y1 = 1, layer = "below",
   fillcolor = "rgba(170,205,222,0.3)", line = list(width = 0))
@@ -209,127 +272,68 @@ plot_trend(terminal, color = ~model, colors = tam_pal(2),
   add_intervals = FALSE) |>
   plotly::layout(shapes = list(low_stock),
     yaxis = list(type = "log", range = log10(range(terminal$est) * c(0.8, 1.2))))
-plot_trend(older, color = ~model, colors = tam_pal(4),
-  ylab = "Age 14 and older abundance (thousands of fish)", add_buttons = FALSE) |>
-  plotly::layout(shapes = list(low_stock),
-    yaxis = list(type = "log", range = log10(range(older$est) * c(0.8, 1.2))))
 plot_trend(ssb, color = ~model, colors = tam_pal(2),
   ylab = "Spawning biomass (tonnes)")
 ```
 
-The log scales make differences visible when abundance was low. For 2025
-spawning biomass, the change from lognormal to PLD is
-`r terminal_ssb_change(ncam, ncam_pld)` with age 20+ and
-`r terminal_ssb_change(ncam14, ncam14_pld)` with age 14+. The size of the
-difference depends on the choice of terminal age.
+For 2025 spawning biomass, the change from lognormal to PLD is
+`r ssb_change`.
 
 [Northern cod dashboard](../examples/northern-cod-pld/index.html)
 
 ## Forecast held-out observations
 
-For each target year from 2006 to 2025, we fit through the previous year
-and forecast one year with terminal F held constant. We compare errors
-on the same positive survey observations using log-RMSE and MASE.
-Both scores use predicted medians for positive observations.
+For each target year from 2006 to 2025, the hindcast fits through the
+previous year and forecasts one year with terminal F held constant.
+Log-RMSE and MASE compare predicted medians against the same positive
+survey observations for both models.
 MASE compares pooled absolute errors with using the last available positive
 observation as the forecast. Scores below one improve on that baseline.
 
-```{r hindcasts, include=FALSE, cache=TRUE, dependson="fits"}
-project <- list(n_proj = 1, n_mean = 1, F_mult = 1)
-score_hindcast <- function(Lognormal, PLD, folds) {
-  h <- fit_hindcast(Lognormal, PLD = PLD, folds = folds,
-    proj_settings = project, progress = FALSE)
-  list(index = h$forecast_pairs$index, diagnostics = h$fold_diagnostics,
-    occurrence_scores = h$occurrence_scores)
-}
-
-paired_survey <- function(hind) {
-  d <- hind$index
-  if (!nrow(d)) return(d)
-  d$log_prediction <- ifelse(d$model == "PLD", d$log_pred_positive, log(d$pred))
-  d <- subset(d, is.finite(obs) & obs > 0 & is.finite(log_prediction))
-  key <- with(d, interaction(fold, year, age, survey, drop = TRUE))
-  d[duplicated(key) | duplicated(key, fromLast = TRUE), ]
-}
-
-windows <- list("2006–2025" = score_hindcast(ncam, ncam_pld, folds = 20))
-matches <- paired_survey(windows[[1]])
-if (sum(matches$age == max(ages) & matches$model == "PLD") < 5L) {
-  earlier_lognormal <- update(ncam, years = 1983:2005, silent = TRUE)
-  earlier_pld <- update(ncam_pld, years = 1983:2005, silent = TRUE)
-  windows[["1992–2005"]] <- score_hindcast(earlier_lognormal, earlier_pld, folds = 14)
-}
+```{r hindcasts, cache=TRUE, dependson="fits"}
+hind <- fit_hindcast(ncam, ncam_pld, folds = 20, proj_settings = list(F_mult = 1))
 ```
 
+The result includes held-out predictions and fold diagnostics. The table
+uses only positive survey observations with usable predictions from both
+models.
+
 ```{r hindcast-scores, echo=FALSE}
-scores <- lapply(names(windows), function(window) {
-  hind <- windows[[window]]
-  matched <- paired_survey(hind)
-  diagnostics <- subset(hind$diagnostics, !is_reference)
-  do.call(rbind, lapply(names(fits), function(model_name) {
-    d <- matched[which(matched$model == model_name), , drop = FALSE]
-    attempts <- diagnostics[diagnostics$model == model_name, ]
-    data.frame(Window = window, Model = model_name,
-      Failed = sum(!attempts$is_converged), Pairs = nrow(d),
-      `20+ pairs` = sum(d$age == max(ages)),
-      `Log-RMSE` = if (nrow(d)) compute_hindcast_rmse(d) else NA_real_,
-      MASE = if (nrow(d)) compute_hindcast_mase(d) else NA_real_,
-      check.names = FALSE)
-  }))
+survey <- hind$forecast_pairs$index
+survey$log_prediction <- ifelse(survey$model == "ncam_pld",
+  survey$log_pred_positive, log(survey$pred))
+survey <- subset(survey, is.finite(obs) & obs > 0 & is.finite(log_prediction))
+key <- with(survey, interaction(fold, year, age, survey, drop = TRUE))
+matched <- survey[duplicated(key) | duplicated(key, fromLast = TRUE), ]
+diagnostics <- subset(hind$fold_diagnostics, !is_reference)
+labels <- c(ncam = "Lognormal", ncam_pld = "PLD")
+scores <- lapply(names(labels), function(model_name) {
+  d <- matched[which(matched$model == model_name), , drop = FALSE]
+  attempts <- diagnostics[diagnostics$model == model_name, ]
+  data.frame(Model = labels[[model_name]],
+    Failed = sum(!attempts$is_converged), Pairs = nrow(d),
+    `20+ pairs` = sum(d$age == max(ages)),
+    `Log-RMSE` = if (nrow(d)) compute_hindcast_rmse(d) else NA_real_,
+    MASE = if (nrow(d)) compute_hindcast_mase(d) else NA_real_,
+    check.names = FALSE)
 })
 knitr::kable(do.call(rbind, scores), digits = 2, row.names = FALSE)
 ```
 
-The **Pairs** columns count shared positive observations, including how many
-were available at age 20+. Both windows had zero matched positives at 20+,
-so the positive survey scores evaluate the younger ages. Forecast accuracy at
-20+ remains unresolved.
-
-For PLD we can also evaluate the probability of a zero. The Brier score is
-the mean squared difference between that probability and the zero indicator.
-Smaller values mean better probability forecasts. These scores use all eligible
-PLD forecasts, including zeros, and are reported separately by data source.
-
-```{r zero-scores, echo=FALSE}
-zero_scores <- lapply(names(windows), function(window) {
-  d <- windows[[window]]$occurrence_scores
-  if (is.null(d)) return(NULL)
-  d <- subset(d, level == "overall" & is.na(horizon))
-  data.frame(Window = rep(window, nrow(d)),
-    Series = ifelse(d$type == "catch", "Commercial catch", "Fall 2J3KL survey"),
-    Observations = d$n, Zeros = d$n_zero, Brier = d$Brier)
-})
-if (length(Filter(Negate(is.null), zero_scores))) {
-  knitr::kable(do.call(rbind, zero_scores), digits = 2, row.names = FALSE)
-}
-```
+All folds passed numerical checks. PLD reduced both errors on the shared
+positive survey observations. Both models had MASE below one. There were
+no matched positive records at age 20+, so the scores describe younger ages.
 
 AIC comparisons require a common likelihood for the same observations.
 Here the families use different sets of observations because of the zeros.
 Conditional AIC is currently available for the all-lognormal fit only.
 
-## Appendix. Likelihood for a recorded observation
+## References
 
-Let \(g_+(z)\) be the density of \(z=\log Y\) conditional on a positive
-observation, and let \(p_0=2^{-\widetilde Y/\widetilde Y_{50}}\). A sampled
-observation adds the following amount to the log-likelihood.
-
-\[
-\ell(Y) =
-\begin{cases}
-\log p_0, & Y=0,\\
-\log(1-p_0)+\log g_+(\log Y), & Y>0.
-\end{cases}
-\]
-
-Each PLD family sets the arithmetic mean of the positive component to
-\(m_+=\widetilde Y/(1-p_0)\). Thus the overall mean is \((1-p_0)m_+=\widetilde Y\).
-For PLD lognormal, the conditional distribution of \(\log Y\) is
-\(N(\log m_+-\sigma^2/2,\sigma^2)\). The subtraction centres the **arithmetic**
-mean of \(Y\) at \(m_+\). For PLD Gamma and generalized Gamma, the
-parameters of the positive distribution are likewise set to give mean \(m_+\).
-See the family reference for their dispersion and shape parameters.
-[Observation family reference](../reference/observation_families.html)
+Thorson, J. T. 2018. Three problems with the conventional delta-model for
+biomass sampling data, and a computationally efficient alternative.
+*Canadian Journal of Fisheries and Aquatic Sciences*, 75(9), 1369–1382.
+[doi:10.1139/cjfas-2017-0266](https://doi.org/10.1139/cjfas-2017-0266).
 
 ```{r dashboard-export, include=FALSE, cache=FALSE}
 dashboard_cache <- Sys.getenv("TINYAM_PLD_GUIDE_FITS")
