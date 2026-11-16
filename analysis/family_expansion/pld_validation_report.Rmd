@@ -17,10 +17,16 @@ spatial <- readRDS(params$spatial_result)
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
   fig.width = 7.8, fig.height = 4, dpi = 120)
 theme_set(theme_bw(base_size = 11) + theme(panel.grid.minor = element_blank(),
-  legend.position = "bottom"))
+  panel.grid.major = element_line(colour = "grey91"),
+  strip.background = element_rect(fill = "grey94"), legend.position = "bottom"))
 models <- c(lognormal = "Lognormal", full = "PLD lognormal",
   gengamma = "PLD generalized gamma", positive = "PLD positive density only")
-colours <- setNames(c("#126782", "#C44C27", "#258375", "#735391"), models)
+# The navy, orange and teal match the tinyAM palette. Purple marks the ablation.
+navy <- "#003e56"
+orange <- "#f05c28"
+teal <- "#028f8d"
+colours <- setNames(c(navy, orange, teal, "#735391"), models)
+point_shapes <- setNames(c(16, 17, 15, 18), models)
 experiments <- c(exact = "Exact PLD", finite = "Finite samples", pulse = "M rises",
   constant_m = "M constant", spatial20 = "SimSurvey 20+", spatial14 = "SimSurvey 14+")
 label_experiment <- function(x) factor(experiments[x], levels = unname(experiments))
@@ -87,12 +93,13 @@ plot_effect <- function(d, x, y = "metric", scales = "free_y") {
   dodge <- position_dodge(width = 0.52)
   ggplot(mutate(d, model = label_model(arm), experiment = label_experiment(stage)),
     aes(change, .data[[y]], colour = model)) +
-    geom_vline(xintercept = 0, linetype = "dashed", colour = "grey55") +
+    geom_vline(xintercept = 0, linetype = "dashed", colour = "grey35") +
     geom_errorbar(aes(xmin = lower, xmax = upper), orientation = "y",
       position = dodge, width = 0.15, na.rm = TRUE) +
-    geom_point(position = dodge, size = 2.1) +
+    geom_point(aes(shape = model), position = dodge, size = 2.5) +
     facet_wrap(~experiment, scales = scales) +
-    scale_colour_manual(values = colours) + labs(x = x, y = NULL, colour = NULL)
+    scale_colour_manual(values = colours) + scale_shape_manual(values = point_shapes) +
+    labs(x = x, y = NULL, colour = NULL, shape = NULL)
 }
 ```
 
@@ -105,19 +112,23 @@ question is whether this improves estimates of older fish and mortality,
 especially when the sampling distribution departs from the fitted model.
 This study fits ordinary lognormal, PLD lognormal, and PLD generalized gamma
 to paired 30-year histories with exact PLD observations, finite age samples,
-and a whole-area SimSurvey pilot. A separate exact comparison holds the
-positive likelihood fixed and drops the encounter contribution.
+and a whole-area SimSurvey pilot. The exact PLD simulations generated
+lognormal positive observations, equivalent to generalized gamma with shape
+$Q=0$. A separate exact comparison holds the positive likelihood fixed and
+drops the encounter contribution.
 `r describe(filter(older_pairs, stage == "exact", arm == "full"), "Using PLD lognormal rather than ordinary lognormal under exact PLD")`
 `r describe(filter(ablation_older, stage == "exact"), "Adding the encounter contribution to the same positive-value likelihood")`
 The changes refer to mean absolute log error in age-14+ abundance.
-Replacing the PLD lognormal positive density with generalized gamma changed
-that error by less than 0.002 in each controlled experiment. Generalized
+Estimating the generalized gamma shape changed that error by less than
+0.002 in each controlled experiment, including the finite age samples
+where a lognormal positive density was only an approximation. Generalized
 gamma passed in seven of eight SimSurvey 20+ histories, compared with five
-for PLD lognormal. Only four histories passed both, leaving the effect on
-recovery uncertain. PLD remains a sensitivity analysis when sampled zeros
-are common. In these experiments the gains in recovery were mainly
-associated with the positive-value model, and the extra shape parameter
-showed no consistent benefit for estimating older abundance.
+for PLD lognormal. Only four histories passed both, and their paired
+interval included both improvement and worsening. PLD remains a sensitivity
+analysis when sampled zeros are common. In these experiments the gains in
+recovery were mainly associated with how the positive observations were
+modeled. The benefit of estimating a shape when the true positive density
+departs substantially from lognormal remains open.
 
 ## What did the fits compare?
 
@@ -173,11 +184,12 @@ zeros |>
   summarise(zero = sum(zeros) / sum(observed), .groups = "drop") |>
   mutate(experiment = label_experiment(stage), program = recode(component, catch = "Catch", index = "Survey")) |>
   ggplot(aes(age, zero, colour = experiment)) +
-  geom_line(linewidth = 0.75) + geom_point(size = 1.4) +
+  geom_line(aes(linetype = experiment), linewidth = 0.85) +
+  geom_point(aes(shape = experiment), size = 1.7) +
   facet_wrap(~program) + scale_y_continuous(labels = scales::label_percent()) +
   scale_x_continuous(breaks = c(1, 4, 7, 10, 14), labels = c(1, 4, 7, 10, "14+")) +
-  scale_colour_manual(values = c("Exact PLD" = "#126782", "Finite samples" = "#C44C27")) +
-  labs(x = "Age", y = "Sampled zeros", colour = NULL)
+  scale_colour_manual(values = c("Exact PLD" = navy, "Finite samples" = orange)) +
+  labs(x = "Age", y = "Sampled zeros", colour = NULL, linetype = NULL, shape = NULL)
 ```
 
 ### Whole-area samples
@@ -214,10 +226,13 @@ rates <- bind_rows(lapply(spatial$histories, function(h) mutate(h$reference, id 
 ggplot(rates, aes(year, value, colour = path, group = interaction(id, path))) +
   annotate("rect", xmin = min(spatial$pulse) - 0.5, xmax = max(spatial$pulse) + 0.5,
     ymin = -Inf, ymax = Inf, alpha = 0.13) +
-  geom_line(alpha = 0.55) + facet_wrap(~rate, scales = "free_y") +
-  scale_colour_manual(values = c(prescribed = "#126782", realized = "#C44C27"),
+  geom_line(aes(linetype = path), linewidth = 0.65, alpha = 0.72) +
+  facet_wrap(~rate, scales = "free_y") +
+  scale_colour_manual(values = c(prescribed = navy, realized = orange),
     labels = c("Prescribed", "Realized")) +
-  labs(x = "Year", y = "Mortality rate (per year)", colour = NULL)
+  scale_linetype_manual(values = c(prescribed = "dashed", realized = "solid"),
+    labels = c("Prescribed", "Realized")) +
+  labs(x = "Year", y = "Mortality rate (per year)", colour = NULL, linetype = NULL)
 ```
 
 ```{r spatial-zeros, fig.cap="Proportion of sampled observations recorded as zero across the eight SimSurvey histories. Crosses mark age–years with missing observations. Age 20 includes all older fish."}
@@ -228,11 +243,15 @@ observed <- bind_rows(lapply(spatial$histories, "[[", "observed")) |>
   mutate(zero = ifelse(available > 0, zeros / available, NA_real_),
     program = recode(component, catch = "Catch", index = "RV index"))
 ggplot(observed, aes(year, age, fill = zero)) +
-  geom_tile() + geom_point(data = filter(observed, missing > 0), shape = 4, size = 0.85) +
+  geom_tile() +
+  geom_point(data = filter(observed, missing > 0), shape = 4, size = 1.2,
+    colour = "white", stroke = 1.1) +
+  geom_point(data = filter(observed, missing > 0), shape = 4, size = 1.2,
+    colour = navy, stroke = 0.4) +
   facet_wrap(~program) +
   scale_y_continuous(breaks = c(1, 5, 10, 14, 20), labels = c(1, 5, 10, 14, "20+")) +
-  scale_fill_gradient(low = "#f4f9f9", high = "#126782", limits = c(0, 1),
-    labels = scales::label_percent(), na.value = "grey85") +
+  scale_fill_gradient(low = "white", high = navy, limits = c(0, 1),
+    labels = scales::label_percent(), na.value = "grey80") +
   labs(x = "Year", y = "Age", fill = "Sampled zeros")
 ```
 
@@ -263,11 +282,15 @@ fit_summary <- fits |>
   summarise(attempts = n(), successes = sum(passed), warnings = sum(warning), .groups = "drop")
 fit_summary |>
   filter(arm != "positive") |>
-  mutate(experiment = label_experiment(stage), model = label_model(arm)) |>
-  ggplot(aes(experiment, model, fill = successes / attempts)) +
+  mutate(experiment = label_experiment(stage), model = label_model(arm),
+    pass_rate = successes / attempts) |>
+  ggplot(aes(experiment, model, fill = pass_rate)) +
   geom_tile(colour = "white") +
-  geom_text(aes(label = paste(successes, attempts, sep = "/"))) +
-  scale_fill_gradient(low = "#f8e2d9", high = "#a6d8cd", limits = c(0, 1),
+  geom_text(aes(label = paste(successes, attempts, sep = "/"),
+    colour = ifelse(pass_rate == 1, "white", navy)), fontface = "bold") +
+  scale_colour_identity() +
+  scale_fill_gradientn(colours = c("white", "#ccdde3", "#78a1ad", navy),
+    values = c(0, 0.6, 0.9, 1), limits = c(0, 1),
     labels = scales::label_percent()) +
   labs(x = NULL, y = NULL, fill = "Pass rate") +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
@@ -325,12 +348,13 @@ metrics |>
     experiment = label_experiment(stage), model = label_model(arm)) |>
   group_by(experiment, model, metric) |>
   summarise(coverage = mean(coverage), .groups = "drop") |>
-  ggplot(aes(coverage, metric, colour = model)) +
-  geom_vline(xintercept = 0.95, linetype = "dashed", colour = "grey55") +
-  geom_point(position = position_dodge(width = 0.55), size = 2.0) +
+  ggplot(aes(coverage, metric, colour = model, shape = model)) +
+  geom_vline(xintercept = 0.95, linetype = "dashed", colour = "grey35") +
+  geom_point(position = position_dodge(width = 0.55), size = 2.4) +
   facet_wrap(~experiment, scales = "free_y") + scale_colour_manual(values = colours) +
+  scale_shape_manual(values = point_shapes) +
   scale_x_continuous(labels = scales::label_percent(), limits = c(0, 1)) +
-  labs(x = "Mean interval coverage", y = NULL, colour = NULL)
+  labs(x = "Mean interval coverage", y = NULL, colour = NULL, shape = NULL)
 ```
 
 ```{r spatial-example, fig.cap="Fitted and generating fishing mortality and abundance for the first SimSurvey 20+ history where all three fits passed. Fishing mortality averages ages 5–10 with true abundance weights. The shaded band marks the fishing pulse."}
@@ -357,13 +381,15 @@ if (nrow(common20)) {
       group_by(year) |>
       summarise(value = sum(N), quantity = "Age 14+ (thousand fish)", .groups = "drop")) |>
     mutate(model = "Truth")
-  ggplot(bind_rows(fitted, truth), aes(year, value, colour = model)) +
+  ggplot(bind_rows(fitted, truth), aes(year, value, colour = model, linetype = model)) +
     annotate("rect", xmin = min(spatial$pulse) - 0.5, xmax = max(spatial$pulse) + 0.5,
       ymin = -Inf, ymax = Inf, alpha = 0.13) +
-    geom_line(linewidth = 0.7) +
+    geom_line(linewidth = 0.85) +
     facet_wrap(~quantity, scales = "free_y") +
     scale_colour_manual(values = c(colours, Truth = "#333333")) +
-    labs(x = "Year", y = NULL, colour = NULL)
+    scale_linetype_manual(values = setNames(c("solid", "longdash", "dotdash", "dotted"),
+      c(unname(models[c("lognormal", "full", "gengamma")]), "Truth"))) +
+    labs(x = "Year", y = NULL, colour = NULL, linetype = NULL)
 }
 ```
 
@@ -380,12 +406,13 @@ mortality |>
   mutate(experiment = label_experiment(stage), model = label_model(arm)) |>
   ggplot(aes(id, estimate, colour = model)) +
   geom_hline(data = distinct(mutate(mortality, experiment = label_experiment(stage)), experiment, truth),
-    aes(yintercept = truth), inherit.aes = FALSE, colour = "grey55", linetype = "dashed") +
+    aes(yintercept = truth), inherit.aes = FALSE, colour = "grey35", linetype = "dashed") +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.15,
     position = position_dodge(width = 0.65)) +
-  geom_point(position = position_dodge(width = 0.65), size = 1.4) +
+  geom_point(aes(shape = model), position = position_dodge(width = 0.65), size = 1.8) +
   facet_wrap(~experiment, scales = "free_y") + scale_colour_manual(values = colours) +
-  labs(x = "History", y = "Late minus early M (per year)", colour = NULL)
+  scale_shape_manual(values = point_shapes) +
+  labs(x = "History", y = "Late minus early M (per year)", colour = NULL, shape = NULL)
 ```
 
 ```{r mortality-summary}
@@ -412,13 +439,13 @@ shapes <- bind_rows(lapply(passed, function(x) {
 }))
 if (nrow(shapes)) {
   ggplot(mutate(shapes, experiment = label_experiment(stage)), aes(id, est, colour = series)) +
-    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey55") +
+    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey35") +
     geom_errorbar(aes(ymin = lwr, ymax = upr), position = position_dodge(width = 0.5),
-      width = 0.12, alpha = 0.65, na.rm = TRUE) +
-    geom_point(size = 1.2, position = position_dodge(width = 0.5)) +
+      width = 0.12, alpha = 0.85, na.rm = TRUE) +
+    geom_point(aes(shape = series), size = 1.6, position = position_dodge(width = 0.5)) +
     facet_wrap(~experiment, ncol = 3, scales = "free") +
-    scale_colour_manual(values = c(Catch = "#C44C27", Survey = "#126782")) +
-    labs(x = "History", y = "Generalized gamma shape (Q)", colour = NULL)
+    scale_colour_manual(values = c(Catch = orange, Survey = navy)) +
+    labs(x = "History", y = "Generalized gamma shape (Q)", colour = NULL, shape = NULL)
 }
 ```
 
@@ -452,9 +479,17 @@ PLD is useful as a sensitivity analysis when catch or survey inputs have
 many sampled zeros. Check where zeros enter the fitted data after pooling,
 inspect fit reliability, and compare on common held-out observations. The
 controlled study gives limited evidence that adding the encounter likelihood
-alone improves stock estimates consistently. Generalized gamma gives a way
-to assess positive-tail sensitivity. Its shape estimates differed from zero
-more often under finite age sampling than under exact PLD, with little
-corresponding change in older-age error. It passed more often than PLD
-lognormal in the SimSurvey pilot, but the four common age-20+ pairs were too
-few to distinguish their recovery.
+alone improves stock estimates consistently.
+
+The exact PLD experiments generated positives at $Q=0$, where the two PLD
+families have the same positive density. Those comparisons show that
+estimating the extra shape had little cost for older-age recovery when
+lognormal was correct. The fitted shape differed from zero more often
+under finite age sampling, with little corresponding change in older-age
+error. At 20+ in the SimSurvey pilot, generalized gamma passed more often
+than PLD lognormal.
+`r describe(filter(gg_pairs, stage == "spatial20"), "Switching from PLD lognormal to PLD generalized gamma")`
+Only four histories passed both fits. The higher pass rate and the
+imprecise paired result describe those eight histories. Whether the extra
+shape improves stock recovery when positive sizes have a substantially
+different distribution remains an open question.
