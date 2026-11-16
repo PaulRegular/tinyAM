@@ -28,7 +28,7 @@ navbar:
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
-      - text: Poisson-link delta observations in tinyAM
+      - text: Poisson-link delta observations
         href: articles/poisson-link-delta.html
 articles:
 - title: Guides
