@@ -35,12 +35,12 @@
 #'          yield across models and shows catch at age and residuals for models
 #'          fitted to aggregate catches. Fleet residuals appear on each
 #'          fleet's page.
-#'          Observation residuals initially use retained OSA
-#'          residuals when available in that panel, otherwise standardized
-#'          residuals. The dropdown offers OSA and Standardized when OSAs are
-#'          available. Model frames choose their initial type separately. Partial
-#'          OSA gaps remain missing, and labels identify the method. Retain OSA
-#'          calculations with [add_osa_residuals()]; rendering never computes them.
+#'          Panels prefer state-sampled quantile residuals for fits with random
+#'          effects. Poisson-link delta panels use quantiles and compare observed
+#'          with predicted zero frequencies. Lognormal panels without usable
+#'          sampled quantiles start with standardized residuals. Retained OSAs
+#'          are selectable and partial OSA gaps remain missing.
+#'          Use [add_residuals()] to choose a quantile method or retain OSAs.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
 #'          Stock-recruit models add a relationship page with parent-year pairs,
@@ -53,9 +53,11 @@
 #'          [plot_process_deviations()] and [plot_process_residuals()] reproduce
 #'          individual diagnostic plots from a single tidy result, selecting
 #'          `component = "Recruitment"` or `"NFM"`. The dashboard supplies dropdown
-#'          tabs for these views; N/F/M plots have component buttons and a model slider.
+#'          tabs for these views. Joint-sample bubbles have Process and Model menus.
 #'          Shared M blocks are not treated as separate biological ages.
 #'          `process_seed` reproduces the same Gaussian joint draw as [tidy_tam()].
+#'          `residual_seed` controls the observation diagnostic's Gaussian draw
+#'          and randomization at observed zeros.
 #'          Random plots include latent states and formula-effect trends.
 #'          Age-year plots offer Annual trends (year axis, age selector) and
 #'          Age profiles (age axis, year selector). Each plot starts in its
@@ -93,7 +95,7 @@
 #' @export
 vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
                     open_file = TRUE, background = NULL, render_args = list(), model = NULL,
-                    process_seed = 123456L) {
+                    process_seed = 123456L, residual_seed = NULL) {
   first <- if (length(list(...))) list(...)[[1L]] else NULL
   UseMethod("vis_tam", first)
 }
@@ -102,7 +104,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
 #' @export
 vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
                             open_file = TRUE, background = NULL, render_args = list(), model = NULL,
-                            process_seed = 123456L) {
+                            process_seed = 123456L, residual_seed = NULL) {
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
   if (any(vapply(c(dots, model_list), inherits, logical(1), "tam_retro"))) {
@@ -111,7 +113,7 @@ vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file
   if (!is.null(model)) cli::cli_abort("model is only used with a tam_retro result.")
   fits <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")$fits
   .render_vis_tam(fits, interval, output_file, open_file, background, render_args,
-    process_seed = process_seed)
+    process_seed = process_seed, residual_seed = residual_seed)
 }
 
 .retro_dashboard <- function(retro, model = NULL, is_interactive = interactive(),
@@ -164,7 +166,7 @@ vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file
 #' @export
 vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
                               open_file = TRUE, background = NULL, render_args = list(), model = NULL,
-                              process_seed = 123456L) {
+                              process_seed = 123456L, residual_seed = NULL) {
   dots <- list(...)
   if (length(dots) != 1L || !is.null(model_list)) {
     cli::cli_abort("Supply one tam_retro object alone, without additional fits or model_list.")
@@ -173,7 +175,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   if (is.null(view)) return(invisible(NULL))
   .render_vis_tam(view$fits, interval, output_file, open_file,
     c(view$background, "", background), render_args, retro_origins = view$origins,
-    process_seed = process_seed)
+    process_seed = process_seed, residual_seed = residual_seed)
 }
 
 .retro_plot_metadata <- function(x, origins) {
@@ -187,7 +189,8 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
 }
 
 .render_vis_tam <- function(fits, interval, output_file, open_file, background,
-                            render_args, retro_origins = NULL, process_seed = 123456L) {
+                            render_args, retro_origins = NULL, process_seed = 123456L,
+                            residual_seed = NULL) {
   process_seed <- .validate_process_seed(process_seed)
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
@@ -229,6 +232,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   rmd_env$fits <- fits
   rmd_env$interval <- interval
   rmd_env$process_seed <- process_seed
+  rmd_env$residual_seed <- residual_seed
   rmd_env$background <- background
   rmd_env$retro_origins <- retro_origins
 
@@ -301,6 +305,8 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[grepl("^sd_(q|mu_F|catch|index)_.*smooth_", par)] <- "Smoothing SDs"
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index", "sd_catch_smooth_fixed", "sd_index_smooth_fixed")] <- "Observation SDs"
+  category[par %in% c("y50_catch", "y50_index")] <- "Soft detection scales"
+  category[par == "gengamma_Q"] <- "Observation shape"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope|peak|scale|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
@@ -312,6 +318,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
     "Process SDs", "Smoothing SDs", "Process SD coefficients", "Observation SDs",
+    "Soft detection scales", "Observation shape",
     "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))

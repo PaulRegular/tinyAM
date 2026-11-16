@@ -109,14 +109,32 @@ compute_mohns_rho <- function(data) {
   pairs
 }
 
+.forecast_log_pred <- function(d) {
+  positive <- is.finite(d$pred) & d$pred > 0
+  prediction <- rep(NA_real_, length(d$pred))
+  prediction[positive] <- log(d$pred[positive])
+  if (!is.null(d$log_pred_positive)) {
+    has_positive_median <- !is.na(d$family) & d$family != "lognormal"
+    prediction[has_positive_median] <- d$log_pred_positive[has_positive_median]
+    if (!is.null(d$is_structural)) {
+      prediction[has_positive_median & d$is_structural %in% TRUE] <- NA_real_
+    }
+  }
+  prediction
+}
+
+.forecast_log_cases <- function(d, prediction = .forecast_log_pred(d)) {
+  is.finite(d$obs) & d$obs > 0 & is.finite(prediction)
+}
+
 .score_forecasts <- function(d, log = TRUE) {
-  valid <- is.finite(d$obs) & is.finite(d$pred)
-  if (log) valid <- valid & d$obs > 0 & d$pred > 0
+  prediction <- if (log) .forecast_log_pred(d) else d$pred
+  valid <- if (log) .forecast_log_cases(d, prediction) else is.finite(d$obs) & is.finite(prediction)
   baseline_valid <- valid & is.finite(d$baseline)
   if (log) baseline_valid <- baseline_valid & d$baseline > 0
   transform <- if (log) base::log else identity
-  error <- transform(d$obs[valid]) - transform(d$pred[valid])
-  e <- abs(transform(d$obs[baseline_valid]) - transform(d$pred[baseline_valid]))
+  error <- transform(d$obs[valid]) - prediction[valid]
+  e <- abs(transform(d$obs[baseline_valid]) - prediction[baseline_valid])
   b <- abs(transform(d$obs[baseline_valid]) - transform(d$baseline[baseline_valid]))
   denominator <- sum(b)
   data.frame(RMSE = if (length(error)) sqrt(mean(error^2)) else NA_real_,
@@ -132,6 +150,8 @@ compute_mohns_rho <- function(data) {
   .bind_rows(lapply(split(data, interaction(data[groups], drop = TRUE)), function(d) {
     ages <- supports[[as.character(d$survey[1])]]
     if (anyDuplicated(d$age) || !setequal(d$age, ages)) return(NULL)
+    # The summed index score currently uses the lognormal prediction convention.
+    if (any(!is.na(d$family) & d$family != "lognormal")) return(NULL)
     values <- d$obs
     if (any(!is.finite(values) | values <= 0)) return(NULL)
     out <- d[1, groups, drop = FALSE]
@@ -178,6 +198,39 @@ compute_mohns_rho <- function(data) {
                                              horizon = if (h == 0) NA_real_ else h, scale = "log"), score))
   }
   list(pairs = pairs, aggregate = aggregate, scores = scores)
+}
+
+.occurrence_forecasts <- function(pairs) {
+  if (!nrow(pairs) || is.null(pairs$p_zero)) return(data.frame())
+  structural <- pairs$is_structural %in% TRUE
+  if (!length(structural)) structural <- rep(FALSE, nrow(pairs))
+  eligible <- .is_pld_family(pairs$family) & !structural &
+    is.finite(pairs$obs) & pairs$obs >= 0 &
+    is.finite(pairs$p_zero) & pairs$p_zero >= 0 & pairs$p_zero <= 1
+  out <- pairs[eligible, , drop = FALSE]
+  out$zero <- out$obs == 0
+  out$brier <- (out$zero - out$p_zero)^2
+  out
+}
+
+.occurrence_score_table <- function(pairs, series) {
+  if (!nrow(pairs)) return(data.frame())
+  if (!series %in% names(pairs)) pairs[[series]] <- "Fishery"
+  score <- function(d, level, horizon) {
+    data.frame(level = level, horizon = horizon,
+      series = if (level == "overall") NA_character_ else as.character(d[[series]][1]),
+      age = if (level == "age") d$age[1] else NA_real_,
+      Brier = mean(d$brier), n = nrow(d), n_zero = sum(d$zero))
+  }
+  .bind_rows(lapply(c(NA_real_, sort(unique(pairs$horizon))), function(h) {
+    d <- if (is.na(h)) pairs else pairs[pairs$horizon == h, , drop = FALSE]
+    series_values <- d[[series]]
+    groups <- split(d, series_values, drop = TRUE)
+    .bind_rows(c(list(score(d, "overall", h)),
+      lapply(groups, score, level = "series", horizon = h),
+      lapply(split(d, interaction(series_values, d$age, drop = TRUE)), score,
+        level = "age", horizon = h)))
+  }))
 }
 
 .catch_compositions <- function(pairs, observations, ages) {
@@ -258,8 +311,11 @@ compute_mohns_rho <- function(data) {
 #' With `log = TRUE`, both values are logged first. Log RMSE measures departures
 #' on a relative scale and is often more useful when catch and survey units differ.
 #' It still combines errors from different series and is not a likelihood score.
-#' Zeros and missing pairs are omitted for log RMSE; zeros are retained on the
-#' natural scale. Predictions beyond the available observations do not contribute.
+#' Zeros and missing pairs are omitted for log RMSE. Poisson-link delta, Gamma
+#' and generalized gamma fits use the positive conditional median for log RMSE
+#' and the arithmetic mean for natural-scale RMSE. Natural-scale scores retain
+#' genuine zeros.
+#' Predictions beyond the available observations do not contribute.
 #' All projection rows are eligible; use [fit_hindcast()] for one-year horizons
 #' or subset the input to the desired forecast horizon.
 #'
@@ -283,7 +339,8 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
     return(.score_forecasts(data, log)$RMSE)
   }
   keys <- c("year", "age", intersect(c("model", "type", "survey", "fleet"), names(data)))
-  proj_d <- data[data$is_proj, c(keys, "pred"), drop = FALSE]
+  predictions <- intersect(c("pred", "family", "log_pred_positive", "is_structural"), names(data))
+  proj_d <- data[data$is_proj, c(keys, predictions), drop = FALSE]
   obs_d <- unique(data[!data$is_proj & !is.na(data$obs), c(keys, "obs"), drop = FALSE])
   if (anyDuplicated(obs_d[keys])) {
     cli::cli_abort("Hindcast scoring requires one observed value per year, age, and series. Separate distinct series with {.field type} or {.field survey}.")
@@ -291,9 +348,8 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
   d <- merge(obs_d, proj_d, by = keys)
   if (log) {
     d$obs[d$obs == 0] <- NA
-    d$pred[d$pred == 0] <- NA
     d$obs <- log(d$obs)
-    d$pred <- log(d$pred)
+    d$pred <- .forecast_log_pred(d)
   }
   d$sq_error <- (d$obs - d$pred)^2
   sqrt(mean(d$sq_error, na.rm = TRUE))
@@ -315,8 +371,9 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
 #' @details Numerator and denominator use the same forecast cases:
 #'   \deqn{\mathrm{MASE}=\sum_i|z_i-\widehat z_i|/\sum_i|z_i-z_{0,i}|.}
 #'   For multiple horizons the baseline remains fixed at the origin. This is
-#'   an extension of the paper's one-year calculation. Predictions are conditional
-#'   medians, as in existing log-RMSE calculations; this is not a probability score.
+#'   an extension of the paper's one-year calculation. Log MASE uses the same
+#'   predictions as log RMSE, including the positive conditional median for
+#'   Poisson-link delta, Gamma and generalized gamma fits.
 #' @references Carvalho et al. (2021). A cookbook for using model diagnostics in
 #'   integrated stock assessments. Fisheries Research 240, 105959.
 #'   \doi{10.1016/j.fishres.2021.105959}.

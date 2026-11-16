@@ -329,7 +329,8 @@ The log link then gives
 Ordinary and other q terms determine \eqn{q_0}. Abundance is not centered;
 this retains the usual SAM power relationship and its baseline-q sharing.
 Missing power-group labels fix p to one while retaining the observation.
-For each positive observation \eqn{Y_i}, conditional on states,
+For each positive observation \eqn{Y_i} under the default \code{\link[=lognormal]{lognormal()}},
+conditional on states,
 \deqn{\log Y_i\sim N(\log\widetilde Y_i,\tau_i^2),\qquad
 \tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}+z_{sd,i}).}
 Catch and survey SDs have separate designs and coefficients. Gaussian formula
@@ -350,14 +351,28 @@ the correlation is \eqn{\rho^2}. Years and series remain conditionally independe
 Check that the data support separate estimation of observation and population
 process correlations when both are enabled.
 
-Zero and NA catch/index values are treated as missing, not as censored values
-or counts. They contribute no observation density and remain missing in
-simulation. Population states and observation predictions are still calculated
+With a Poisson-link delta (PLD) family the population prediction
+\eqn{\widetilde{Y}_i} is the conditional arithmetic mean across zeros and
+positives. Each fleet or survey \eqn{j} has a soft detection scale
+\eqn{\widetilde{Y}_{50,j}} (the predicted catch or index at which half of
+observations are expected to be zero). The probability of zero is
+\eqn{\Pr(Y_i=0)=\exp[-\log(2)\widetilde{Y}_i/\widetilde{Y}_{50,j}]}.
+The positive component can be lognormal, Gamma, or generalized gamma.
+Gamma and generalized gamma also support positive-only fits with predictions
+on the arithmetic mean scale. These families and all PLD families use
+independent observation errors conditional on the modeled states.
+See \link[=observation_families]{observation families} for the encounter link,
+positive densities and likelihood contributions.
+
+NA records are missing under all families. Positive-only families also
+exclude sampled zeros. Population states and predictions are calculated
 throughout the model grid. Complete catch, weight, and maturity year-age grids are required;
 surveys may be sparse. Reducing the maximum age sums catch and index within
 year (and within survey for indices). Weight and maturity use the hidden-age
 abundance and biomass weighting described above. Other covariates come from the plus age
-or the first available older age. Check that this aggregation suits the data.
+or the first available older age. Native PLD observations are pooled only
+across complete sampled age groups. See \link[=observation_families]{observation families}
+for details on input resolution and missing terminal observations.
 }
 
 \subsection{Likelihood and inference}{
@@ -468,7 +483,8 @@ Projections scale only the fished part of terminal F. Catch-target feasibility
 uses biomass at ages with positive terminal F.
 Total catch sums numbers; yield uses catch weights, falling back to stock
 weights when no catch weights are supplied. Observed totals omit missing cells; predicted
-totals sum the conditional median predictions over all catch cells.
+totals sum the catch predictions over all cells. The predictions are medians
+for lognormal catch and arithmetic means for PLD catch.
 
 Optional \code{weight$type} distinguishes complete stock and catch weights
 on the same biological year-age grid. Untyped or stock-only inputs

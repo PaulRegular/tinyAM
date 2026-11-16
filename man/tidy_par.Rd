@@ -83,6 +83,8 @@ Labels are added where applicable:
 \itemize{
 \item For parameters specified using a formula in \code{\link[=prepare_tam]{prepare_tam()}} (e.g., \code{log_q}, \code{logit_q},
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
+\item For generalized gamma, \code{gengamma_Q} shows the signed shape by fleet or
+survey. Estimated shapes use standard errors on the reported scale.
 \item For \code{log_r}, \code{year} contains eligible recruitment process years (by default
 years 2:Y). Fixed early \code{log_r_init} states also carry year labels.
 Full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}; parent pairs and process diagnostics

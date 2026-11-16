@@ -2,7 +2,7 @@
 #' @rdname plot_tam
 #' @export
 plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
-                         residual_type = c("auto", "standardized", "osa"), ...) {
+                         residual_type = c("auto", "standardized", "osa", "quantile"), ...) {
   if (is.null(res)) {
     return(.plot_observation_residuals(data, match.arg(residual_type), "bubbles",
       list(...), y = y, ylab = ylab, title = title))
@@ -67,7 +67,7 @@ plot_resid <- function(
   data,
   x = ~year,
   xlab = "Year",
-  residual_type = c("auto", "standardized", "osa"),
+  residual_type = c("auto", "standardized", "osa", "quantile"),
   ...
 ) {
   .plot_observation_residuals(data, match.arg(residual_type), "scatter",
@@ -80,31 +80,58 @@ plot_resid <- function(
   values <- function(name) if (name %in% names(data)) data[[name]] else rep(NA_real_, nrow(data))
   standardized <- values("std_res")
   osa <- values("osa_res")
+  quantile <- values("quantile_res")
+  family <- as.character(values("family"))
+  pld <- .is_pld_family(family)
+  non_lognormal <- !is.na(family) & family != "lognormal"
+  quantile_method <- as.character(values("quantile_method"))
+  sampled <- quantile_method %in% "mle-mvn"
+  distinct_quantile <- non_lognormal | sampled
+  # Plain lognormal tables without quantile metadata also support the fitted-
+  # state quantile view. Keep values and gaps exactly as retained otherwise.
+  if (!"quantile_method" %in% names(data)) quantile[!non_lognormal] <- standardized[!non_lognormal]
   eligible <- rep(TRUE, nrow(data))
-  if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & data$obs > 0
+  if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | pld & data$obs == 0)
   if ("is_proj" %in% names(data)) eligible <- eligible & !is.na(data$is_proj) & !data$is_proj
+  eligible <- eligible & !(values("is_structural") %in% TRUE | values("is_observed") %in% FALSE)
   osa[!eligible] <- standardized[!eligible] <- NA_real_
+  osa[non_lognormal] <- NA_real_
+  if ("obs" %in% names(data)) standardized[which(data$obs == 0)] <- NA_real_
+  quantile[!eligible] <- NA_real_
   model <- if ("model" %in% names(data)) as.character(data$model) else rep("Model", nrow(data))
   models <- if (is.factor(data$model)) levels(data$model) else unique(model)
   models <- models[models %in% model & !is.na(models)]
   if (!length(models)) models <- "Model"
   method <- if ("osa_method" %in% names(data)) as.character(data$osa_method) else rep(NA_character_, nrow(data))
   method[is.na(method) | !nzchar(method)] <- "method unspecified"
+  quantile_label <- rep("Quantile residuals", nrow(data))
+  quantile_label[sampled] <- "State-sampled quantile residuals (mle-mvn)"
+  quantile_label[quantile_method %in% "mle-eb"] <- "Fitted-state quantile residuals (mle-eb)"
+  fallback <- values("quantile_status") %in% "fallback"
+  quantile_label[fallback] <- paste0(quantile_label[fallback], " [fallback]")
   data$.residual_value <- rep(NA_real_, nrow(data))
   data$.residual_type <- rep(NA_character_, nrow(data))
   data$.residual_source <- rep(NA_character_, nrow(data))
   status <- lapply(models, function(name) {
     rows <- which(model == name)
+    has_quantile <- any(is.finite(quantile[rows]) & distinct_quantile[rows])
+    has_osa <- any(is.finite(osa[rows]))
+    has_method <- any(!is.na(quantile_method[rows]))
     selected <- if (type == "auto" && !is.null(selection)) selection[[name]] else if (type == "auto") {
-      if (any(is.finite(osa[rows]))) "osa" else "standardized"
+      if (has_quantile) "quantile" else if (has_osa && !has_method) "osa" else "standardized"
     } else type
-    data$.residual_value[rows] <<- if (selected == "osa") osa[rows] else standardized[rows]
+    data$.residual_value[rows] <<- switch(selected, osa = osa[rows],
+      quantile = quantile[rows], standardized = standardized[rows])
     data$.residual_type[rows] <<- selected
-    label <- if (selected == "osa") paste0("OSA residuals (", method[rows], ")") else "Standardized residuals"
+    label <- switch(selected, osa = paste0("OSA residuals (", method[rows], ")"),
+      quantile = quantile_label[rows],
+      standardized = ifelse(pld[rows], "Standardized positive-component residuals", "Standardized residuals"))
     data$.residual_source[rows] <<- label
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
       osa_method = if (selected == "osa" && length(finite)) paste(unique(method[finite]), collapse = ", ") else NA_character_,
+      has_quantile = has_quantile, has_osa = has_osa,
+      combine_quantile = !any(distinct_quantile[rows]),
       n = length(finite), stringsAsFactors = FALSE)
   })
   list(data = data, status = do.call(rbind, status))
@@ -119,8 +146,57 @@ plot_resid <- function(
   limits + c(-1, 1) * max(diff(limits) * .05, .1)
 }
 
+.annual_zero_counts <- function(data, years = NULL) {
+  required <- c("year", "family", "is_proj", "is_observed", "is_structural", "obs", "p_zero")
+  if (!is.data.frame(data) || !all(required %in% names(data))) return(NULL)
+  history <- which(.is_pld_family(data$family) & !data$is_proj & is.finite(data$year))
+  if (!length(history)) return(NULL)
+  data <- data[history, , drop = FALSE]
+  if (is.null(data$model)) data$model <- "Model"
+  if (!is.factor(data$model)) data$model <- factor(data$model, levels = unique(data$model))
+  models <- split(data, data$model, drop = TRUE)
+  totals <- .bind_rows(lapply(models, function(d) {
+    sampled <- which(d$is_observed & !d$is_structural & is.finite(d$obs) & is.finite(d$p_zero))
+    if (!length(sampled)) return(NULL)
+    counts <- rowsum(cbind(obs = d$obs[sampled] == 0, pred = d$p_zero[sampled], n = 1),
+      group = d$year[sampled])
+    span <- if (is.list(years)) years[[as.character(d$model[1L])]] else years
+    if (is.null(span)) span <- seq.int(min(d$year), max(d$year))
+    totals <- counts[match(span, rownames(counts)), , drop = FALSE]
+    data.frame(model = d$model[1L], year = span,
+      obs = totals[, "obs"], pred = totals[, "pred"], n = totals[, "n"], row.names = NULL)
+  }))
+  if (nrow(totals)) totals else NULL
+}
+
+.plot_annual_zeros <- function(counts, colors = NULL, height = NULL) {
+  colors <- if (is.null(colors)) tam_pal(nlevels(counts$model)) else colors
+  models <- split(counts, counts$model, drop = TRUE)
+  observed <- unique(counts[is.finite(counts$obs), c("year", "obs", "n")])
+  p <- plotly::plot_ly(height = height) |>
+    plotly::add_markers(x = observed$year, y = observed$obs, text = observed$n,
+      name = "Observed", color = I("grey40"), opacity = 0.5,
+      hovertemplate = paste0("Year: %{x}<br>Observed zeros: %{y}<br>Sampled cells: %{text}",
+        "<extra>%{fullData.name}</extra>"))
+  for (model in names(models)) {
+    d <- models[[model]]
+    col <- colors[match(model, levels(counts$model))]
+    sampled <- is.finite(d$obs)
+    # A single sampled year between gaps needs a marker for its expected count.
+    isolated <- sampled & !c(FALSE, utils::head(sampled, -1)) & !c(utils::tail(sampled, -1), FALSE)
+    name <- if (length(models) == 1L) "Expected" else paste(model, "Expected", sep = " \u00b7 ")
+    p <- plotly::add_trace(p, x = d$year, y = d$pred, text = d$n,
+      type = "scatter", mode = "lines+markers", name = name, connectgaps = FALSE,
+      line = list(color = col), marker = list(color = col, symbol = "circle-open", size = ifelse(isolated, 6, 0)),
+      hovertemplate = paste0("Year: %{x}<br>Expected zeros: %{y:.2f}<br>Sampled cells: %{text}",
+        "<extra>%{fullData.name}</extra>"))
+  }
+  plotly::layout(p, xaxis = list(title = "Year", tickformat = "d", range = range(counts$year) + c(-.5, .5)),
+    yaxis = list(title = "Number of zeros", rangemode = "tozero"))
+}
+
 .residual_frame_values <- function(data, frame) {
-  if (is.null(frame)) return(list(values = rep("Model", nrow(data)), levels = "Model", prefix = ""))
+  if (is.null(frame)) return(list(values = rep("Model", nrow(data)), levels = "Model", label = "Model"))
   value <- if (inherits(frame, "formula")) {
     tab <- stats::model.frame(frame, data, na.action = stats::na.pass)
     if (ncol(tab) != 1L) cli::cli_abort("Residual plot frames must select one column.")
@@ -133,16 +209,19 @@ plot_resid <- function(
   }
   levels <- if (is.factor(value)) levels(value)[levels(value) %in% value] else unique(as.character(value))
   if (!length(levels)) levels <- "Model"
-  label <- if (inherits(frame, "formula")) all.vars(frame)[1L] else "Frame"
+  label <- if (inherits(frame, "formula")) all.vars(frame)[1L] else if (length(frame) == 1L &&
+    is.character(frame) && frame %in% names(data)) frame else "Frame"
   if (!length(label) || is.na(label)) label <- "Frame"
   list(values = as.character(value), levels = levels,
-    prefix = paste0(toupper(substr(label, 1L, 1L)), substring(label, 2L), ": "))
+    label = paste0(toupper(substr(label, 1L, 1L)), substring(label, 2L)))
 }
 
 .residual_plot_label <- function(status, type) {
   available <- status[status$n > 0L, , drop = FALSE]
   kinds <- unique(available$residual_type)
-  if (identical(kinds, "osa")) "OSA residuals" else if (identical(kinds, "standardized")) {
+  if (identical(kinds, "quantile") || type == "quantile") {
+    "Quantile residuals"
+  } else if (identical(kinds, "osa")) "OSA residuals" else if (identical(kinds, "standardized")) {
     "Standardized residuals"
   } else if (type == "osa") "OSA residuals" else if (type == "standardized") {
     "Standardized residuals"
@@ -156,11 +235,10 @@ plot_resid <- function(
       "Residuals unavailable for this model/panel"
     return(list(list(text = text, x = .5, y = .5, xref = "paper", yref = "paper", showarrow = FALSE)))
   }
-  labels <- ifelse(status$residual_type == "osa", paste0("OSA (", status$osa_method, ")"), "Standardized")
-  labels[!available] <- if (type == "osa") "OSA unavailable" else "Unavailable"
-  if (nrow(status) > 1L) labels <- paste0(status$model, ": ", labels)
-  text <- paste(labels, collapse = "; ")
-  list(list(text = as.character(htmltools::htmlEscape(text)), x = 0, y = 1,
+  if (all(available)) return(list())
+  message <- if (type == "osa") "OSA residuals unavailable" else "Residuals unavailable"
+  text <- paste0(htmltools::htmlEscape(status$model[!available]), ": ", message, collapse = "<br>")
+  list(list(text = text, x = 0, y = 1,
     xref = "paper", yref = "paper", xanchor = "left", yanchor = "bottom",
     yshift = 8, showarrow = FALSE, font = list(size = 10)))
 }
@@ -175,7 +253,7 @@ plot_resid <- function(
   } else if (kind == "bubbles") {
     d$kind <- as.character(htmltools::htmlEscape(d$.residual_source))
     p <- do.call(plot_bubbles, c(list(data = d, res = ~.residual_value,
-      y = y, ylab = ylab, title = if (is.null(title)) label else title), args))
+      y = y, ylab = ylab, title = if (is.null(title)) "" else title), args))
   } else {
     d$.residual_hover <- paste0(htmltools::htmlEscape(d$.residual_source), ": ", signif(d$.residual_value, 4))
     if (is.null(args$text)) args$text <- ~.residual_hover
@@ -184,19 +262,12 @@ plot_resid <- function(
       plotly::add_markers(alpha = .8)
   }
   p <- plotly::plotly_build(p)
-  if (!nrow(d)) for (j in seq_along(p$x$data)) {
-    p$x$data[[j]]$x <- p$x$data[[j]]$y <- numeric()
-    p$x$data[[j]]$showlegend <- FALSE
-  }
+  if (!nrow(d)) p$x$data <- list()
   p$x$layout$xaxis$title <- if (kind == "bubbles") "Year" else xlab
   p$x$layout$yaxis$title <- if (kind == "bubbles") ylab else label
-  if (kind == "bubbles") p$x$layout$title <- if (is.null(title)) label else title
+  if (kind == "bubbles") p$x$layout$title <- if (is.null(title)) "" else title
   p$x$layout$annotations <- .residual_plot_annotations(selected$status, type)
   list(data = p$x$data, layout = p$x$layout, status = selected$status)
-}
-
-.residual_trace_key <- function(trace) {
-  paste(trace$name, trace$legendgroup, trace$type, trace$mode, collapse = "\r")
 }
 
 .plot_observation_residuals <- function(data, type, kind, args,
@@ -219,18 +290,23 @@ plot_resid <- function(
     }
   }
   frame <- .residual_frame_values(data, args$frame)
-  animated <- !is.null(args$frame) && length(frame$levels) > 1L
+  has_frames <- !is.null(args$frame) && length(frame$levels) > 1L
   model_frame <- identical(args$frame, "model") ||
     (inherits(args$frame, "formula") && identical(all.vars(args$frame), "model"))
   args$frame <- NULL
-  types <- c("standardized", "osa")
   available <- .observation_residual_data(data, "auto")$status
+  types <- c("standardized", "osa")
+  if (any(available$has_quantile) || type == "quantile") types <- c(types, "quantile")
   # Resolve once for the complete panel, never from a partially observed frame.
-  default_type <- if (all(available$residual_type == "osa")) "osa" else "standardized"
-  defaults <- if (model_frame) {
-    available$residual_type[match(frame$levels, available$model)]
-  } else rep(default_type, length(frame$levels))
+  default_type <- if (any(available$has_quantile)) "quantile" else
+    if (all(available$residual_type == "osa")) "osa" else "standardized"
+  model_rows <- match(frame$levels, available$model)
+  defaults <- if (model_frame) available$residual_type[model_rows] else
+    rep(default_type, length(frame$levels))
   defaults[is.na(defaults)] <- "standardized"
+  combine_quantile <- if (model_frame) available$combine_quantile[model_rows] else
+    rep(all(available$combine_quantile), length(frame$levels))
+  combine_quantile[is.na(combine_quantile)] <- TRUE
   default_views <- match(defaults, types) - 1L
   models <- if (is.factor(data$model)) levels(data$model) else unique(as.character(data$model))
   model_colors <- NULL
@@ -250,7 +326,7 @@ plot_resid <- function(
     xrange <- .residual_axis_range(valid, if (kind == "bubbles") ~year else x)
     yrange <- .residual_axis_range(valid, if (kind == "bubbles") y else ~.residual_value)
     cells <- lapply(frame$levels, function(level) {
-      d <- if (animated) data[frame$values == level, , drop = FALSE] else data
+      d <- if (has_frames) data[frame$values == level, , drop = FALSE] else data
       cell <- .residual_plot_cell(d, view, kind, args, x, xlab, y, ylab, title, selection)
       if (!is.null(xrange)) cell$layout$xaxis <- utils::modifyList(cell$layout$xaxis, list(range = xrange, autorange = FALSE))
       if (!is.null(yrange)) cell$layout$yaxis <- utils::modifyList(cell$layout$yaxis, list(range = yrange, autorange = FALSE))
@@ -269,44 +345,36 @@ plot_resid <- function(
     })
     list(type = view, cells = cells)
   })
-  # Stable trace slots clear markers when a model lacks the selected residuals.
-  templates <- list()
-  for (view in views) for (cell in view$cells) for (trace in cell$data) {
-    key <- .residual_trace_key(trace)
-    if (is.null(templates[[key]])) templates[[key]] <- trace
-  }
-  for (i in seq_along(views)) for (j in seq_along(views[[i]]$cells)) {
-    cell <- views[[i]]$cells[[j]]
-    keys <- vapply(cell$data, .residual_trace_key, character(1))
-    cell$data <- lapply(names(templates), function(key) {
-      found <- match(key, keys)
-      if (!is.na(found)) return(cell$data[[found]])
-      trace <- templates[[key]]
-      trace$x <- trace$y <- numeric()
-      trace$text <- character()
-      trace$showlegend <- FALSE
-      if (!is.null(trace$marker$size)) trace$marker$size <- numeric()
-      trace
-    })
-    views[[i]]$cells[[j]] <- cell
-  }
-  initial_views <- if (type == "auto") default_views else
-    rep(match(type, types) - 1L, length(frame$levels))
-  config <- list(views = views, frames = frame$levels, animated = animated,
-    prefix = frame$prefix, view = initial_views[1L], frame = 0L,
+  initial_view <- if (type == "auto") default_views[1L] else match(type, types) - 1L
+  selectors <- which(types != "osa" | any(available$has_osa))
+  # Show OSA on explicit selection even when its retained values are unavailable.
+  if (type == "osa") selectors <- seq_along(types)
+  labels <- c("Standardized", "OSA", "Quantile")[seq_along(types)]
+  view_options <- lapply(combine_quantile, function(combine) {
+    display <- seq_along(types)
+    frame_labels <- labels
+    if (combine) {
+      display[types == "quantile"] <- 1L
+      frame_labels[1L] <- "Standardized / Quantile"
+    }
+    choices <- unique(display[selectors])
+    list(values = choices - 1L, labels = frame_labels[choices], display = display - 1L)
+  })
+  config <- list(views = views, frames = frame$levels, frameLabel = frame$label,
+    viewLabel = "Residuals", view = initial_view, frame = 0L,
     automatic = type == "auto", defaultViews = default_views,
-    showSelector = any(available$residual_type == "osa"))
-  initial <- views[[initial_views[1L] + 1L]]$cells[[1L]]
+    compactHeader = kind == "bubbles" && is.null(title),
+    viewOptions = view_options,
+    showSelector = (has_frames && model_frame) || any(available$has_osa) ||
+      any(available$has_quantile))
+  .residual_widget(config)
+}
+
+.residual_widget <- function(config) {
+  initial <- config$views[[config$view + 1L]]$cells[[config$frame + 1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data
   p$x$layout <- utils::modifyList(p$x$layout, initial$layout)
-  if (animated) {
-    p$x$frames <- lapply(seq_along(frame$levels), function(i) {
-      cell <- views[[initial_views[i] + 1L]]$cells[[i]]
-      list(name = frame$levels[i], data = cell$data, layout = cell$layout,
-        traces = seq_along(cell$data) - 1L)
-    })
-  }
   script <- paste(readLines(system.file("js", "residual-selection.js", package = "tinyAM"), warn = FALSE), collapse = "\n")
   htmlwidgets::onRender(p, script, data = config)
 }

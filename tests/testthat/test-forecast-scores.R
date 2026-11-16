@@ -62,3 +62,33 @@ test_that("overall MASE weights ages, surveys and horizons separately", {
   expect_equal(overall$MASE, mean(c(mean(c(2, 10)), mean(c(4, 2)))))
   expect_equal(overall$RMSE, sqrt(mean(c(1, 3, 10, 4, 2)^2)))
 })
+
+test_that("delta log scores and the zero Brier score use their own validation cases", {
+  actual <- data.frame(year = rep(2000:2001, each = 6), age = rep(1:6, 2),
+    survey = rep(c(rep("S", 5), "T"), 2), obs = c(rep(1, 6), 6, 0, NA, 0, 4, 4), is_proj = FALSE,
+    family = c(rep("pld_lognormal", 5), "lognormal"))
+  p <- subset(actual, year == 2001)
+  p$is_proj <- TRUE
+  p$fold <- 2000
+  p$horizon <- 1
+  p$pred <- c(2, 2, 2, 0, 2, 4)
+  p$log_pred_positive <- log(rep(3, 6))
+  p$p_zero <- c(.25, .4, .1, 1, .7, NA)
+  p$is_structural <- p$age == 4
+  matched <- .forecast_pairs(p, actual)
+  scores <- .index_score_tables(matched, actual)$scores
+  overall <- subset(scores, level == "overall" & is.na(horizon))
+  expect_equal(overall$n, 3L)
+  expect_equal(overall$RMSE, sqrt(mean(log(c(6/3, 4/3, 1))^2)))
+  expect_equal(overall$MASE, mean(c(mean(log(c(6/3, 4/3)) / log(c(6, 4))), 0)))
+  expect_equal(compute_hindcast_rmse(matched), overall$RMSE)
+  expect_equal(compute_hindcast_rmse(.bind_rows(list(actual, p))), overall$RMSE)
+  expect_equal(.index_score_tables(matched, actual)$aggregate$survey, "T")
+
+  occurrence <- .occurrence_forecasts(matched)
+  expect_equal(sort(occurrence$age), c(1, 2, 5))
+  brier <- subset(.occurrence_score_table(occurrence, "survey"), level == "overall" & is.na(horizon))
+  expect_equal(brier$n, 3L)
+  expect_equal(brier$n_zero, 1L)
+  expect_equal(brier$Brier, mean(c(.25^2, (1 - .4)^2, .7^2)))
+})

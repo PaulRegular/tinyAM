@@ -11,7 +11,9 @@ tidy_tam(
   label = "model",
   label_type = "auto",
   process_residuals = TRUE,
-  process_seed = 123456L
+  process_seed = 123456L,
+  residual_seed = NULL,
+  quantile_method = NULL
 )
 }
 \arguments{
@@ -36,6 +38,12 @@ tidy_tam(
 
 \item{process_seed}{Non-negative integer seed for a reproducible local
 Gaussian joint sample. Default \code{123456L}; the caller's RNG state is restored.}
+
+\item{residual_seed}{Optional seed for quantile residuals, as
+in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}. With \code{NULL}, retain the seed of each fitted model.}
+
+\item{quantile_method}{Method passed to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}. With \code{NULL}, retain
+any explicitly stored quantile calculation and otherwise choose by model.}
 }
 \value{
 A named list of stacked tables, with \code{formula_effects} when present:

@@ -37,7 +37,8 @@ and +/-2 lines aid interpretation; no confidence ribbons are attached to
 diagnostic draws. Missing/invalid joint uncertainty is reported explicitly.
 
 Each call returns one plot; the dashboard supplies its dropdown containers.
-N/F/M buttons retain the selected model. Signed matrices share symmetric colour ranges across
+The joint-sample bubbles use Process and Model menus that retain their selections.
+Signed matrices share symmetric colour ranges across
 models within a component and have no logarithmic scale. Blocked F and M use unique,
 ordered state blocks. Bubble areas use absolute residuals with one scale
 across all components/models; orange is negative and navy is positive.

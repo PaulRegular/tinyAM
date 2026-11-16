@@ -139,3 +139,27 @@ test_that("comparability follows the positive-value mask used by log scores", {
   expect_warning(h <- fit_hindcast(f, zero = zero, folds = 1, progress = FALSE), "not directly comparable")
   expect_false(h$comparable)
 })
+
+test_that("hindcasts report delta occurrence alongside positive index scores", {
+  local_mocked_bindings(update = mock_hindcast_update, tidy_tam = mock_hindcast_tidy,
+    check_tam = function(...) list(is_converged = TRUE))
+  future::plan(future::sequential)
+  f <- hindcast_fixture()
+  i <- f$obs_pred$index
+  i$family <- "pld_lognormal"
+  i$p_zero <- .25
+  i$is_structural <- FALSE
+  i$log_pred_positive <- log(i$obs)
+  i$obs[i$year == 2005 & i$age == 3] <- 0
+  f$obs_pred$index <- i
+  h <- fit_hindcast(f, folds = 1, progress = FALSE)
+  expect_true(h$occurrence_comparable)
+  expect_equal(h$fold_diagnostics$n_scored_index, c(1, 0))
+  overall <- subset(h$scores, type == "index" & level == "overall" & is.na(horizon))
+  expect_equal(overall$RMSE, 0)
+  occurrence <- subset(h$occurrence_scores, type == "index" & level == "overall" & is.na(horizon))
+  expect_equal(occurrence$n, 2L)
+  expect_equal(occurrence$n_zero, 1L)
+  expect_equal(occurrence$Brier, mean(c(.25^2, .75^2)))
+  expect_equal(nrow(h$forecast_pairs$occurrence), 2L)
+})

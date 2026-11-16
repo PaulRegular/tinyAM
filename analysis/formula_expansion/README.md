@@ -53,6 +53,8 @@ tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
 
+Observation-family recovery and sampled-state diagnostics are documented in [the family studies](../family_expansion/README.md).
+
 ## Gillnet and RV observation error
 
 [**SimSurvey observation properties**](observation_error_report.Rmd) examines

@@ -22,6 +22,9 @@
 #' is supplied unless explicitly overridden. Method-dependent upstream defaults,
 #' including `reverse`, are retained. When SAM is also loaded, parallel OSA
 #' calculations use the existing sequential safeguard.
+#' OSA requires all observations to use the default lognormal family. Use
+#' quantile residuals for fits with Poisson-link delta, Gamma or generalized
+#' gamma observations.
 #'
 #' Temporary RTMB objectives protect the fitted parameters, uncertainty and
 #' objective state. Only OSA columns and metadata are added to a copy of the
@@ -83,6 +86,7 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
 
 .compute_osa_residuals <- function(fit, method, controls = list()) {
   method <- .osa_method(method, controls)
+  .check_osa_family(fit)
   if (is.null(fit$obj) || is.null(fit$parameter_values)) {
     cli::cli_abort("OSA calculation requires the fitted objective and stored parameter values.")
   }
@@ -151,6 +155,15 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
   list(tables = tables, metadata = metadata)
 }
 
+.check_osa_family <- function(fit) {
+  if (.obs_has_non_lognormal(fit$dat)) {
+    cli::cli_abort(c(
+      "One-step-ahead residuals require an all-lognormal fit.",
+      "i" = "Use residuals(fit, type = 'quantile') for Poisson-link delta, Gamma and generalized gamma observations."
+    ))
+  }
+}
+
 .observation_tables <- function(fit) {
   tables <- fit$obs_pred
   absent <- vapply(c("catch", "index"), function(name) !is.data.frame(tables[[name]]), logical(1))
@@ -161,6 +174,9 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
     fallback <- tidy_obs_pred(fit, interval = interval)
     for (name in names(absent)[absent]) tables[[name]] <- fallback[[name]]
     if (is.null(attr(tables, "interval", exact = TRUE))) attr(tables, "interval") <- interval
+    if (is.null(attr(tables, "residual_seed", exact = TRUE))) {
+      attr(tables, "residual_seed") <- attr(fallback, "residual_seed", exact = TRUE)
+    }
   }
   tables
 }
@@ -168,13 +184,13 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
 .observation_match <- function(target, source) {
   keys <- intersect(c("year", "age", "survey", "fleet"), names(source))
   if (!all(keys %in% names(target)) || !length(keys)) {
-    cli::cli_abort("OSA observation rows must retain the fitted year, age, survey and fleet keys.")
+    cli::cli_abort("Diagnostic observation rows must retain the fitted year, age, survey and fleet keys.")
   }
   key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
   source_key <- key(source)
   rows <- match(key(target), source_key)
   if (anyDuplicated(source_key) || anyNA(rows)) {
-    cli::cli_abort("OSA observation rows do not match the fitted inputs uniquely.")
+    cli::cli_abort("Diagnostic observation rows do not match the fitted inputs uniquely.")
   }
   rows
 }
@@ -201,6 +217,9 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
       rows <- .observation_match(tables[[name]], cached[[name]])
       tables[[name]][extras] <- cached[[name]][rows, extras, drop = FALSE]
     }
+  }
+  if (is.null(attr(tables, "residual_seed", exact = TRUE))) {
+    attr(tables, "residual_seed") <- attr(cached, "residual_seed", exact = TRUE)
   }
   .attach_osa_tables(tables, cached, metadata)
 }

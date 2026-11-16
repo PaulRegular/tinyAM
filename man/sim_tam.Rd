@@ -45,8 +45,9 @@ Use these draws to explore uncertainty or test whether simulated data resemble
 the observations. Results are tidy data frames with a \verb{sim = 1..n} column.
 }
 \details{
-Missing observations, including zeros treated as missing by the likelihood,
-remain \code{NA} in the simulated catch and index tables. Population states and
+Missing observations and zeros excluded by positive-only families remain
+\code{NA} in the simulated tables. PLD draws can be zero or positive at each
+sampled age. Population states and
 predictions are still calculated throughout the modeled period, including
 projection years. Missing observations are not estimated as extra parameters.
 Observation draws preserve fitted age correlations within each fleet-year

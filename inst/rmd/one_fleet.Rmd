@@ -30,6 +30,14 @@ if (!is.null(F_data) && nrow(F_data)) {
 } else plotly::plot_ly()
 ```
 
+```{r, results='asis'}
+zero_counts <- dashboard_zero_counts(catch_data)
+if (!is.null(zero_counts)) cat("\n### Number of zeros\n\n")
+```
+```{r}
+if (!is.null(zero_counts)) tinyAM:::.plot_annual_zeros(zero_counts, colors = cols)
+```
+
 Row {.tabset}
 --------------------------------------------------------------------------------
 

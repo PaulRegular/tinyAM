@@ -128,9 +128,10 @@ check_tam_data(dat)               # validate before fitting
 
 Catch in **thousand fish** and weight in **kg** give biomass and SSB in **tonnes**.
 Optional `unit` columns label values; they do not convert them. Survey units
-can differ. Catch/index `NA` values and zeros are excluded from the lognormal
-likelihood; weights and maturities must be complete. No missing-observation
-imputation or zero-count model is provided.
+can differ. Use `NA` for unavailable catch and index observations. The default
+lognormal also excludes sampled zeros. Use `pld_lognormal()` to fit sampled
+zeros alongside positive observations. Weights and maturities must be complete.
+See [observation families](https://paulregular.github.io/tinyAM/reference/observation_families.html).
 
 See [`?check_tam_data`](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
 for input requirements and
@@ -227,8 +228,9 @@ page to inspect process switches and formulas. Its second tab shows function cal
 shows how to read the diagram alongside the fit diagnostics.
 
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
-residuals. Plots start with retained OSA residuals when available, otherwise
-standardized residuals; the dropdown selects either type explicitly. Fisheries
+residuals. State-space fits start with quantile residuals from a sampled set
+of states. Lognormal fits without random effects start with standardized
+residuals. The dropdown includes retained OSA residuals when available. Fisheries
 lists each fleet, then **Aggregate fishery**;
 without fleets, the aggregate page contains the single-fishery diagnostics.
 Review **Tables → Diagnostics** and **Parameters** for

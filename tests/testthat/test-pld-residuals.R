@@ -1,0 +1,113 @@
+pld_diagnostic_rows <- function() {
+  data.frame(year = 2000:2005, age = 2L, survey = "RV", unit = "fish",
+    obs = c(0, 2, NA, 0, 0, 0), pred = c(1, 1.5, 2, 0, 2, 1000),
+    family = "pld_lognormal", is_observed = c(TRUE, TRUE, FALSE, FALSE, FALSE, TRUE),
+    is_structural = c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE),
+    is_proj = c(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE),
+    log_p_zero = c(log(.5), log(.2), log(.3), 0, log(.1), -1000),
+    log_p_positive = c(log(.5), log(.8), log(.7), -Inf, log(.9), 0),
+    sd = .5, log_res = c(NA, 0, NA, NA, NA, NA), std_res = c(NA, 0, NA, NA, NA, NA))
+}
+
+test_that("conditional quantile residuals include sampled zeros and use stable tails", {
+  d <- pld_diagnostic_rows()
+  old_seed <- .Random.seed
+  old_kind <- RNGkind()
+  r <- .add_quantile_residuals(list(index = d), seed = 1L)
+  expect_identical(.Random.seed, old_seed)
+  expect_identical(RNGkind(), old_kind)
+  expect_identical(r, .add_quantile_residuals(list(index = d), seed = 1L))
+  rr <- .add_quantile_residuals(list(index = d), seed = 2L)
+  expect_false(identical(r$index$quantile_res[1L], rr$index$quantile_res[1L]))
+  expect_lt(r$index$quantile_res[1L], 0)
+  expect_equal(r$index$quantile_res[2L], qnorm(.2 + .8 * .5))
+  expect_identical(which(is.na(r$index$quantile_res)), 3:5)
+  expect_true(is.finite(r$index$quantile_res[6L]))
+  expect_lt(r$index$quantile_res[6L], -40)
+  d$obs[1L] <- 1
+  d$log_p_zero[1L] <- -1200
+  d$log_p_positive[1L] <- 0
+  d$std_res[1L] <- -42
+  expect_equal(.add_quantile_residuals(list(index = d))$index$quantile_res[1L],
+    -42, tolerance = 1e-10)
+})
+
+test_that("retained quantile residuals preserve keys, seeds, and the supplied fit", {
+  d <- pld_diagnostic_rows()
+  fit <- structure(list(dat = list(pld = list(series = list(list()))),
+    obs_pred = list(catch = d[FALSE, ], index = d)), class = "tam_fit")
+  fit2 <- add_residuals(fit, type = "quantile", residual_seed = 97L)
+  expect_null(fit$obs_pred$index$quantile_res)
+  res <- residuals(fit2, type = "quantile")
+  expect_equal(res$residual, fit2$obs_pred$index$quantile_res)
+  expect_identical(attr(res, "residual_seed"), 97L)
+  expect_equal(res$year, d$year)
+  expect_equal(residuals(fit2, type = "response")$residual[1L], -1)
+  expect_equal(residuals(fit2, type = "response")$residual[4L], 0)
+  expect_equal(residuals(fit2, type = "log")$residual[2L], 0)
+  expect_error(residuals(fit2, type = "osa"), "all-lognormal")
+  expect_error(add_osa_residuals(fit2), "all-lognormal")
+  expect_error(add_residuals(fit2, residual_seed = .5), "nonnegative integer")
+})
+
+test_that("delta displays include zero residuals and maintain calibration support", {
+  d <- pld_diagnostic_rows()
+  d$model <- factor("delta")
+  d$p_zero <- exp(d$log_p_zero)
+  d$pred_positive_mean <- d$pred / exp(d$log_p_positive)
+  d$pred_positive_mean[d$is_structural] <- NA_real_
+  d <- .add_quantile_residuals(list(index = d))$index
+  config <- plot_resid(d)$jsHooks$render[[1L]]$data
+  expect_identical(config$view, 2L)
+  expect_identical(config$viewOptions[[1L]]$values, c(0L, 2L))
+  expect_identical(config$viewOptions[[1L]]$labels, c("Standardized", "Quantile"))
+  expect_identical(config$views[[3L]]$cells[[1L]]$status$n, 3L)
+  traces <- plotly::plotly_build(plot_obs_pred(d[!is.na(d$obs), ]))$x$data
+  expect_true(any(vapply(traces, function(trace) any(trace$y == 0, na.rm = TRUE), logical(1))))
+  expect_true(any(grepl("mean including zeros", unlist(lapply(traces, `[[`, "text")))))
+  expect_match(.obs_family_hover(d)[1L], "Probability of zero: 0.5", fixed = TRUE)
+})
+
+test_that("annual zero counts use the same sampled cells and retain unsampled years", {
+  d <- pld_diagnostic_rows()
+  d$p_zero <- exp(d$log_p_zero)
+  # Two cells in the first year, including one zero. The reference has no
+  # observation-family metadata, and 2003 is wholly absent from the PLD rows.
+  d$year[2L] <- d$year[1L]
+  d$age[2L] <- d$age[1L] + 1L
+  other <- d[c(1L, 2L), ]
+  other$family <- c("lognormal", NA)
+  data <- rbind(other, d[-4L, ])
+  data$model <- factor(c("Lognormal", "Reference", rep("PLD", 5)),
+    levels = c("Lognormal", "PLD", "Reference"))
+  counts <- .annual_zero_counts(data)
+  expect_equal(as.character(counts$model), rep("PLD", 6))
+  expect_equal(counts$year, 2000:2005)
+  expect_equal(counts$n, c(2, NA, NA, NA, NA, 1))
+  expect_equal(counts$obs, c(1, NA, NA, NA, NA, 1))
+  expect_equal(counts$pred, c(.7, NA, NA, NA, NA, 0))
+  expect_null(.annual_zero_counts(data[data$model != "PLD", ]))
+  expect_null(.annual_zero_counts(data[!data$is_observed, ]))
+
+  traces <- plotly::plotly_build(.plot_annual_zeros(counts,
+    colors = c("#FF0000", "#003E56", "#000000")))$x$data
+  expect_identical(vapply(traces, `[[`, character(1), "name"), c("Observed", "Expected"))
+  expect_equal(as.numeric(traces[[1L]]$x), c(2000, 2005))
+  # Plotly collapses consecutive unsampled years into one gap separator.
+  expect_equal(as.numeric(traces[[2L]]$x), c(2000, NA, 2005))
+  expect_equal(as.numeric(traces[[2L]]$y), c(.7, NA, 0))
+  expect_identical(traces[[2L]]$connectgaps, FALSE)
+  expect_identical(traces[[2L]]$line$color, "#003E56")
+
+  alternate <- transform(counts, model = "PLD Gamma", pred = pred / 2)
+  comparison <- rbind(counts, alternate)
+  traces <- plotly::plotly_build(.plot_annual_zeros(comparison,
+    colors = c("#FF0000", "#003E56", "#000000", "#F95D26")))$x$data
+  trend <- plotly::plotly_build(plot_obs_pred(subset(counts, is.finite(obs))))$x$data[[1L]]
+  expect_identical(traces[[1L]]$marker$color, trend$marker$color)
+  expect_identical(traces[[1L]]$opacity, trend$opacity)
+  expect_equal(as.numeric(traces[[1L]]$x), c(2000, 2005))
+  expect_identical(lapply(traces[-1L], function(trace) trace$line$color),
+    list("#003E56", "#F95D26"))
+  expect_equal(as.numeric(traces[[3L]]$y), c(.35, NA, 0))
+})

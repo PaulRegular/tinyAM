@@ -80,6 +80,7 @@ test_that("Fisheries renders full fleet diagnostics and an unlabeled aggregate",
   second <- regexpr('id="fishery-fleet-2"',html,fixed=TRUE)[1]
   aggregate <- regexpr('id="fishery-aggregate"',html,fixed=TRUE)[1]
   expect_true(first < second && second < aggregate)
+  expect_false(grepl("Number of zeros", html, fixed = TRUE))
   fleet_html <- substr(html,first,aggregate-1L)
   expect_match(fleet_html,"Numbers-at-age",fixed=TRUE)
   expect_match(fleet_html,"F-at-age",fixed=TRUE)

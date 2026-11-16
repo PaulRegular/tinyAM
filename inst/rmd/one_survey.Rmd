@@ -21,10 +21,11 @@ d |>
     pred = if (any(is.finite(pred))) sum(pred, na.rm = TRUE) else NA_real_,
     unit = if ("unit" %in% names(d)) unique(unit) else NA_character_,
     is_proj = unique(is_proj),
+    family = if ("family" %in% names(d)) unique(family) else NA_character_,
     .groups = "drop"
   ) |> 
   mutate(
-    obs = ifelse(obs == 0, NA, obs)
+    obs = ifelse(obs == 0 & !tinyAM:::.is_pld_family(family), NA, obs)
   ) |> 
   plot_obs_pred(
     color = ~model,
@@ -50,7 +51,9 @@ for (nm in c("q_lwr", "q_upr")) {
 qest$est <- qest$q
 qest$lwr <- qest$q_lwr
 qest$upr <- qest$q_upr
-qest$supported <- is.finite(qest$obs) & qest$obs > 0
+qest$supported <- if ("is_observed" %in% names(qest)) {
+  ifelse(is.na(qest$is_observed), is.finite(qest$obs) & qest$obs > 0, qest$is_observed)
+} else is.finite(qest$obs) & qest$obs > 0
 qest$unit <- qest$q_unit
 u_qest <- unique(qest[, c("model", "age", "est", "lwr", "upr", "unit")])
 if (any(duplicated(u_qest[, c("model", "age")]))) {
@@ -62,7 +65,13 @@ if (any(duplicated(u_qest[, c("model", "age")]))) {
 }
 ```
 
-
+```{r, results='asis'}
+zero_counts <- dashboard_zero_counts(d)
+if (!is.null(zero_counts)) cat("\n### Number of zeros\n\n")
+```
+```{r}
+if (!is.null(zero_counts)) tinyAM:::.plot_annual_zeros(zero_counts, colors = cols)
+```
 
 Row {.tabset}
 --------------------------------------------------------------------------------

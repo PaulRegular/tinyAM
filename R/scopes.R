@@ -143,7 +143,9 @@ for_survey <- function(survey, formula) {
   curve_rows <- if (has_curve(global)) list(seq_len(n)) else list()
   for (spec in split$scopes) {
     rows <- spec$rows
-    piece <- tryCatch(.parse_q_formula(spec$formula, data[rows, , drop = FALSE], fixed_design),
+    scoped_data <- data[rows, , drop = FALSE]
+    attr(scoped_data, "observation_support") <- .q_observation_support(data)[rows]
+    piece <- tryCatch(.parse_q_formula(spec$formula, scoped_data, fixed_design),
       error=function(e) cli::cli_abort("Cannot compile {spec$id}: {conditionMessage(e)}",parent=e))
     if (has_curve(piece)) {
       if (any(vapply(curve_rows, function(x) length(intersect(x,rows)) > 0L, logical(1)))) {
@@ -192,7 +194,7 @@ for_survey <- function(survey, formula) {
     out$q_scope_components[[length(out$q_scope_components) + 1L]] <- spec
   }
   observed <- if (is.null(data$is_proj)) rep(TRUE,n) else !data$is_proj
-  if (allowed == "survey") observed <- observed & is.finite(data$obs) & data$obs > 0
+  if (allowed == "survey") observed <- observed & .q_observation_support(data)
   fixed <- out$q_modmat[observed,,drop=FALSE]
   if (!is.null(out$q_mono_modmat)) fixed <- cbind(fixed,out$q_mono_modmat[observed,,drop=FALSE])
   if (ncol(fixed) && qr(fixed)$rank < ncol(fixed)) {

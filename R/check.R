@@ -267,7 +267,9 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     mapped <- parameter_map[[parameters[[nm]]]]
     if (!is.null(mapped)) x <- x[, !is.na(mapped), drop = FALSE]
     historical <- if (is.null(d$is_proj)) rep(TRUE, nrow(d)) else !d$is_proj
-    if (nm %in% c("q_modmat", "sd_index_modmat", "sd_catch_modmat")) {
+    if (nm == "q_modmat" && !is.null(dat$obs_map)) {
+      historical <- historical & dat$is_observed[dat$obs_map$type == "index"]
+    } else if (nm %in% c("q_modmat", "sd_index_modmat", "sd_catch_modmat")) {
       historical <- historical & is.finite(d$obs) & d$obs > 0
     }
     x <- x[historical, , drop = FALSE]
@@ -531,7 +533,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
     .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit), .q_power_advisories(fit),
     .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit),
-    .smooth_design_advisories(fit$dat), .smooth_fit_advisories(fit)
+    .smooth_design_advisories(fit$dat), .smooth_fit_advisories(fit),
+    .y50_advisories(fit)
   )
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

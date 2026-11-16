@@ -72,15 +72,31 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @param method OSA algorithm; defaults to `"oneStepGaussianOffMode"`.
 #'   See [add_osa_residuals()] for supported choices and computation details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
+#' @param residual_seed Optional nonnegative integer seed for the Gaussian draw
+#'   and randomization of observed zeros. Defaults to the stored seed or 123456.
+#' @param quantile_method `"auto"`, `"mle-mvn"` or `"mle-eb"`, as in
+#'   [residuals.tam_fit()]. With `NULL`, retain stored residuals when available
+#'   and use the automatic choice otherwise.
 #'
 #' @details
-#' `pred` is the conditional median on the natural scale. `sd` is the fitted
-#' marginal SD of log observations. Standardized residuals are
-#' `(log(obs) - log(pred)) / sd`. Zero and missing observations have missing
-#' residuals. Standardizing by marginal SD leaves any across-age correlation
-#' in the residuals and treats fitted states as given. Optional one-step-ahead
-#' residuals use a different predictive calculation. See [tinyAM-model] for the
-#' observation equations.
+#' For lognormal observations, `pred` is the median and `sd` is the marginal
+#' SD of log observations. For Gamma and generalized gamma, `pred` is the
+#' arithmetic mean. For Poisson-link delta families, `pred` is the arithmetic
+#' mean including zeros. In those families, `sd` describes the positive
+#' component. The `sd_scale` column identifies a log SD, CV or Prentice scale.
+#' Fits using these families also report the `family`, the scale of `pred` in
+#' `pred_scale`, the arithmetic mean in `pred_mean`, the positive-component
+#' mean and median. Poisson-link delta rows include zero and positive probabilities (`p_zero`, `p_positive`
+#' and their logs). Generalized gamma rows include the signed `gengamma_Q`.
+#' Standardized residuals use the positive component's log mean and log SD.
+#' Standardized residuals (`std_res`) use fitted states. Quantile residuals
+#' (`quantile_res`) use one conditional Gaussian draw when fitted random effects
+#' and usable precision are available. All-lognormal fits without random effects
+#' use standardized residuals in the default plots. The `quantile_method` and
+#' `quantile_status` columns identify the calculation and any fallback. Both
+#' residual types use the marginal distribution of correlated observations.
+#' One-step-ahead residuals use a different predictive calculation and are
+#' available for all-lognormal fits. See [tinyAM-model] for the equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
 #' it does not refit fixed parameters or modify the fitted objective.
 #' With `add_osa_res = TRUE`, it computes the requested method afresh and records
@@ -113,14 +129,25 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @export
 
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
-                          method = "oneStepGaussianOffMode", ...) {
+                          method = "oneStepGaussianOffMode", ..., residual_seed = NULL,
+                          quantile_method = NULL) {
   fit <- .require_tam_fit(fit, arg = "fit")
   .osa_method(method, list(...))
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
     interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
   }
+  obs_pred <- .tidy_obs_predictions(fit, interval)
+  obs_pred <- .observation_quantiles(fit, obs_pred, quantile_method, residual_seed)
+  if (add_osa_res) {
+    osa <- .compute_osa_residuals(fit, method, list(...))
+    obs_pred <- .attach_osa_tables(obs_pred, osa$tables, osa$metadata)
+  }
+  attr(obs_pred, "interval") <- interval
+  obs_pred
+}
 
+.tidy_obs_predictions <- function(fit, interval = .95) {
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
   log_pred <- split(fit$rep$log_pred, fit$dat$obs_map$type)
@@ -171,12 +198,66 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   obs_pred$index$std_res <- if (!n_index) numeric() else
     with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
-  if (add_osa_res) {
-    osa <- .compute_osa_residuals(fit, method, list(...))
-    obs_pred <- .attach_osa_tables(obs_pred, osa$tables, osa$metadata)
-  }
+  if (.obs_has_non_lognormal(fit$dat)) {
+    map <- fit$dat$obs_map
+    for (name in names(obs_pred)) {
+      rows <- which(map$type == name)
+      d <- obs_pred[[name]]
+      d$family <- map$family[rows]
+      d$is_structural <- map$is_structural[rows]
+      d$is_observed <- map$is_observed[rows]
+      d$log_p_zero <- fit$rep$log_p_zero[rows]
+      d$log_p_positive <- fit$rep$log_p_positive[rows]
+      d$log_p_zero[d$is_structural] <- 0
+      d$log_p_positive[d$is_structural] <- -Inf
+      d$log_pred_positive <- fit$rep$log_pred_positive[rows]
+      d$p_zero <- exp(d$log_p_zero)
+      d$p_positive <- exp(d$log_p_positive)
+      gamma <- d$family %in% c("gamma", "pld_gamma")
+      gengamma <- .is_gengamma_family(d$family)
+      d$sd_scale <- rep("log SD", nrow(d))
+      d$sd_scale[gamma] <- "CV"
+      d$sd_scale[gengamma] <- "Prentice scale"
+      d$gengamma_Q <- rep(NA_real_, nrow(d))
+      if (any(gengamma)) d$gengamma_Q[gengamma] <- fit$rep$observation_Q[rows[gengamma]]
+      d$log_obs_positive_mean <- d$log_pred_positive + d$sd^2 / 2
+      if (any(gamma | gengamma)) {
+        d$log_obs_positive_mean[gamma | gengamma] <-
+          fit$rep$log_obs_positive_mean[rows[gamma | gengamma]]
+      }
+      log_center <- d$log_pred_positive
+      log_sd <- d$sd
 
-  attr(obs_pred, "interval") <- interval
+      other <- which((gamma | gengamma) & !d$is_structural)
+      for (family in unique(d$family[other])) {
+        i <- other[d$family[other] == family]
+        moments <- .positive_log_summary(family, d$log_obs_positive_mean[i],
+          d$sd[i], d$gengamma_Q[i])
+        d$log_pred_positive[i] <- moments$median_log
+        log_center[i] <- moments$mean_log
+        log_sd[i] <- moments$sd_log
+      }
+
+      mean_prediction <- d$family != "lognormal"
+      d$pred_scale <- rep("median", nrow(d))
+      d$pred_scale[mean_prediction] <- "mean"
+      d$pred_positive_mean <- exp(d$log_obs_positive_mean)
+      d$pred_positive_median <- exp(d$log_pred_positive)
+      d$pred_mean <- d$pred_positive_mean
+      d$pred_mean[mean_prediction] <- d$pred[mean_prediction]
+      d$pred_mean[d$is_structural] <- 0
+      d$log_res <- d$std_res <- rep(NA_real_, nrow(d))
+      positive <- which(d$is_observed & d$obs > 0)
+      log_obs <- log(d$obs[positive])
+      d$log_res[positive] <- log_obs - d$log_pred_positive[positive]
+      d$std_res[positive] <- (log_obs - log_center[positive]) / log_sd[positive]
+      d$log_pred_positive[d$is_structural] <- NA_real_
+      d$log_obs_positive_mean[d$is_structural] <- NA_real_
+      d$pred_positive_median[d$is_structural] <- NA_real_
+      d$pred_positive_mean[d$is_structural] <- NA_real_
+      obs_pred[[name]] <- d
+    }
+  }
   obs_pred
 }
 
@@ -231,7 +312,8 @@ tidy_rep <- function(fit) {
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth)$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
-  keep[names(keep) %in% c("log_q_base", "q_power")] <- FALSE
+  keep[names(keep) %in% c("log_q_base", "q_power", "gengamma_Q_report",
+    "observation_Q", "log_obs_positive_mean")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -349,6 +431,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth))$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
+  vals$gengamma_Q_report <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     if (length(dim(vals[[i]])) >= 2L) {
@@ -505,6 +588,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
+#' - For generalized gamma, `gengamma_Q` shows the signed shape by fleet or
+#'   survey. Estimated shapes use standard errors on the reported scale.
 #' - For `log_r`, `year` contains eligible recruitment process years (by default
 #'   years 2:Y). Fixed early `log_r_init` states also carry year labels.
 #'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
@@ -549,7 +634,8 @@ tidy_par <- function(fit, interval = 0.95) {
   nms <- nms[lengths(est[nms]) > 0L]
 
   ran_nms <- intersect(fit$obj$env$.random, nms)
-  fix_nms <- setdiff(nms, ran_nms)
+  fix_nms <- setdiff(nms, c(ran_nms, "log_y50_index", "log_y50_catch",
+    "eta_gengamma_Q_catch", "eta_gengamma_Q_index"))
   z <- stats::qnorm(0.5 + interval / 2)
   smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
     if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
@@ -661,6 +747,12 @@ tidy_par <- function(fit, interval = 0.95) {
     initial$unit <- .population_unit(fit$dat, "N")
     fixed <- stack_list(list(fixed, initial), label = NULL)
   }
+  y50 <- .tidy_y50(fit, interval)
+  if (is.data.frame(y50) && nrow(y50)) {
+    fixed <- stack_list(list(fixed, y50), label = NULL)
+  }
+  shape <- .tidy_gengamma_Q(fit, z)
+  if (!is.null(shape)) fixed <- stack_list(list(fixed, shape), label = NULL)
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
   fixed <- fixed[, c(
@@ -674,6 +766,25 @@ tidy_par <- function(fit, interval = 0.95) {
   attr(random, "interval") <- interval
 
   list(fixed = fixed, random = random)
+}
+
+.tidy_gengamma_Q <- function(fit, z) {
+  series <- fit$dat$gengamma$series
+  if (!length(series)) return(NULL)
+  name <- vapply(series, `[[`, character(1), "name")
+  type <- vapply(series, `[[`, character(1), "type")
+  fixed <- vapply(series, `[[`, logical(1), "fixed")
+  est <- unname(fit$rep$gengamma_Q_report)
+  se <- rep(NA_real_, length(series))
+  if (!is.null(fit[["sdrep"]])) {
+    report_se <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$gengamma_Q_report
+    if (!is.null(report_se)) se[!fixed] <- report_se[!fixed]
+  }
+  data.frame(par = "gengamma_Q", coef = name,
+    fleet = ifelse(type == "catch", name, NA_character_),
+    survey = ifelse(type == "index", name, NA_character_),
+    unit = "unitless", is_fixed = fixed, est = est,
+    lwr = est - z * se, upr = est + z * se, se = se, se_scale = "reported")
 }
 
 .tam_parameter_summary <- function(fit, what) {
@@ -940,6 +1051,10 @@ stack_nested <- function(x, label = "model",
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
 #' @param process_residuals Calculate joint-sample process diagnostics? Use
 #'   `FALSE` for lightweight consumers that need only existing fitted summaries.
+#' @param residual_seed Optional seed for quantile residuals, as
+#'   in [tidy_obs_pred()]. With `NULL`, retain the seed of each fitted model.
+#' @param quantile_method Method passed to [tidy_obs_pred()]. With `NULL`, retain
+#'   any explicitly stored quantile calculation and otherwise choose by model.
 #' @param process_seed Non-negative integer seed for a reproducible local
 #'   Gaussian joint sample. Default `123456L`; the caller's RNG state is restored.
 #' @inheritParams stack_nested
@@ -1012,8 +1127,11 @@ stack_nested <- function(x, label = "model",
 #' reusable viewers of the same tables.
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
-                     process_residuals = TRUE, process_seed = 123456L) {
+                     process_residuals = TRUE, process_seed = 123456L,
+                     residual_seed = NULL, quantile_method = NULL) {
   process_seed <- .validate_process_seed(process_seed)
+  if (!is.null(residual_seed)) residual_seed <- .observation_residual_seed(residual_seed)
+  if (!is.null(quantile_method)) quantile_method <- .quantile_method(quantile_method)
   if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
     cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
   }
@@ -1053,17 +1171,31 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     stored <- attr(x, "interval", exact = TRUE)
     !is.null(stored) && isTRUE(all.equal(stored, interval))
   }
+  mixed_families <- any(vapply(model_list, function(fit) {
+    inherits(fit, "tam_fit") && .obs_has_non_lognormal(fit$dat)
+  }, logical(1)))
   obs_list <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(fit$obs_pred)
     }
-    if (!is.null(fit$obs_pred) && interval_matches(fit$obs_pred)) {
-      return(fit$obs_pred)
+    tables <- fit$obs_pred
+    if (is.null(tables) || !interval_matches(tables)) {
+      tables <- tidy_obs_pred(fit, interval = interval, residual_seed = residual_seed,
+        quantile_method = quantile_method)
+      metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
+      if (is.null(metadata)) metadata <- fit$osa
+      tables <- .preserve_observation_extras(tables, fit$obs_pred, metadata)
+    } else if (!is.null(quantile_method) || !is.null(residual_seed) ||
+               is.null(attr(tables, "quantile", exact = TRUE))) {
+      tables <- .observation_quantiles(fit, tables, quantile_method, residual_seed)
     }
-    tables <- tidy_obs_pred(fit, interval = interval)
-    metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
-    if (is.null(metadata)) metadata <- fit$osa
-    .preserve_observation_extras(tables, fit$obs_pred, metadata)
+    if (mixed_families && !.obs_has_non_lognormal(fit$dat)) {
+      for (name in names(tables)) {
+        tables[[name]]$family <- rep("lognormal", nrow(tables[[name]]))
+        tables[[name]]$pred_scale <- rep("median", nrow(tables[[name]]))
+      }
+    }
+    tables
   })
 
   pop_list <- .population_tables(model_list, interval)
@@ -1094,6 +1226,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
+  residual_seeds <- Filter(Negate(is.null), lapply(obs_list, attr, which = "residual_seed", exact = TRUE))
+  if (length(residual_seeds)) attr(obs_pred, "residual_seed") <- residual_seeds
+  quantile_metadata <- Filter(Negate(is.null), lapply(obs_list, attr, which = "quantile", exact = TRUE))
+  if (length(quantile_metadata)) attr(obs_pred, "quantile") <- quantile_metadata
   osa_metadata <- lapply(seq_along(model_list), function(i) {
     metadata <- attr(obs_list[[i]], "osa", exact = TRUE)
     if (is.null(metadata)) metadata <- model_list[[i]]$osa
