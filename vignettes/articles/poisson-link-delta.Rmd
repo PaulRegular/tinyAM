@@ -25,63 +25,87 @@ When fish are scarce, a catch or survey sample can record zero for an age
 even if fish of that age are present. The default lognormal family uses
 positive observations and treats zeros as missing values. Poisson-link delta
 (PLD) families use recorded zeros to inform the predicted catch or index.
-These families use a shared quantity to explain both encounter probability
-and the size of positive observations (Thorson 2018, see also the
-[sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html)).
-tinyAM adapts Thorson's parameterization so the assessment's predicted catch
-or index supplies that shared quantity. PLD can be used for catch, survey
-indices, or both.
+PLD can be used for catch, survey indices, or both.
 
 ## The observation model
 
-For one age and year, let \(Y\) be the recorded catch or survey index.
-The assessment supplies a prediction \(\widetilde Y\). For catch, it comes
-from the Baranov catch equation. For a survey index, it is abundance at the
-time of sampling scaled by catchability. PLD treats \(\widetilde Y\) as the
-average over all possible observations, including zeros.
+Let \(Y_i\) be a recorded catch or survey index for an age and year, and let
+\(\widetilde{Y}_i\) be its prediction from the population model. The catch
+prediction comes from the Baranov catch equation. The survey prediction is
+abundance at sampling time scaled by catchability. Poisson-link delta (PLD)
+uses this prediction to explain both the chance of recording a positive
+value and the size of positive observations
+([Thorson 2018](https://repository.library.noaa.gov/view/noaa/54874), see
+also the [sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html)).
 
-The encounter part of the likelihood asks whether the sample recorded any
-fish of that age. Given the population states and model parameters, the
-indicator \(D=\mathbf{1}(Y>0)\) follows a binomial distribution with one trial,
-also called a Bernoulli distribution. The probability of a positive is
-\(1-p_0\). To calculate \(p_0\), the Poisson link divides the assessment
-prediction by a **soft detection scale** \(\widetilde Y_{50}\) and uses the
-chance of zero events from a Poisson distribution with mean \(\lambda\).
-Each fleet or survey has its own scale, in the same units as its prediction.
+tinyAM adapts Thorson's parameterization by using the assessment prediction
+as the overall mean. Each fleet or survey \(j\) has a soft detection scale
+\(\widetilde{Y}_{50,j}\) (the predicted catch or index at which half of
+observations are expected to be zero). The prediction and the scale use the
+observation's units.
+
+**Encounter.** Conditional on the population states and parameters,
+recording a positive value is a binomial outcome with one trial and
+probability \(p_{+,i}\). The probability of recording zero is the chance
+of zero events under a Poisson distribution with mean \(\lambda_i\).
 
 \[
-\lambda = \log(2)\frac{\widetilde Y}{\widetilde Y_{50}},
-\qquad p_0 = P(Y=0) = e^{-\lambda} = 2^{-\widetilde Y/\widetilde Y_{50}}.
+\lambda_i = \log(2)\frac{\widetilde{Y}_i}{\widetilde{Y}_{50,j}},
+\qquad
+p_{0,i} = \Pr(Y_i = 0) = e^{-\lambda_i},
+\qquad
+p_{+,i} = \Pr(Y_i > 0) = 1-p_{0,i}.
 \]
 
-At \(\widetilde Y=\widetilde Y_{50}\), the chance of recording zero is 50%.
-At twice that prediction it is 25%. The probability changes gradually as
-the prediction changes.
-
-The second part describes how large a positive observation is. Dividing
-the prediction by the probability of a positive gives the positive mean
-\(m_+=\widetilde Y/(1-p_0)\). Averaging over zeros and positives gives
-\((1-p_0)m_+=\widetilde Y\), the original assessment prediction.
-
-A recorded zero contributes its probability from the binomial part. A
-positive record contributes both its probability of occurring and the
-density of its size. With \(g_+\) denoting the density of \(\log Y\) given a
-positive observation, the log-likelihood for one sample is
+Doubling the prediction from the soft detection scale to twice that level
+lowers the chance of recording zero from 50% to 25%. The encounter
+component uses a complementary log-log link for the probability of a
+positive.
 
 \[
-\ell(Y)=
+\operatorname{cloglog}(p_{+,i})
+= \log\!\big[-\log(1-p_{+,i})\big]
+= \log\lambda_i.
+\]
+
+**Positive observations.** The positive component uses a log link for its
+arithmetic mean \(m_{+,i}\), with
+\(\log m_{+,i} = \log\widetilde{Y}_i - \log p_{+,i}\).
+Dividing by the probability of a positive keeps the average across zeros
+and positives equal to the assessment prediction.
+
+\[
+m_{+,i} = \frac{\widetilde{Y}_i}{p_{+,i}},
+\qquad
+p_{+,i}\,m_{+,i} = \widetilde{Y}_i.
+\]
+
+The positive distribution can be lognormal, Gamma, or generalized gamma.
+For example, with a lognormal positive component,
+
+\[
+\log Y_i \mid Y_i > 0
+\sim N\!\left(\log m_{+,i}-\frac{\sigma_i^2}{2},\ \sigma_i^2\right).
+\]
+
+Here \(\sigma_i\) controls the spread on the log scale. Subtracting
+\(\sigma_i^2/2\) gives the positive observations an arithmetic mean of
+\(m_{+,i}\). The default, positive-only `lognormal()` family uses the
+assessment prediction as its conditional median.
+[Observation family reference](../reference/observation_families.html)
+
+**Likelihood.** A recorded zero contributes the log probability of
+recording zero. A positive contributes the log probability of recording a
+positive plus the log density of its size. Let \(g_{+,i}\) be the chosen
+positive density on the log-observation scale.
+
+\[
+\ell_i =
 \begin{cases}
-\log p_0, & Y=0,\\
-\log(1-p_0)+\log g_+(\log Y), & Y>0.
+\log p_{0,i}, & Y_i = 0,\\[4pt]
+\log p_{+,i} + \log g_{+,i}(\log Y_i), & Y_i > 0.
 \end{cases}
 \]
-
-For `pld_lognormal()`, \(\log Y\) given a positive observation follows
-\(N(\log m_+-\sigma^2/2,\sigma^2)\). The log-scale SD \(\sigma\) controls
-the spread of positive values. Subtracting \(\sigma^2/2\) gives the
-positives an arithmetic mean of \(m_+\). The PLD Gamma and generalized
-Gamma options use the same \(p_0\) and \(m_+\) with different positive densities.
-[Observation family reference](../reference/observation_families.html)
 
 ## Apply PLD to Northern cod
 
@@ -122,16 +146,16 @@ zero. Truly missing observations contribute to neither likelihood. The
 lognormal model predicts a median for the positive observations. PLD
 predicts an arithmetic mean across zeros and positives.
 
-### Half-detection levels
+### Soft detection scales
 
 ```{r detection-scales, echo=FALSE}
 scales <- subset(tidy_par(ncam_pld)$fixed, par %in% c("y50_catch", "y50_index"))
 scales$series <- ifelse(scales$par == "y50_catch", "Commercial catch", "Fall 2J3KL survey")
 knitr::kable(scales[c("series", "est", "lwr", "upr", "unit")], digits = 2, row.names = FALSE,
-  col.names = c("Series", "Detection scale", "Lower 95%", "Upper 95%", "Units"))
+  col.names = c("Series", "Soft detection scale", "Lower 95%", "Upper 95%", "Units"))
 ```
 
-For each series, a fitted mean near its half-detection level gives a zero
+For each series, a fitted mean near its soft detection scale gives a zero
 probability near 50%. The table uses the same units as the matrices below.
 
 ### Which observations are likely to be zero? {.tabset}
@@ -188,16 +212,7 @@ observation_matrix <- function(data) {
   htmltools::div(style = "overflow-x: auto;",
     htmltools::div(style = "min-width: 865px;", plotly::config(p, displayModeBar = FALSE)))
 }
-annual_zero_counts <- function(data) {
-  eligible <- subset(data, is_observed & !is_structural & !is_proj &
-    is.finite(obs) & is.finite(p_zero))
-  counts <- aggregate(cbind(obs = as.integer(obs == 0), pred = p_zero, n = 1L) ~ year,
-    data = eligible, FUN = sum)
-  counts <- counts[match(years, counts$year), ]
-  counts$year <- years
-  counts
-}
-zero_counts <- lapply(d[c("catch", "index")], annual_zero_counts)
+zero_counts <- lapply(d[c("catch", "index")], tinyAM:::.annual_zero_counts, years = years)
 ```
 
 The catch recorded `r sum(zero_counts$catch$obs, na.rm = TRUE)` zeros, with
@@ -223,29 +238,16 @@ Dots count the ages with a recorded zero. The line sums the fitted
 probabilities of zero over the same sampled ages. Years without observations
 leave a gap.
 
-```{r annual-zero-plots, include=FALSE}
-plot_annual_zeros <- function(counts) {
-  hover <- "Year: %{x}<br>Zeros: %{y:.2f}<br>Ages sampled: %{text}<extra>%{fullData.name}</extra>"
-  plotly::plot_ly(counts, x = ~year, text = ~n, height = 320, hovertemplate = hover) |>
-    plotly::add_markers(data = subset(counts, is.finite(obs)), y = ~obs,
-      name = "Observed", marker = list(color = "#666666")) |>
-    plotly::add_lines(data = counts, y = ~pred, name = "Expected", line = list(color = tam_cols()[1L]),
-      connectgaps = FALSE) |>
-    plotly::layout(xaxis = list(title = "Year"),
-      yaxis = list(title = "Number of zeros", rangemode = "tozero"), showlegend = FALSE)
-}
-```
-
 #### Catch {#catch-zero-counts}
 
 ```{r catch-zero-counts, echo=FALSE}
-plot_annual_zeros(zero_counts$catch)
+tinyAM:::.plot_annual_zeros(zero_counts$catch, height = 320)
 ```
 
 #### Index {#index-zero-counts}
 
 ```{r index-zero-counts, echo=FALSE}
-plot_annual_zeros(zero_counts$index)
+tinyAM:::.plot_annual_zeros(zero_counts$index, height = 320)
 ```
 
 ## Compare the assessments
@@ -287,8 +289,9 @@ For each target year from 2006 to 2025, the hindcast fits through the
 previous year and forecasts one year with terminal F held constant.
 Log-RMSE and MASE compare predicted medians against the same positive
 survey observations for both models.
-MASE compares pooled absolute errors with using the last available positive
-observation as the forecast. Scores below one improve on that baseline.
+A MASE below one means the model had a lower mean absolute error on the log
+scale than a forecast that carried forward the last available positive
+observation, evaluated on the same records.
 
 ```{r hindcasts, cache=TRUE, dependson="fits"}
 hind <- fit_hindcast(ncam, ncam_pld, folds = 20, proj_settings = list(F_mult = 1))
@@ -305,24 +308,31 @@ survey$log_prediction <- ifelse(survey$model == "ncam_pld",
 survey <- subset(survey, is.finite(obs) & obs > 0 & is.finite(log_prediction))
 key <- with(survey, interaction(fold, year, age, survey, drop = TRUE))
 matched <- survey[duplicated(key) | duplicated(key, fromLast = TRUE), ]
-diagnostics <- subset(hind$fold_diagnostics, !is_reference)
 labels <- c(ncam = "Lognormal", ncam_pld = "PLD")
 scores <- lapply(names(labels), function(model_name) {
-  d <- matched[which(matched$model == model_name), , drop = FALSE]
-  attempts <- diagnostics[diagnostics$model == model_name, ]
-  data.frame(Model = labels[[model_name]],
-    Failed = sum(!attempts$is_converged), Pairs = nrow(d),
-    `20+ pairs` = sum(d$age == max(ages)),
-    `Log-RMSE` = if (nrow(d)) compute_hindcast_rmse(d) else NA_real_,
-    MASE = if (nrow(d)) compute_hindcast_mase(d) else NA_real_,
-    check.names = FALSE)
+  d <- subset(matched, model == model_name)
+  data.frame(`Log-RMSE` = compute_hindcast_rmse(d),
+    MASE = compute_hindcast_mase(d), check.names = FALSE)
 })
-knitr::kable(do.call(rbind, scores), digits = 2, row.names = FALSE)
+scores <- do.call(rbind, scores)
+rownames(scores) <- labels
+knitr::kable(scores, digits = 2)
+
+brier <- subset(hind$occurrence_scores, model == "ncam_pld" &
+  level == "overall" & is.na(horizon))
+zero_score <- setNames(sprintf("%.2f", brier$Brier), brier$type)
 ```
 
 All folds passed numerical checks. PLD reduced both errors on the shared
-positive survey observations. Both models had MASE below one. There were
-no matched positive records at age 20+, so the scores describe younger ages.
+positive survey observations. Both models had MASE below one.
+
+The hindcast also scores PLD's forecasts of whether each held-out record
+was zero. The Brier score averages the squared difference between the
+forecast probability of zero and the outcome (1 for a zero and 0 for a
+positive). Lower scores are better, with zero indicating perfect
+probability forecasts on these records. PLD scored
+`r zero_score[["catch"]]` for catch and `r zero_score[["index"]]` for the
+survey.
 
 AIC comparisons require a common likelihood for the same observations.
 Here the families use different sets of observations because of the zeros.
@@ -345,7 +355,7 @@ if (nzchar(dashboard_cache)) {
     background = paste(
       "### Northern cod observation families",
       "These NCAM-inspired fits use 1983–2025 and ages 2–20+. The lognormal fit uses positive observations. The PLD fit also uses recorded zeros in both catch and the Fall 2J3KL survey.",
-      "See the [Poisson-link delta guide](../../articles/poisson-link-delta.html) for the equations and fitted detection scales.",
+      "See the [Poisson-link delta guide](../../articles/poisson-link-delta.html) for the equations and fitted soft detection scales.",
       sep = "\n\n")), dashboard_cache)
 }
 ```
