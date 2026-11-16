@@ -4,7 +4,7 @@ This history belongs to tinyAM. SAIO is an independent source database: its chec
 
 The initial manifest is preserved byte for byte in [saio_initial_migration.json](saio_initial_migration.json). The former SAIO snapshot note records frozen source revisions. [Historical snapshots](SAIO_SNAPSHOTS.md)
 
-Both translation tiers now read committed tables directly from a local SAIO checkout. [Current analysis workflow](../README.md#1-read-local-saio-data)
+Both translation tiers now read the latest restored SAIO release by default. [Current analysis workflow](../README.md#1-read-local-saio-data)
 
 ## Former SAIO migration note
 

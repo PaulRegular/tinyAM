@@ -99,19 +99,16 @@ weight_rows <- data.frame(
   stringsAsFactors = FALSE
 )
 
-add_composition_fields <- function(x) {
+match_input_columns <- function(x) {
   x$observation_id <- ""
-  x$length_bin <- NA_real_
-  x$length_bin_lower <- NA_real_
-  x$length_bin_upper <- NA_real_
-  x$sample_size <- NA_real_
-  x$age_error <- NA_real_
-  x$partition <- NA_real_
+  for (name in setdiff(names(inputs), names(x))) {
+    x[[name]] <- inputs[[name]][rep(NA_integer_, nrow(x))]
+  }
   x[names(inputs)]
 }
 
-catch_rows <- add_composition_fields(catch_rows)
-weight_rows <- add_composition_fields(weight_rows)
+catch_rows <- match_input_columns(catch_rows)
+weight_rows <- match_input_columns(weight_rows)
 
 fit_inputs <- inputs[
   !(inputs$type == "catch" & inputs$measure == "numbers_at_age") &

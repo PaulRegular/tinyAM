@@ -1,6 +1,6 @@
 # Step 5 source-readiness review
 
-Reviewed from the local SAIO restore identified by manifest `saio-local-2026-11-14-step5-sole-herring`. The manifest is tracked in SAIO commit `e6f2d7e0ba07f228ab3aa9ab34370777f1275573`; its checksums identify the restored CSV tables. The three registered preliminary recipes below stop before constructing observations or fitting. They record where the official source inputs do not support tinyAM's age-based observation structure. No source values are substituted, and no fitted source states are used as observations.
+Reviewed from the local SAIO restore identified by manifest `saio-local-2026-11-14-step5-sole-herring`. The manifest is tracked in SAIO commit `e6f2d7e0ba07f228ab3aa9ab34370777f1275573`; its checksums identify the restored CSV tables. The three registered preliminary recipes below stop before constructing observations or fitting. The three assessment records are included in the published SAIO expansion and curation releases. The historical 28-stock snapshot predates these records. The recipes record where the official source inputs do not support tinyAM's age-based observation structure. No source values are substituted, and no fitted source states are used as observations.
 
 | Assessment | Translation blocker |
 |---|---|

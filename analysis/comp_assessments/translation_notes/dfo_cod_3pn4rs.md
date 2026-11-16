@@ -12,7 +12,7 @@ The Sentinel-only translation converged with package-default starting values
 and no source-based starts (optimizer code 0; objective 615.876; maximum
 absolute gradient 0.000113; positive-definite Hessian and standard errors
 available). The fit used 40 fixed and 509 random effects. The dashboard is
-cached locally at `results/cache/dfo_cod_3pn4rs_2025/dashboard.html`. An
+cached locally at `results/preliminary/cache/dfo_cod_3pn4rs_2025/dashboard.html`. An
 advisory reports a recruitment AR(1) correlation interval spanning more than
 0.5, so recruitment persistence remains imprecise.
 
@@ -27,7 +27,7 @@ despite a 0.939 trend correlation. The limited index coverage and simplified
 population processes remain substantial differences; retain the fit as a
 numerically successful but weakly matching first translation.
 
-The cached source files and checksums are listed in
+The [public source manifest](https://github.com/PaulRegular/saio/blob/main/provenance/dfo_cod_3pn4rs_2025/sources.csv) also lists the source files and checksums. The local SAIO cache keeps a copy at
 `source_cache/dfo_cod_3pn4rs/dfo_cod_3pn4rs_2025/manifest.csv`.
 `scripts/dfo_cod_3pn4rs/038_import_dfo_cod_3pn4rs_2025.R` reproduces table imports and
 digitizes the fitted biological curves from the cached assessment PDF;

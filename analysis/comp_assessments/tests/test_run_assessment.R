@@ -2,21 +2,25 @@ pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "run_assessment.R"))
 
+release <- .saio_release_source()
 result <- run_assessment("dfo_cod_2j3kl_2025", fit = FALSE)
 stopifnot(
   result$source$assessment$assessment_id == "dfo_cod_2j3kl_2025",
   result$source$database_source == "saio",
-  result$source$database_selection == "local_commit",
-  result$source$commit == .saio_commit(),
-  result$source$database_ref == result$source$commit,
-  result$source$database_key == result$source$commit,
+  result$source$database_selection == "local_release",
+  identical(result$source$commit, release$commit),
+  identical(result$source$database_release, release$release),
+  identical(result$source$database_ref, release$release),
+  identical(result$source$database_key, release$key),
   is.data.frame(result$obs$catch),
   is.data.frame(result$obs$index),
   is.data.frame(result$audit),
   length(result$background) > 0L,
   is.null(result$fit),
   result$diagnostics$status == "not_fitted",
-  result$diagnostics$database_revision == result$source$commit
+  identical(result$diagnostics$database_revision, release$commit),
+  identical(result$diagnostics$database_ref, release$release),
+  identical(result$diagnostics$database_key, release$key)
 )
 
 goa <- run_assessment("afsc_cod_goa_2026", fit = FALSE)

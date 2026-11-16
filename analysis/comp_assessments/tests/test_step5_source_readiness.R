@@ -1,4 +1,4 @@
-source("analysis/comp_assessments/R/translation_registry.R")
+source("analysis/comp_assessments/R/run_assessment.R")
 
 testthat::test_that("Step 5 preliminary recipes stop before fitting when source data are not age-ready", {
   ids <- c(
@@ -18,20 +18,24 @@ testthat::test_that("Step 5 preliminary recipes stop before fitting when source 
   testthat::expect_true(all(is.na(entries$source_commit) | !nzchar(entries$source_commit)))
   testthat::expect_true(all(file.exists(entries$script)))
 
-  for (id in ids) {
-    env <- new.env(parent = globalenv())
-    env$source <- list(assessment = list())
-    env$print_sources <- function(assessment) character()
-    condition <- tryCatch({
-      sys.source(.assessment_script(id, "preliminary"), envir = env)
-      NULL
-    }, error = identity)
+  database <- list(
+    stocks = data.frame(stock_id = "fixture_stock"),
+    assessments = data.frame(assessment_id = ids, stock_id = "fixture_stock",
+      assessment_url = "https://example.invalid/assessment"),
+    assumptions = data.frame(assessment_id = ids, component = "population",
+      setting = "age_range", value = "unknown", source_reference = "fixture", notes = "fixture"),
+    inputs = data.frame(assessment_id = character()),
+    outputs = data.frame(assessment_id = character())
+  )
 
-    testthat::expect_s3_class(condition, "error")
-    testthat::expect_match(conditionMessage(condition), expected[[id]])
-    testthat::expect_identical(env$fit_stage, "source_readiness")
-    testthat::expect_true(startsWith(env$background[[1]], "###"))
-    testthat::expect_false(exists("obs", envir = env, inherits = FALSE))
-    testthat::expect_false(exists("fit", envir = env, inherits = FALSE))
+  for (id in ids) {
+    result <- run_assessment(id, database = database, fit = FALSE, tier = "preliminary")
+    testthat::expect_identical(result$diagnostics$status, "source_readiness_failed")
+    reason <- gsub("[[:space:]]+", " ", result$diagnostics$reason)
+    testthat::expect_match(reason, expected[[id]], fixed = TRUE)
+    testthat::expect_true(startsWith(result$background[[1L]], "###"))
+    testthat::expect_true(any(grepl("https://example.invalid/assessment", result$background, fixed = TRUE)))
+    testthat::expect_null(result$obs)
+    testthat::expect_null(result$fit)
   }
 })

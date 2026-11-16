@@ -622,11 +622,13 @@ expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
 
 db <- database
+release <- .saio_release_source()
 expect_equal(db$database_source, "saio")
-expect_equal(db$database_selection, "local_commit")
-expect_equal(grepl("^[[:xdigit:]]{40}$", db$commit), TRUE)
-expect_equal(db$database_ref, db$commit)
-expect_equal(db$database_key, db$commit)
+expect_equal(db$database_selection, "local_release")
+expect_equal(db$commit, release$commit)
+expect_equal(db$database_release, release$release)
+expect_equal(db$database_ref, release$release)
+expect_equal(db$database_key, release$key)
 
 ebs <- read_assessment("afsc_pollock_ebs_2024", database = db)
 expect_equal(nrow(ebs$assessment), 1L)

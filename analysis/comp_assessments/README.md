@@ -8,7 +8,7 @@ Source data are maintained in the independent **SAIO — Stock Assessment Inputs
 - scripts/preliminary/: additional translations and changed alternatives from comp-assessments. They have not been promoted into the paper working set.
 - translations.csv: the explicit registry, including each script's originating commit. An assessment can have a curated version and a preliminary alternative.
 
-Curated runs are the default. Preliminary runs require an explicit tier. Extraction completeness, translation review and numerical convergence are separate. Move a script and update the registry only after reviewing its sources, assumptions and comparisons. If both tiers contain the same assessment, selecting its ID without a tier uses the curated version.
+Curated runs are the default. Preliminary runs require an explicit tier. A batch includes registered assessments present in the selected SAIO release. Extraction completeness, translation review and numerical convergence are separate. Move a script and update the registry only after reviewing its sources, assumptions and comparisons. If both tiers contain the same assessment, selecting its ID without a tier uses the curated version.
 
 The first 20-stock expansion beyond Charbonneau–Keith is tracked in
 [expansion_batch_01.csv](expansion_batch_01.csv), using the selected stock units
@@ -26,16 +26,42 @@ definitions still need a reviewed conversion. Neither status counts as a fit.
 
 ## 1. Read local SAIO data
 
-Both tiers default to the five SAIO tables used for the current 28-stock comparison at `c36cc22df29dc0efb9a96b7e2500caf4bec36c86`. The pin remains fixed as SAIO expands. [SAIO source curation and validation](https://github.com/PaulRegular/saio)
+Both tiers use the newest published SAIO release manifest in the local SAIO checkout.
+The reader checks the five restored CSVs against that manifest. Install the R
+packages `readr` and `openssl` to read and verify the release.
+
+Update your SAIO checkout to get the latest manifest. Download the five
+`.csv.gz` files and `manifest.csv` from the matching release. From the SAIO
+checkout, run `Rscript scripts/003_restore_release.R path/to/assets`. Restore
+into an empty target directory. Supply a second path argument to the restore
+script to keep releases in separate directories.
+[SAIO releases](https://github.com/PaulRegular/saio/releases) ·
+[SAIO restore instructions](https://github.com/PaulRegular/saio#getting-the-data)
 
 ```r
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
+database$database_ref
 ```
 
-Run from the tinyAM repository root. By default the reader looks for `saio` next to the primary tinyAM checkout, including when you work from a linked worktree. Set `SAIO_REPO` to change the location used by the pinned analysis. For exploratory reads, pass `revision = "HEAD"` explicitly or supply a checkout as `saio_repo`. An explicitly supplied checkout defaults to its own HEAD. The reader uses committed Git data and locally available Git LFS objects. It ignores uncommitted edits and performs no network requests or checkout changes. Parsed tables are reused within the R session for the same repository and commit.
+Run from the tinyAM repository root. The reader looks for `saio` next to the
+primary tinyAM checkout, including when you run from a linked worktree.
+Set `SAIO_REPO` to locate another checkout. Restored tables go under that
+checkout's `database/` folder by default. Set `SAIO_DATABASE_DIR` or pass
+`database_dir` for another location. To select an older release, pass
+`release` and the directory where its tables are restored.
 
-To reproduce an earlier analysis, pass the recorded SHA as `revision` to `read_database()`. That commit and its table data must be available locally. If Git LFS objects are missing, run `git lfs fetch origin <sha>` from the SAIO checkout. Pass the returned `database` to the fitting and overview scripts to use the same revision throughout.
+```r
+database <- read_database(release = "saio-2026-11-16-curation",
+  database_dir = "path/to/restored/tables")
+```
+
+For the historical 28-stock comparison, use
+`read_database(revision = "c36cc22df29dc0efb9a96b7e2500caf4bec36c86")`.
+A Git revision selects a historical commit that contains the five tables.
+If its LFS objects are missing locally, run `git lfs fetch origin <sha>`
+from the SAIO checkout. Pass the same `database` to the fitting and overview
+scripts to keep their source selection consistent.
 
 One preliminary English Channel plaice recipe retains its documented native-SAM starting-value retry. That optional retry needs `source_cache/ices_plaice_7d_2026/fit_local_locked.RData`, copied manually from the reviewed source artifact.
 
@@ -84,6 +110,6 @@ The hindcast default conditions each forecast on actual aggregate catch, while h
 
 ## Results and translation guidance
 
-Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO commit>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record both the SAIO commit and the tinyAM revision. Existing historical results keep their original provenance.
+Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO data key>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record the SAIO release and manifest commit, or the selected historical SAIO commit, along with the tinyAM revision. Existing historical results keep their original provenance.
 
 The scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited reviews are in [translation_notes/](translation_notes/README.md); official source evidence is maintained in SAIO. The migration record is in [migration/](migration/README.md). No operational assessment or study hypothesis is changed by this workflow.

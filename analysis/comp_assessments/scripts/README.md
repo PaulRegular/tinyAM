@@ -2,16 +2,16 @@
 
 Run these scripts from the tinyAM repository root in RStudio.
 
-The scripts read committed tables directly from a local SAIO checkout. The batch analysis defaults to the fixed 28-stock SAIO revision. Set `SAIO_REPO` to locate the checkout with that revision. For exploratory reads, pass a revision or an explicit `saio_repo` to `read_database()`. An explicitly supplied checkout defaults to its own HEAD. [Analysis workflow](../README.md#1-read-local-saio-data)
+The scripts read the latest release restored in the local SAIO checkout. Set `SAIO_REPO` to locate the checkout and `SAIO_DATABASE_DIR` for an alternate restoration directory. Select reproducible older inputs with `read_database(release = ...)` or `read_database(revision = ...)`. [Analysis workflow](../README.md#1-read-local-saio-data)
 
 1. `run_stock.R` chooses a stock and tier, fits its recipe, and previews the supplied fit independently.
-2. `run_all.R` reads the database once, configures `future::plan(future::multisession, workers = 10)`, fits and checkpoints the batch, then renders dashboards and overview figures in separate sections.
-3. `observation_readiness.R` audits the supplied `database` or reads the local SAIO checkout when run alone.
+2. `run_all.R` reads the database once, configures the worker count, fits and checkpoints the batch, then renders dashboards and overview figures in separate sections.
+3. `observation_readiness.R` audits the supplied `database` or reads the selected SAIO release when run alone.
 4. `stats_plots.R` and `trend_plots.R` rebuild overview figures from results matching the selected source revision.
 
 `run_assessment(..., fit = FALSE)` prepares inputs without final or preliminary fits. The batch functions honor your existing future plan; choose `future::sequential` for troubleshooting. `run_all.R` selects a 20-minute per-assessment deadline; use `timeout = Inf` for unrestricted fitting. A finite deadline requires `callr` and records a timeout without retuning the model.
 
-With `cache = TRUE`, each completed attempt is saved immediately under `results/<tier>/cache/<SAIO commit>/<assessment_id>/`, along with the fit when available and stage logs. Interrupted serialization preserves the previous complete checkpoint. `cache` does not reuse or skip fits. Only an intentional full batch should set `save_results = TRUE` to refresh aggregate CSVs.
+With `cache = TRUE`, each completed attempt is saved immediately under `results/<tier>/cache/<SAIO data key>/<assessment_id>/`, along with the fit when available and stage logs. Interrupted serialization preserves the previous complete checkpoint. `cache` does not reuse or skip fits. Only an intentional full batch should set `save_results = TRUE` to refresh aggregate CSVs.
 
 Run `render_assessment_dashboards(runs)` after fitting. It records rendered, troubleshooting, skipped and failed outcomes in `dashboard_manifest.csv` and rebuilds the tier's index. It never fits or changes numerical eligibility. Troubleshooting dashboards may lack reliable estimates or uncertainty; inspect `check_tam()` and the diagnostic table.
 

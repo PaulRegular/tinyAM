@@ -2,7 +2,7 @@
 
 ## Repository and review tiers
 
-Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read the source instructions there before proposing corrections. Both translation tiers read committed tables directly from the local SAIO checkout and record its commit in their outputs. The current local commit is the default. [Source selection and reproduction](README.md#1-read-local-saio-data)
+Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read the source instructions there before proposing corrections. Both translation tiers read the latest restored SAIO release by default and record the data key and release in their outputs. [Source selection and reproduction](README.md#1-read-local-saio-data)
 
 Translations are registered in translations.csv and stored under scripts/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
 
@@ -91,8 +91,7 @@ When a source-data gap prevents translation or a requested comparison:
 3. obtain or correct the source records in the canonical database, retaining provenance;
 4. validate the revised records and reload the database before retrying translation.
 
-Record the database revision used for every fit. After validating and committing
-a repair in SAIO, call `read_database()` again to use the new commit. If
+Record the database revision used for every fit. After a source repair is released in SAIO, restore the verified tables and call `read_database()` again. If
 authoritative information cannot be recovered, report the blocker and continue
 with other requested stocks.
 
