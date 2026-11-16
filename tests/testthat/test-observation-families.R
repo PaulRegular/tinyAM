@@ -87,6 +87,24 @@ test_that("PLD zeros do not support observation SD coefficients", {
   expect_equal(ncol(dat$sd_index_modmat), 0L)
 })
 
+test_that("The log link and zero generalized gamma shape preserve the PLD likelihood", {
+  make_tape <- function(family) {
+    dat <- prepare_tam(cod_obs, years = 1991:1994,
+      catch_settings = list(family = family, sd_form = ~ 1))
+    RTMB::MakeADFun(function(p) nll_fun(p, dat), make_par(dat), silent = TRUE)
+  }
+  implicit_link <- make_tape(pld_lognormal())
+  explicit_link <- make_tape(pld_lognormal(link = "log"))
+  zero_shape <- make_tape(pld_gengamma(Q = 0, link = "log"))
+
+  expect_identical(explicit_link$par, implicit_link$par)
+  expect_identical(explicit_link$fn(), implicit_link$fn())
+  expect_identical(explicit_link$gr(), implicit_link$gr())
+  expect_identical(zero_shape$par, explicit_link$par)
+  expect_equal(zero_shape$fn(), explicit_link$fn(), tolerance = 1e-12)
+  expect_equal(zero_shape$gr(), explicit_link$gr(), tolerance = 1e-12)
+})
+
 test_that("PLD series have separate estimated or fixed scales with clear support", {
   d <- cod_obs
   d$index$survey <- "A"

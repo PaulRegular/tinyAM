@@ -118,8 +118,8 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 These functions display the supplied tables without refitting the model or
 recalculating uncertainty. Trend ribbons use \code{lwr} and \code{upr} confidence limits;
 they are not prediction intervals for future observations. Catch and survey
-predictions from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} are medians for lognormal observations
-and means including zeros for Poisson-link delta lognormal observations.
+predictions from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} are medians for default lognormal
+observations and means including zeros for Poisson-link delta families.
 Subset to a single survey or supply a grouping aesthetic when combining surveys
 so distinct series are not connected. A log axis requires positive values.
 Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};

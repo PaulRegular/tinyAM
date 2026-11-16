@@ -100,7 +100,8 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
-#'   - `log_y50_catch` and `log_y50_index` for estimated PLD detection scales.
+#'   - `log_y50_catch` and `log_y50_index` for estimated
+#'     [PLD soft detection scales][observation_families].
 #'   - `eta_gengamma_Q_catch` and `eta_gengamma_Q_index` for estimated
 #'     Prentice shapes, transformed to keep the arithmetic mean finite.
 #'   - `logit_rho_obs`: adjacent-age log-error correlations for AR1 catch fleets

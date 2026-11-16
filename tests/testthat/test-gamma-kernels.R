@@ -18,6 +18,19 @@ test_that("Gamma specs use the standard log-link family object", {
   expect_error(gengamma(link = "identity"), "link")
 })
 
+test_that("PLD constructors expose the log link without changing positional arguments", {
+  expect_identical(pld_lognormal(20), pld_lognormal(y50 = 20, link = "log"))
+  expect_identical(pld_gamma(40), pld_gamma(y50 = 40, link = "log"))
+  expect_identical(pld_gengamma(60, .2), pld_gengamma(y50 = 60, Q = .2, link = "log"))
+
+  for (constructor in list(pld_lognormal, pld_gamma, pld_gengamma)) {
+    expect_identical(constructor()$link, "log")
+    for (link in list("cloglog", NA_character_, c("log", "log"), NULL)) {
+      expect_error(constructor(link = link), "link = 'log'.*overall assessment prediction")
+    }
+  }
+})
+
 test_that("Gamma density uses a log observation measure and CV dispersion", {
   y <- c(.2, 2, 10, 120, 4)
   mean <- c(.8, 3, 5, 50, 2)

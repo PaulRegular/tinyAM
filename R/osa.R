@@ -22,8 +22,9 @@
 #' is supplied unless explicitly overridden. Method-dependent upstream defaults,
 #' including `reverse`, are retained. When SAM is also loaded, parallel OSA
 #' calculations use the existing sequential safeguard.
-#' OSA requires all observations to use the lognormal family. Use quantile
-#' residuals for fits with Poisson-link delta lognormal observations.
+#' OSA requires all observations to use the default lognormal family. Use
+#' quantile residuals for fits with Poisson-link delta, Gamma or generalized
+#' gamma observations.
 #'
 #' Temporary RTMB objectives protect the fitted parameters, uncertainty and
 #' objective state. Only OSA columns and metadata are added to a copy of the

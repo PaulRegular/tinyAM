@@ -13,9 +13,10 @@
   `pld_gengamma()` in catch and index settings.
 
 * Use `pld_lognormal()` in catch or index settings to fit sampled zeros with
-  one fixed or estimated half-detection scale per fleet or survey. The default
-  `lognormal()` continues to fit positive observations. PLD outputs include
-  fitted zero probabilities and randomized quantile residuals.
+  one fixed or estimated soft detection scale per fleet or survey. PLD
+  constructors expose `link = "log"` for the overall arithmetic mean.
+  The default `lognormal()` continues to fit positive observations. PLD outputs
+  include fitted zero probabilities and randomized quantile residuals.
 
 * Rename the catchability marker `power()` to `q_power()` to avoid masking
   `stats::power()`. Use `q_power(N)` in catchability formulas.

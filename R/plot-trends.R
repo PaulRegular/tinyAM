@@ -15,8 +15,8 @@
 #' These functions display the supplied tables without refitting the model or
 #' recalculating uncertainty. Trend ribbons use `lwr` and `upr` confidence limits;
 #' they are not prediction intervals for future observations. Catch and survey
-#' predictions from [tidy_obs_pred()] are medians for lognormal observations
-#' and means including zeros for Poisson-link delta lognormal observations.
+#' predictions from [tidy_obs_pred()] are medians for default lognormal
+#' observations and means including zeros for Poisson-link delta families.
 #' Subset to a single survey or supply a grouping aesthetic when combining surveys
 #' so distinct series are not connected. A log axis requires positive values.
 #' Both trend and observed/predicted plots accept an `x` formula and `xlab`;

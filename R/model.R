@@ -341,18 +341,21 @@
 #' Check that the data support separate estimation of observation and population
 #' process correlations when both are enabled.
 #'
-#' With a Poisson-link delta family the same population prediction \eqn{\widetilde Y}
-#' represents the conditional arithmetic mean over sampled zeros and positives.
-#' The predicted probability of zero is
-#' \eqn{\exp[-\log(2)\widetilde Y / \widetilde Y_{50}]}.
-#' Gamma uses the positive coefficient of variation and generalized gamma uses
-#' the Prentice scale. These distributions also support positive-only fits
-#' whose predictions are arithmetic means. Non-lognormal and PLD series use
-#' independent observation errors conditional on the modeled states. See
-#' [observation families][observation_families] for the full specification.
+#' With a Poisson-link delta (PLD) family the population prediction
+#' \eqn{\widetilde{Y}_i} is the conditional arithmetic mean across zeros and
+#' positives. Each fleet or survey \eqn{j} has a soft detection scale
+#' \eqn{\widetilde{Y}_{50,j}} (the predicted catch or index at which half of
+#' observations are expected to be zero). The probability of zero is
+#' \eqn{\Pr(Y_i=0)=\exp[-\log(2)\widetilde{Y}_i/\widetilde{Y}_{50,j}]}.
+#' The positive component can be lognormal, Gamma, or generalized gamma.
+#' Gamma and generalized gamma also support positive-only fits with predictions
+#' on the arithmetic mean scale. These families and all PLD families use
+#' independent observation errors conditional on the modeled states.
+#' See [observation families][observation_families] for the encounter link,
+#' positive densities and likelihood contributions.
 #'
-#' NA records are missing under either family. The default lognormal also
-#' excludes sampled zeros. Population states and predictions are calculated
+#' NA records are missing under all families. Positive-only families also
+#' exclude sampled zeros. Population states and predictions are calculated
 #' throughout the model grid. Complete catch, weight, and maturity year-age grids are required;
 #' surveys may be sparse. Reducing the maximum age sums catch and index within
 #' year (and within survey for indices). Weight and maturity use the hidden-age

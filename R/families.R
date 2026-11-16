@@ -3,10 +3,15 @@
 #' Lognormal, Gamma and generalized gamma families fit positive observations.
 #' Poisson-link delta (PLD) families also use sampled zeros.
 #'
-#' @param link Link for the observation prediction. Only `"log"` is supported.
-#' @param y50 Optional positive detection scale in observation units. At this
-#'   predicted level the probability of observing zero is one half. The default
-#'   estimates a separate value for each selected fleet or survey.
+#' @param link Link for the assessment prediction. Only `"log"` is supported.
+#'   For PLD families, the link applies to the overall assessment prediction,
+#'   the arithmetic mean across zeros and positives. The prediction on the
+#'   link scale is \eqn{\log\widetilde{Y}_i}. The complementary log-log link
+#'   applies to the encounter probability described in Details.
+#' @param y50 Optional positive soft detection scale in the observation's units
+#'   (the predicted level at which half of observations are expected to be zero).
+#'   By default, the model estimates a separate scale for each selected fleet
+#'   or survey.
 #' @param Q Optional fixed Prentice shape parameter for generalized gamma.
 #'   The default estimates a separate signed shape for each selected series.
 #'
@@ -16,19 +21,77 @@
 #' families by fleet or survey, with the default lognormal for unlisted series.
 #' Unlabelled catches use the name `"Fishery"`.
 #'
-#' With `lognormal()`, the prediction is the conditional median. Use
-#' [stats::Gamma()] with `link = "log"` for Gamma observations. For that family
-#' and `gengamma()`, the prediction is the arithmetic mean. Positive-only
-#' families exclude sampled zeros.
+#' Use [stats::Gamma()] with `link = "log"` for Gamma observations. For that
+#' family and `gengamma()`, the prediction is the arithmetic mean.
+#' Positive-only families exclude sampled zeros.
 #'
-#' With a PLD family, the prediction \eqn{\widetilde Y} is the arithmetic mean
-#' over zeros and positives conditional on population states. The probability
-#' of zero is
-#' \deqn{P(Y=0)=\exp[-\log(2)\widetilde Y/\widetilde Y_{50}].}
-#' Writing \eqn{p = P(Y>0)}, the mean of positive observations is
-#' \eqn{\widetilde Y/p}. For PLD lognormal, their log location is
-#' \eqn{\log(\widetilde Y/p)-\sigma^2/2}. The `q_link` setting continues to
-#' determine how the catchability formula maps to catchability.
+#' ### Poisson-link delta
+#'
+#' Let \eqn{Y_i} be a recorded catch or survey index for an age and year, and
+#' let \eqn{\widetilde{Y}_i} be its prediction from the population model. The
+#' catch prediction comes from the Baranov catch equation. The survey prediction
+#' is abundance at sampling time scaled by catchability. Poisson-link delta
+#' (PLD) uses this prediction to explain both the chance of recording a positive
+#' value and the size of positive observations (Thorson 2018, see also the
+#' [sdmTMB Poisson-link delta guide](https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html)).
+#'
+#' tinyAM adapts Thorson's parameterization by using the assessment prediction
+#' as the overall mean. Each fleet or survey \eqn{j} has a soft detection scale
+#' \eqn{\widetilde{Y}_{50,j}} (the predicted catch or index at which half of
+#' observations are expected to be zero). The prediction and the scale use the
+#' observation's units.
+#'
+#' **Encounter.** Conditional on the population states and parameters, recording
+#' a positive value is a binomial outcome with one trial and probability
+#' \eqn{p_{+,i}}. The probability of recording zero is the chance of zero
+#' events under a Poisson distribution with mean \eqn{\lambda_i}.
+#' \deqn{\lambda_i = \log(2)\frac{\widetilde{Y}_i}{\widetilde{Y}_{50,j}},
+#' \qquad p_{0,i} = \Pr(Y_i = 0) = e^{-\lambda_i},
+#' \qquad p_{+,i} = \Pr(Y_i > 0) = 1-p_{0,i}.}{
+#' lambda_i = log(2) * Ytilde_i / Ytilde_50,j,
+#' p_0,i = Pr(Y_i = 0) = exp(-lambda_i),
+#' p_+,i = Pr(Y_i > 0) = 1 - p_0,i.}
+#' Doubling the prediction from the soft detection scale to twice that level
+#' lowers the chance of recording zero from 50% to 25%. The encounter component
+#' uses a complementary log-log link for the probability of a positive.
+#' \deqn{\operatorname{cloglog}(p_{+,i}) =
+#' \log\!\big[-\log(1-p_{+,i})\big] = \log\lambda_i.}{
+#' cloglog(p_+,i) = log(-log(1 - p_+,i)) = log(lambda_i).}
+#'
+#' **Positive observations.** The positive component uses a log link for its
+#' arithmetic mean \eqn{m_{+,i}}, with
+#' \eqn{\log m_{+,i} = \log\widetilde{Y}_i - \log p_{+,i}}. Dividing by the
+#' probability of a positive keeps the average across zeros and positives equal
+#' to the assessment prediction.
+#' \deqn{m_{+,i} = \frac{\widetilde{Y}_i}{p_{+,i}},
+#' \qquad p_{+,i}\,m_{+,i} = \widetilde{Y}_i.}{
+#' m_+,i = Ytilde_i / p_+,i, and p_+,i * m_+,i = Ytilde_i.}
+#'
+#' The positive distribution can be lognormal, Gamma, or generalized gamma.
+#' For example, with a lognormal positive component,
+#' \deqn{\log Y_i \mid Y_i > 0 \sim
+#' N\!\left(\log m_{+,i}-\frac{\sigma_i^2}{2},\ \sigma_i^2\right).}{
+#' log(Y_i) given Y_i > 0 follows Normal(log(m_+,i) - sigma_i^2 / 2, sigma_i^2).}
+#' Here \eqn{\sigma_i} controls the spread on the log scale. Subtracting
+#' \eqn{\sigma_i^2/2} gives the positive observations an arithmetic mean of
+#' \eqn{m_{+,i}}. The default, positive-only `lognormal()` family uses the
+#' assessment prediction as its conditional median.
+#'
+#' **Likelihood.** A recorded zero contributes the log probability of recording
+#' zero. A positive contributes the log probability of recording a positive
+#' plus the log density of its size. Let \eqn{g_{+,i}} be the chosen positive
+#' density on the log-observation scale.
+#' \deqn{\ell_i = \begin{cases}
+#' \log p_{0,i}, & Y_i = 0, \\[4pt]
+#' \log p_{+,i} + \log g_{+,i}(\log Y_i), & Y_i > 0.
+#' \end{cases}}{
+#' ell_i = log(p_0,i) if Y_i = 0, or
+#' log(p_+,i) + log(g_+,i(log(Y_i))) if Y_i > 0.}
+#'
+#' The `q_link` setting determines how the catchability formula maps to
+#' catchability in the survey prediction.
+#'
+#' ### Dispersion, shape and observation support
 #'
 #' For lognormal families, the observation SD settings specify the log-SD of
 #' positives. For Gamma families, they specify the coefficient of variation of
@@ -45,9 +108,14 @@
 #' than the median. `pld_gengamma(Q = 0)` gives `pld_lognormal()`.
 #' Gamma, generalized gamma and PLD observations are conditionally independent.
 #' Use separate SD coefficients for series whose dispersion scales differ.
+#' Within-year age correlation (`cor_struct = "ar1"`) can be used for ordinary
+#' lognormal series, including lognormal series in a mixed-family fit.
+#' Standardized and quantile residuals use marginal observation distributions
+#' and retain that correlation. Use a Gaussian one-step-ahead algorithm for
+#' correlated observations in an all-lognormal fit. See [residuals.tam_fit()].
 #'
 #' Use zero for a sampled nondetection and `NA` for a missing observation.
-#' Estimating the detection scale requires both sampled zeros and positives.
+#' Estimating the soft detection scale requires both sampled zeros and positives.
 #' A fixed scale can be used with all-positive data. Each fitted series needs
 #' at least one positive observation. Catch at structurally unfished ages is
 #' deterministic.
@@ -69,7 +137,7 @@
 #' biological ages, use `proj_settings = list(F_mult = 1)` in [fit_hindcast()].
 #'
 #' PLD assumes independent observation errors conditional on the fitted states
-#' and a stable detection scale across years and ages within each series.
+#' and a stable soft detection scale across years and ages within each series.
 #' Sampling effort, the number of fish aged and common sampling units can
 #' alter detection or induce dependence. Check how fitted zero probabilities
 #' and positive magnitudes agree with the observations. At very low predictions
@@ -116,16 +184,18 @@ lognormal <- function(link = "log") {
 
 #' @rdname observation_families
 #' @export
-pld_lognormal <- function(y50 = NULL) {
+pld_lognormal <- function(y50 = NULL, link = "log") {
+  .validate_pld_link(link)
   .validate_y50(y50)
-  structure(list(name = "pld_lognormal", y50 = y50), class = "tam_observation_family")
+  structure(list(name = "pld_lognormal", y50 = y50, link = link), class = "tam_observation_family")
 }
 
 #' @rdname observation_families
 #' @export
-pld_gamma <- function(y50 = NULL) {
+pld_gamma <- function(y50 = NULL, link = "log") {
+  .validate_pld_link(link)
   .validate_y50(y50)
-  structure(list(name = "pld_gamma", y50 = y50), class = "tam_observation_family")
+  structure(list(name = "pld_gamma", y50 = y50, link = link), class = "tam_observation_family")
 }
 
 #' @rdname observation_families
@@ -138,10 +208,17 @@ gengamma <- function(link = "log", Q = NULL) {
 
 #' @rdname observation_families
 #' @export
-pld_gengamma <- function(y50 = NULL, Q = NULL) {
+pld_gengamma <- function(y50 = NULL, Q = NULL, link = "log") {
+  .validate_pld_link(link)
   .validate_y50(y50)
   .validate_gengamma_Q(Q)
-  structure(list(name = "pld_gengamma", y50 = y50, Q = Q), class = "tam_observation_family")
+  structure(list(name = "pld_gengamma", y50 = y50, Q = Q, link = link), class = "tam_observation_family")
+}
+
+.validate_pld_link <- function(link) {
+  if (!identical(link, "log")) {
+    cli::cli_abort("Poisson-link delta families support {.code link = 'log'} for the overall assessment prediction.")
+  }
 }
 
 .validate_y50 <- function(y50) {
@@ -317,7 +394,7 @@ pld_gengamma <- function(y50 = NULL, Q = NULL) {
     !is.finite(table$se) | table$se > 1
   table <- table[weak & !table$is_fixed, , drop = FALSE]
   data.frame(issue = rep("y50_support", nrow(table)), detail = if (nrow(table)) {
-    paste("Detection scale for", table$coef,
+    paste("Soft detection scale for", table$coef,
       "has few zeros or positives, or imprecise uncertainty. Inspect y50 and zero calibration.")
   } else character())
 }
