@@ -172,20 +172,21 @@ plot_resid <- function(
 .plot_annual_zeros <- function(counts, colors = NULL, height = NULL) {
   colors <- if (is.null(colors)) tam_pal(nlevels(counts$model)) else colors
   models <- split(counts, counts$model, drop = TRUE)
-  p <- plotly::plot_ly(height = height)
+  observed <- unique(counts[is.finite(counts$obs), c("year", "obs", "n")])
+  p <- plotly::plot_ly(height = height) |>
+    plotly::add_markers(x = observed$year, y = observed$obs, text = observed$n,
+      name = "Observed", color = I("grey40"), opacity = 0.5,
+      hovertemplate = paste0("Year: %{x}<br>Observed zeros: %{y}<br>Sampled cells: %{text}",
+        "<extra>%{fullData.name}</extra>"))
   for (model in names(models)) {
     d <- models[[model]]
     col <- colors[match(model, levels(counts$model))]
-    observed <- is.finite(d$obs)
+    sampled <- is.finite(d$obs)
     # A single sampled year between gaps needs a marker for its expected count.
-    isolated <- observed & !c(FALSE, utils::head(observed, -1)) & !c(utils::tail(observed, -1), FALSE)
-    name <- function(kind) if (length(models) == 1L) kind else paste(model, kind, sep = " \u00b7 ")
-    p <- plotly::add_trace(p, x = d$year[observed], y = d$obs[observed], text = d$n[observed],
-      type = "scatter", mode = "markers", name = name("Observed"), marker = list(color = col),
-      hovertemplate = paste0("Year: %{x}<br>Observed zeros: %{y}<br>Sampled cells: %{text}",
-        "<extra>%{fullData.name}</extra>"))
+    isolated <- sampled & !c(FALSE, utils::head(sampled, -1)) & !c(utils::tail(sampled, -1), FALSE)
+    name <- if (length(models) == 1L) "Expected" else paste(model, "Expected", sep = " \u00b7 ")
     p <- plotly::add_trace(p, x = d$year, y = d$pred, text = d$n,
-      type = "scatter", mode = "lines+markers", name = name("Expected"), connectgaps = FALSE,
+      type = "scatter", mode = "lines+markers", name = name, connectgaps = FALSE,
       line = list(color = col), marker = list(color = col, symbol = "circle-open", size = ifelse(isolated, 6, 0)),
       hovertemplate = paste0("Year: %{x}<br>Expected zeros: %{y:.2f}<br>Sampled cells: %{text}",
         "<extra>%{fullData.name}</extra>"))

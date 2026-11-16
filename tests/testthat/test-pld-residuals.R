@@ -98,4 +98,16 @@ test_that("annual zero counts use the same sampled cells and retain unsampled ye
   expect_equal(as.numeric(traces[[2L]]$y), c(.7, NA, 0))
   expect_identical(traces[[2L]]$connectgaps, FALSE)
   expect_identical(traces[[2L]]$line$color, "#003E56")
+
+  alternate <- transform(counts, model = "PLD Gamma", pred = pred / 2)
+  comparison <- rbind(counts, alternate)
+  traces <- plotly::plotly_build(.plot_annual_zeros(comparison,
+    colors = c("#FF0000", "#003E56", "#000000", "#F95D26")))$x$data
+  trend <- plotly::plotly_build(plot_obs_pred(subset(counts, is.finite(obs))))$x$data[[1L]]
+  expect_identical(traces[[1L]]$marker$color, trend$marker$color)
+  expect_identical(traces[[1L]]$opacity, trend$opacity)
+  expect_equal(as.numeric(traces[[1L]]$x), c(2000, 2005))
+  expect_identical(lapply(traces[-1L], function(trace) trace$line$color),
+    list("#003E56", "#F95D26"))
+  expect_equal(as.numeric(traces[[3L]]$y), c(.35, NA, 0))
 })

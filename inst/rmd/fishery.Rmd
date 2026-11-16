@@ -35,7 +35,7 @@ plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model,
 
 ```{r, results='asis'}
 zero_counts <- dashboard_zero_counts(catch_data)
-if (!is.null(zero_counts)) cat("\n### Number of zeros by year\n\n")
+if (!is.null(zero_counts)) cat("\n### Number of zeros\n\n")
 ```
 ```{r}
 if (!is.null(zero_counts)) tinyAM:::.plot_annual_zeros(zero_counts, colors = cols)
