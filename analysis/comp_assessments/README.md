@@ -110,6 +110,8 @@ The hindcast default conditions each forecast on actual aggregate catch, while h
 
 ## Results and translation guidance
 
+See the [November 2026 curated snapshot](snapshots/saio-2026-11-16-curation/README.md) for the comparison figures, outcomes, and run provenance.
+
 Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO data key>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record the SAIO release and manifest commit, or the selected historical SAIO commit, along with the tinyAM revision. Existing historical results keep their original provenance.
 
 The scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited reviews are in [translation_notes/](translation_notes/README.md); official source evidence is maintained in SAIO. The migration record is in [migration/](migration/README.md). No operational assessment or study hypothesis is changed by this workflow.
