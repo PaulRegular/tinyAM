@@ -146,18 +146,52 @@ plot_resid <- function(
   limits + c(-1, 1) * max(diff(limits) * .05, .1)
 }
 
-.zero_frequency_data <- function(data) {
-  pld <- .is_pld_family(data$family)
-  if (!any(pld)) return(NULL)
-  rows <- which(pld & data$is_observed &
-    !data$is_structural & is.finite(data$p_zero))
-  if (!length(rows)) return(NULL)
-  d <- data[rows, , drop = FALSE]
-  groups <- split(d, list(d$model, d$age), drop = TRUE)
-  .bind_rows(lapply(groups, function(x) data.frame(
-    model = x$model[1L], age = x$age[1L], obs = mean(x$obs == 0),
-    pred = mean(x$p_zero), n = nrow(x)
-  )))
+.annual_zero_counts <- function(data, years = NULL) {
+  required <- c("year", "family", "is_proj", "is_observed", "is_structural", "obs", "p_zero")
+  if (!is.data.frame(data) || !all(required %in% names(data))) return(NULL)
+  history <- which(.is_pld_family(data$family) & !data$is_proj & is.finite(data$year))
+  if (!length(history)) return(NULL)
+  data <- data[history, , drop = FALSE]
+  if (is.null(data$model)) data$model <- "Model"
+  if (!is.factor(data$model)) data$model <- factor(data$model, levels = unique(data$model))
+  models <- split(data, data$model, drop = TRUE)
+  totals <- .bind_rows(lapply(models, function(d) {
+    sampled <- which(d$is_observed & !d$is_structural & is.finite(d$obs) & is.finite(d$p_zero))
+    if (!length(sampled)) return(NULL)
+    counts <- rowsum(cbind(obs = d$obs[sampled] == 0, pred = d$p_zero[sampled], n = 1),
+      group = d$year[sampled])
+    span <- if (is.list(years)) years[[as.character(d$model[1L])]] else years
+    if (is.null(span)) span <- seq.int(min(d$year), max(d$year))
+    totals <- counts[match(span, rownames(counts)), , drop = FALSE]
+    data.frame(model = d$model[1L], year = span,
+      obs = totals[, "obs"], pred = totals[, "pred"], n = totals[, "n"], row.names = NULL)
+  }))
+  if (nrow(totals)) totals else NULL
+}
+
+.plot_annual_zeros <- function(counts, colors = NULL, height = NULL) {
+  colors <- if (is.null(colors)) tam_pal(nlevels(counts$model)) else colors
+  models <- split(counts, counts$model, drop = TRUE)
+  p <- plotly::plot_ly(height = height)
+  for (model in names(models)) {
+    d <- models[[model]]
+    col <- colors[match(model, levels(counts$model))]
+    observed <- is.finite(d$obs)
+    # A single sampled year between gaps needs a marker for its expected count.
+    isolated <- observed & !c(FALSE, utils::head(observed, -1)) & !c(utils::tail(observed, -1), FALSE)
+    name <- function(kind) if (length(models) == 1L) kind else paste(model, kind, sep = " \u00b7 ")
+    p <- plotly::add_trace(p, x = d$year[observed], y = d$obs[observed], text = d$n[observed],
+      type = "scatter", mode = "markers", name = name("Observed"), marker = list(color = col),
+      hovertemplate = paste0("Year: %{x}<br>Observed zeros: %{y}<br>Sampled cells: %{text}",
+        "<extra>%{fullData.name}</extra>"))
+    p <- plotly::add_trace(p, x = d$year, y = d$pred, text = d$n,
+      type = "scatter", mode = "lines+markers", name = name("Expected"), connectgaps = FALSE,
+      line = list(color = col), marker = list(color = col, symbol = "circle-open", size = ifelse(isolated, 6, 0)),
+      hovertemplate = paste0("Year: %{x}<br>Expected zeros: %{y:.2f}<br>Sampled cells: %{text}",
+        "<extra>%{fullData.name}</extra>"))
+  }
+  plotly::layout(p, xaxis = list(title = "Year", tickformat = "d", range = range(counts$year) + c(-.5, .5)),
+    yaxis = list(title = "Number of zeros", rangemode = "tozero"))
 }
 
 .residual_frame_values <- function(data, frame) {

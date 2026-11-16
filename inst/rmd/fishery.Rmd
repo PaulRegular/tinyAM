@@ -33,10 +33,12 @@ plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model,
   colors = cols, ylab = tinyAM:::.unit_label(catch_data, "Catch"))
 ```
 
-```{r}
-zero_frequency <- tinyAM:::.zero_frequency_data(catch_data)
+```{r, results='asis'}
+zero_counts <- dashboard_zero_counts(catch_data)
+if (!is.null(zero_counts)) cat("\n### Number of zeros by year\n\n")
 ```
-```{r, child = if (!is.null(zero_frequency)) "zero-frequency.Rmd" else NULL}
+```{r}
+if (!is.null(zero_counts)) tinyAM:::.plot_annual_zeros(zero_counts, colors = cols)
 ```
 
 Row {.tabset}

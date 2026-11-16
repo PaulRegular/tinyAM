@@ -220,12 +220,13 @@ test_that("Gamma residuals select quantiles and only PLD includes sampled zeros"
   expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 5L)
   d$family[d$model == "B"] <- "pld_gengamma"
   d$is_observed <- TRUE
+  d$is_structural <- FALSE
   d$p_zero <- 0.2
   config <- residual_config(plot_bubbles(d, frame = ~model))
   expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 6L)
-  frequency <- .zero_frequency_data(d)
-  expect_true(all(frequency$model == "B"))
-  expect_equal(sum(frequency$n), 6L)
+  counts <- .annual_zero_counts(d)
+  expect_true(all(counts$model == "B"))
+  expect_equal(sum(counts$n), 6L)
 })
 
 test_that("explicit hover vectors follow model frames and partial OSA rows", {

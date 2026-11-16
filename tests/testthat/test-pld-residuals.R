@@ -62,12 +62,40 @@ test_that("delta displays include zero residuals and maintain calibration suppor
   expect_identical(config$viewOptions[[1L]]$values, c(0L, 2L))
   expect_identical(config$viewOptions[[1L]]$labels, c("Standardized", "Quantile"))
   expect_identical(config$views[[3L]]$cells[[1L]]$status$n, 3L)
-  frequencies <- .zero_frequency_data(d)
-  expect_equal(frequencies$n, 3L)
-  expect_equal(frequencies$obs, 2 / 3)
-  expect_equal(frequencies$pred, (.5 + .2) / 3)
   traces <- plotly::plotly_build(plot_obs_pred(d[!is.na(d$obs), ]))$x$data
   expect_true(any(vapply(traces, function(trace) any(trace$y == 0, na.rm = TRUE), logical(1))))
   expect_true(any(grepl("mean including zeros", unlist(lapply(traces, `[[`, "text")))))
   expect_match(.obs_family_hover(d)[1L], "Probability of zero: 0.5", fixed = TRUE)
+})
+
+test_that("annual zero counts use the same sampled cells and retain unsampled years", {
+  d <- pld_diagnostic_rows()
+  d$p_zero <- exp(d$log_p_zero)
+  # Two cells in the first year, including one zero. The reference has no
+  # observation-family metadata, and 2003 is wholly absent from the PLD rows.
+  d$year[2L] <- d$year[1L]
+  d$age[2L] <- d$age[1L] + 1L
+  other <- d[c(1L, 2L), ]
+  other$family <- c("lognormal", NA)
+  data <- rbind(other, d[-4L, ])
+  data$model <- factor(c("Lognormal", "Reference", rep("PLD", 5)),
+    levels = c("Lognormal", "PLD", "Reference"))
+  counts <- .annual_zero_counts(data)
+  expect_equal(as.character(counts$model), rep("PLD", 6))
+  expect_equal(counts$year, 2000:2005)
+  expect_equal(counts$n, c(2, NA, NA, NA, NA, 1))
+  expect_equal(counts$obs, c(1, NA, NA, NA, NA, 1))
+  expect_equal(counts$pred, c(.7, NA, NA, NA, NA, 0))
+  expect_null(.annual_zero_counts(data[data$model != "PLD", ]))
+  expect_null(.annual_zero_counts(data[!data$is_observed, ]))
+
+  traces <- plotly::plotly_build(.plot_annual_zeros(counts,
+    colors = c("#FF0000", "#003E56", "#000000")))$x$data
+  expect_identical(vapply(traces, `[[`, character(1), "name"), c("Observed", "Expected"))
+  expect_equal(as.numeric(traces[[1L]]$x), c(2000, 2005))
+  # Plotly collapses consecutive unsampled years into one gap separator.
+  expect_equal(as.numeric(traces[[2L]]$x), c(2000, NA, 2005))
+  expect_equal(as.numeric(traces[[2L]]$y), c(.7, NA, 0))
+  expect_identical(traces[[2L]]$connectgaps, FALSE)
+  expect_identical(traces[[2L]]$line$color, "#003E56")
 })

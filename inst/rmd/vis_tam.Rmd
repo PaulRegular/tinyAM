@@ -73,6 +73,15 @@ ssb_label <- "SSB"
 
 cols <- tam_pal(length(fits))
 
+historical_years <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), function(fit) {
+  fit$dat$years[!fit$dat$is_proj]
+})
+dashboard_zero_counts <- function(d) {
+  if (!is.data.frame(d)) return(NULL)
+  d <- d[d$model %in% names(historical_years), , drop = FALSE]
+  tinyAM:::.annual_zero_counts(d, years = historical_years)
+}
+
 plot_rows <- function(d, columns) {
   if (!is.data.frame(d)) return(NULL)
   columns <- intersect(columns, names(d))
