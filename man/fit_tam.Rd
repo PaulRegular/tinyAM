@@ -269,12 +269,12 @@ Other columns are copied from the last available year in each table.
 Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
-\item \code{catch}: total annual catch weight, in catch-number times mean-weight units
-(e.g. tonnes for thousand fish and kg). Supply one value recycled across
-years, or \code{n_proj} values. Specify either \code{catch} or \code{F_mult}, not both.
-\code{catch = "observed"} is restricted to \code{\link[=fit_hindcast]{fit_hindcast()}} evaluation; it is
-not a forecast input for an ordinary fit.
-See \link{tinyAM-model} for the catch solver and feasibility safeguards.
+\item \code{catch}: target catch biomass for each future year. tinyAM scales terminal
+fishing mortality to meet the target. Use catch-number times mean-weight
+units (e.g. tonnes for thousand fish and kg). Supply one value for all
+projection years or \code{n_proj} values, using either \code{catch} or \code{F_mult}.
+Use \code{catch = "observed"} in \code{\link[=fit_hindcast]{fit_hindcast()}} to condition on held-out
+removals. See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 }}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,
@@ -322,9 +322,13 @@ RW increments and numeric-by contributions for reporting and dashboards.
 }
 }
 \description{
-Estimates abundance, recruitment, and mortality from catch-at-age and survey
-observations. Returns population trends, observation diagnostics, parameter
-estimates, and uncertainty tables. Use \code{N_settings}, \code{F_settings}, and
+Estimates abundance, recruitment, and mortality from catch numbers at age
+and survey indices. Fitting historical catch totals, age or length compositions,
+or totals and compositions jointly is unsupported. See \code{\link[=as_tam_data]{as_tam_data()}} for
+input preparation.
+
+Returns population trends, observation diagnostics, parameter estimates,
+and uncertainty tables. Use \code{N_settings}, \code{F_settings}, and
 \code{M_settings} to specify where unexplained biological variation is allowed.
 See \code{\link[=prepare_tam]{prepare_tam()}} for options and \link{tinyAM-model} for the model equations.
 }

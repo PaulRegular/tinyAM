@@ -76,21 +76,17 @@ held-out observations, conditional on observed removals by default.
 }
 \details{
 Only observed years determine folds. Historical references have no
-forecasts. Held-out indices and catch compositions do not enter fitting;
-observed-catch conditioning uses only aggregate removals. Forecast biology
-uses training years and \code{n_mean}.
+forecasts. Each fold fits catch numbers at age and survey indices in its
+training years. Forecast biology uses training years and \code{n_mean}.
 
-\strong{Forecast assumptions.} \code{catch = "observed"} is available only in hindcast
-evaluation (\code{fit_hindcast()} or \code{fit_retro(hindcast = TRUE)}), not ordinary
-\code{\link[=fit_tam]{fit_tam()}} projections. It uses actual total catch weight in each held-out
-year, calculated from complete raw catch-at-age and catch weights (stock
-weights if no catch weights are supplied), summed across all fleets with
-their own catch weights. Forecast stock and catch weights
-are averaged separately by type and fleet using training years only. This
-conditions prediction on removals that actually occurred; held-out surveys
-and catch compositions do not enter fitting. Agreement with the conditioning
-catch total is not forecast skill. Missing catch/weight coverage fails that
-fold; it is not imputed. Results do not represent forecasts of future removals.
+\strong{Forecast assumptions.} The hindcast default \code{catch = "observed"} conditions
+each forecast on total catch biomass in the held-out year. tinyAM calculates
+it from complete catch numbers at age and catch weights across all fleets,
+using stock weights if catch weights are absent. Forecast stock and catch
+weights are averaged separately by type and fleet using training years only.
+The forecast scales the terminal fishing mortality pattern to meet the biomass
+target. Agreement with the imposed catch biomass does not measure forecast skill.
+Missing catch or weight coverage fails that fold.
 An alternative is \code{proj_settings = list(F_mult = 1)}, retaining the F-at-age
 estimated at each fold's terminal year. Any scalar multiplier applies to
 that terminal profile at every available horizon, rather than compounding
@@ -117,11 +113,17 @@ with persistence on identical cases; see \code{\link[=compute_hindcast_mase]{com
 MASE averages ages within survey, surveys within horizon, then horizons.
 Poisson-link delta, Gamma and generalized gamma models use their positive
 conditional medians for both log scores. Age-summed log scores are available
-for lognormal surveys with
-complete, consistent age coverage. Catch proportions
-and mean modeled age (plus age coded by its lower bound) are scored separately
-on their natural scale; genuine zeros are retained. Overlapping forecasts are
-distinct origin/horizon cases from the same data history.
+for lognormal surveys with complete, consistent age coverage.
+
+Quotas can constrain catch biomass, while the ages caught depend on cohort
+abundance and fishing selectivity. Composition scores assess how well
+projected cohorts and the assumed fishing pattern reproduce the age mix.
+The scores compare proportions derived from observed and predicted catch
+numbers at age within each fleet. Both the observed and predicted catch must
+cover all modeled ages and have a positive total. The scores retain zeros at
+individual ages and also assess mean age, using the lower bound for the plus group.
+Overlapping forecasts are distinct origin/horizon cases from the same data
+history.
 
 For Poisson-link delta models, \code{occurrence_scores} reports the mean squared
 error of predicted zero probabilities (Brier score), with numbers of scored

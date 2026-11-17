@@ -538,12 +538,12 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
-#' - `catch`: total annual catch weight, in catch-number times mean-weight units
-#'   (e.g. tonnes for thousand fish and kg). Supply one value recycled across
-#'   years, or `n_proj` values. Specify either `catch` or `F_mult`, not both.
-#'   `catch = "observed"` is restricted to [fit_hindcast()] evaluation; it is
-#'   not a forecast input for an ordinary fit.
-#'   See [tinyAM-model] for the catch solver and feasibility safeguards.
+#' - `catch`: target catch biomass for each future year. tinyAM scales terminal
+#'   fishing mortality to meet the target. Use catch-number times mean-weight
+#'   units (e.g. tonnes for thousand fish and kg). Supply one value for all
+#'   projection years or `n_proj` values, using either `catch` or `F_mult`.
+#'   Use `catch = "observed"` in [fit_hindcast()] to condition on held-out
+#'   removals. See [tinyAM-model] for the catch solver and feasibility safeguards.
 #'
 #' @return
 #' A named list `dat` containing:

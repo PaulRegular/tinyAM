@@ -30,6 +30,14 @@ Plain lists can also be passed directly to \code{\link[=prepare_tam]{prepare_tam
 }
 \details{
 The required tables are \code{catch}, \code{index}, \code{weight} and \code{maturity}.
+Supply estimated catch numbers for each year and age in \code{data$catch$obs},
+with separate rows for each fleet when applicable. tinyAM does not support
+fitting annual catch totals in numbers or biomass, fitting age or length
+compositions, or fitting totals and compositions jointly. If your source
+provides matching annual totals in numbers and age proportions by number,
+convert them to estimated catch numbers at age before fitting. Converting
+biomass totals requires appropriate catch weights at age.
+
 For a catch-only model, keep \code{index} as a zero-row table with its required
 columns. Catchability and survey observation-SD settings then contribute no
 parameters. Model identification still depends on the remaining assumptions.

@@ -199,9 +199,16 @@ attempt counts. Rho describes retrospective change; values near zero indicate
 greater historical stability. Lower log-RMSE indicates smaller log-scale forecast
 errors. MASE below one beats keeping the last observed index value unchanged.
 
-Default forecasts condition on the actual aggregate catch in the withheld year.
-Survey observations and catch compositions remain held out. Agreement with the
-imposed catch total therefore does not measure forecasting skill. Use
+Quotas can constrain total catch biomass. The ages caught still depend on
+which cohorts are available and how fleets select fish. By default, tinyAM
+calculates the observed catch biomass from held-out catch numbers at age and
+their weights, summed across ages and fleets. It scales the terminal fishing
+mortality pattern to meet that total.
+
+Catch composition scores test how well the projected cohorts and that fishing
+pattern reproduce the observed age mix. They compare the shares of fish caught
+at each age, calculated from observed and predicted catch numbers. Survey
+forecasts are scored against held-out survey observations. Use
 `proj_settings = list(F_mult = 1)` for a status-quo-F alternative.
 
 Inspect failures and compare validation coverage before interpreting score

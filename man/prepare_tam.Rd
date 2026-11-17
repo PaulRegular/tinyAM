@@ -260,12 +260,12 @@ Other columns are copied from the last available year in each table.
 Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
-\item \code{catch}: total annual catch weight, in catch-number times mean-weight units
-(e.g. tonnes for thousand fish and kg). Supply one value recycled across
-years, or \code{n_proj} values. Specify either \code{catch} or \code{F_mult}, not both.
-\code{catch = "observed"} is restricted to \code{\link[=fit_hindcast]{fit_hindcast()}} evaluation; it is
-not a forecast input for an ordinary fit.
-See \link{tinyAM-model} for the catch solver and feasibility safeguards.
+\item \code{catch}: target catch biomass for each future year. tinyAM scales terminal
+fishing mortality to meet the target. Use catch-number times mean-weight
+units (e.g. tonnes for thousand fish and kg). Supply one value for all
+projection years or \code{n_proj} values, using either \code{catch} or \code{F_mult}.
+Use \code{catch = "observed"} in \code{\link[=fit_hindcast]{fit_hindcast()}} to condition on held-out
+removals. See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 }}
 }
 \value{

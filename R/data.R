@@ -126,6 +126,14 @@
 #'
 #' @details
 #' The required tables are `catch`, `index`, `weight` and `maturity`.
+#' Supply estimated catch numbers for each year and age in `data$catch$obs`,
+#' with separate rows for each fleet when applicable. tinyAM does not support
+#' fitting annual catch totals in numbers or biomass, fitting age or length
+#' compositions, or fitting totals and compositions jointly. If your source
+#' provides matching annual totals in numbers and age proportions by number,
+#' convert them to estimated catch numbers at age before fitting. Converting
+#' biomass totals requires appropriate catch weights at age.
+#'
 #' For a catch-only model, keep `index` as a zero-row table with its required
 #' columns. Catchability and survey observation-SD settings then contribute no
 #' parameters. Model identification still depends on the remaining assumptions.
@@ -265,10 +273,12 @@ print.tam_data <- function(x, n = 5, ...) {
 #'
 #' @description
 #' Validates the minimal structure required by [prepare_tam()] and [fit_tam()].
-#' The `obs` object must be a list containing data.frames `catch`, `index`,
+#' `data` must be a list containing data.frames `catch`, `index`,
 #' `weight`, and `maturity`. Each table must include columns `year`, `age`,
 #' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
-#' and numeric for `obs`.
+#' and numeric for `obs`. The catch table's `obs` column contains catch numbers
+#' at age. Historical catch totals and age or length compositions are
+#' unsupported fitting inputs. See [as_tam_data()] for input preparation.
 #'
 #' Additional requirements:
 #' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
@@ -276,8 +286,9 @@ print.tam_data <- function(x, n = 5, ...) {
 #' - Optional `maturity$spawn_time` must contain finite numeric fractions in
 #'   `[0, 1]` for every year and age. Absence means zero; see [prepare_tam()].
 #' - Non-missing observations must be finite and non-negative; maturity must
-#'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
-#'   treated as missing by [prepare_tam()], because the observation model is on logs.
+#'   be a proportion in `[0, 1]`. Zero catch and index values are allowed.
+#'   The default lognormal likelihood excludes zeros. Poisson-link delta
+#'   families can fit sampled zeros. See [observation_families].
 #' - `catch` and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).

@@ -101,8 +101,14 @@ Years 1954–2025; ages 0–20
 ```
 
 The four required tables have numeric `year`, `age` and `obs` columns.
-`obs` contains catch numbers, survey indices, individual weights or proportions
-mature. Index rows also identify `survey` and `samp_time`: `0.8` means sampling
+`catch$obs` contains estimated catch numbers for each year and age, with
+separate rows for each fleet when applicable. Fitting annual catch totals,
+age or length compositions, or totals and compositions jointly is unsupported.
+Convert matching totals and age compositions to estimated catch numbers at age
+before fitting. The other `obs` columns contain survey indices, individual
+weights or proportions mature.
+
+Index rows also identify `survey` and `samp_time`: `0.8` means sampling
 eight-tenths of the way through the year. `q_block` groups ages sharing
 catchability in the example.
 
@@ -252,10 +258,15 @@ constant), and scored/failed-fold counts. Compare
 validation coverage before comparing scores; failed fits are retained in
 `hind$fold_diagnostics`, not scored.
 
-By default, each one-year forecast conditions on actual aggregate catch.
-Held-out surveys and catch compositions test prediction; matching the imposed
-catch total is not forecast skill. Use `proj_settings = list(F_mult = 1)` for
-status-quo F instead. See [hindcast definitions](https://paulregular.github.io/tinyAM/reference/fit_retro.html).
+By default, each one-year forecast conditions on total catch biomass calculated
+from held-out catch numbers at age and catch weights (stock weights if catch
+weights are absent). Quotas can constrain total catch biomass, while the ages
+caught depend on cohort abundance and fishing selectivity. Composition scores
+compare the observed and predicted shares of fish caught at each age. This
+checks how well projected cohorts and the assumed fishing pattern predict the
+age mix. Agreement with the imposed biomass does not measure forecast skill. Use
+`proj_settings = list(F_mult = 1)` for status-quo F. See
+[hindcast definitions](https://paulregular.github.io/tinyAM/reference/fit_retro.html).
 
 `AIC()` and `cAIC()` complement predictive checks for numerically acceptable
 models fitted to the same observations. Intrinsic random walks and

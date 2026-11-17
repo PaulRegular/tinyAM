@@ -17,10 +17,12 @@ check_tam_data(data, quiet = FALSE)
 }
 \description{
 Validates the minimal structure required by \code{\link[=prepare_tam]{prepare_tam()}} and \code{\link[=fit_tam]{fit_tam()}}.
-The \code{obs} object must be a list containing data.frames \code{catch}, \code{index},
+\code{data} must be a list containing data.frames \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. Each table must include columns \code{year}, \code{age},
 and \code{obs}. Types must be numeric (integerish allowed) for \code{year} and \code{age},
-and numeric for \code{obs}.
+and numeric for \code{obs}. The catch table's \code{obs} column contains catch numbers
+at age. Historical catch totals and age or length compositions are
+unsupported fitting inputs. See \code{\link[=as_tam_data]{as_tam_data()}} for input preparation.
 
 Additional requirements:
 \itemize{
@@ -29,8 +31,9 @@ Additional requirements:
 \item Optional \code{maturity$spawn_time} must contain finite numeric fractions in
 \verb{[0, 1]} for every year and age. Absence means zero; see \code{\link[=prepare_tam]{prepare_tam()}}.
 \item Non-missing observations must be finite and non-negative; maturity must
-be a proportion in \verb{[0, 1]}. Zero catch/index values are accepted here but
-treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the observation model is on logs.
+be a proportion in \verb{[0, 1]}. Zero catch and index values are allowed.
+The default lognormal likelihood excludes zeros. Poisson-link delta
+families can fit sampled zeros. See \link{observation_families}.
 \item \code{catch} and \code{maturity} must contain exactly one row for \strong{every}
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).

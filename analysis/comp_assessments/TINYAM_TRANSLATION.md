@@ -361,17 +361,16 @@ the corresponding common period and age groups for comparisons.
 
 # 4. Preparing catch-at-age
 
-tinyAM currently uses one aggregate catch-at-age observation table.
+tinyAM fits catch numbers at age. The catch table can contain one fishery or
+separate fleets identified by the `fleet` column. The shared converter
+`database_to_tam_obs()` processes one selected catch stream at a time.
 
-The source assessment may instead contain:
-
-- one fleet;
-- multiple fleets;
-- landings and discards separately;
-- totals plus age compositions;
-- biomass and composition rather than direct numbers-at-age.
-
-The translation step should first reconstruct a numbers-at-age series for each source catch/removal stream, then aggregate those streams as appropriate.
+A source assessment may report catches for multiple fleets, separate landings
+and discards, or annual totals and age compositions. When direct numbers at
+age are unavailable, reconstruct them for each source catch stream before
+fitting. Then combine streams as appropriate for the tinyAM model. Annual
+catch totals and catch compositions serve as inputs to the reconstruction.
+The catch likelihood uses the resulting numbers at age.
 
 ## 4.1 Direct numbers-at-age
 
@@ -448,11 +447,11 @@ C^N_{f,t}
 \frac{p^B_{f,t,a}/w^C_{f,t,a}}
 {\sum_j p^B_{f,t,j}/w^C_{f,t,j}}.$$
 
-All four total/composition combinations above are supported when the required
-matching total and composition rows are present. Biomass-based catch
-reconstruction requires compatible catch-weight rows and never substitutes
-stock weights. It converts the full source age composition before applying a
-requested age range, so biomass-to-number calculations retain their correct
+The converter can reconstruct catch numbers at age from any of the four
+combinations above when the required total and composition rows match.
+Conversions involving biomass require matching catch weights at age from
+the same source catch stream. The converter uses the full source composition
+before applying the requested age range so conversions retain their correct
 denominators.
 
 ## 4.6 Aggregate fleets

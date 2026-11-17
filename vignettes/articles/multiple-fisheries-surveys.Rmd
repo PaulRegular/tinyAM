@@ -71,8 +71,9 @@ local({
 ```
 
 SimSurvey's `run_catch()` uses sampled fish ages and reported annual fleet totals
-to estimate catch at age. It also estimates catch weights, using stock weight
-in the tinyAM inputs where a fleet has no estimate. The fit takes stock
+to estimate catch numbers at age before fitting. It also estimates catch
+weights. The tinyAM inputs use stock weights where a fleet has no catch weight
+estimate. The fit takes stock
 weights and maturity from the simulated population. `run_strat()` estimates
 abundance within each survey's footprint. The input tables retain zero
 estimates, which the lognormal likelihood excludes.
@@ -203,11 +204,12 @@ observation SDs. Each survey also has its own observation SD. Each fleet's
 Baranov catch prediction uses its own F and the common total mortality
 $Z = M + \sum_f F_f$.
 
-For the aggregate model, sum catches across fleets at each year and age
-before forming the plus group. A missing fleet catch makes the sum missing.
-Compute a catch-number-weighted weight at age so the pooled data give the
-same observed yield before plus-group pooling. Use the stock weight where
-total catch is zero or missing.
+For the aggregate model, sum catch numbers across fleets within each year
+and age. This gives one catch number for each year and age before plus-group
+pooling. A missing fleet catch makes the sum missing. Compute a mean catch
+weight at age weighted by each fleet's catch numbers so the pooled data give
+the same observed yield before plus-group pooling. Use the stock weight
+where the summed catch at age is zero or missing.
 
 ```{r aggregate-inputs, cache=TRUE}
 stock_weight <- subset(dat$weight, type == "stock")

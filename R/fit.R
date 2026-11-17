@@ -193,9 +193,13 @@
 #' Fit a Tiny Assessment Model (TAM)
 #'
 #' @description
-#' Estimates abundance, recruitment, and mortality from catch-at-age and survey
-#' observations. Returns population trends, observation diagnostics, parameter
-#' estimates, and uncertainty tables. Use `N_settings`, `F_settings`, and
+#' Estimates abundance, recruitment, and mortality from catch numbers at age
+#' and survey indices. Fitting historical catch totals, age or length compositions,
+#' or totals and compositions jointly is unsupported. See [as_tam_data()] for
+#' input preparation.
+#'
+#' Returns population trends, observation diagnostics, parameter estimates,
+#' and uncertainty tables. Use `N_settings`, `F_settings`, and
 #' `M_settings` to specify where unexplained biological variation is allowed.
 #' See [prepare_tam()] for options and [tinyAM-model] for the model equations.
 #'
