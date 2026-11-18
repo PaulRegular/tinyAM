@@ -31,8 +31,9 @@ fit_tam(
 \arguments{
 \item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}) and optional \code{pop_covariates}. A \link[=as_tam_data]{tam_data}
-object or plain list can be used. The weight table may distinguish complete
-stock and catch weights with \code{type};
+object or plain list can be used. Supply \code{index$obs} for each survey, year
+and age in the survey's units, such as fish per tow. The weight table may
+distinguish complete stock and catch weights with \code{type};
 stock weights supply both purposes when catch weights are absent.
 See \link{cod_obs} for an example.}
 
@@ -323,9 +324,9 @@ RW increments and numeric-by contributions for reporting and dashboards.
 }
 \description{
 Estimates abundance, recruitment, and mortality from catch numbers at age
-and survey indices. Fitting historical catch totals, age or length compositions,
-or totals and compositions jointly is unsupported. See \code{\link[=as_tam_data]{as_tam_data()}} for
-input preparation.
+and survey indices at age. Fitting historical catch totals, total survey
+indices, age or length compositions, or totals and compositions jointly is
+unsupported. See \code{\link[=as_tam_data]{as_tam_data()}} for input preparation.
 
 Returns population trends, observation diagnostics, parameter estimates,
 and uncertainty tables. Use \code{N_settings}, \code{F_settings}, and

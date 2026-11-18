@@ -38,6 +38,17 @@ provides matching annual totals in numbers and age proportions by number,
 convert them to estimated catch numbers at age before fitting. Converting
 biomass totals requires appropriate catch weights at age.
 
+Supply an abundance index for each survey, year and age in \code{data$index$obs},
+in the survey's units (for example, fish per tow). tinyAM does not fit a
+total survey index, survey age or length compositions, or the two jointly.
+If a total index in numbers and age proportions by number describe the
+same survey, sampling period and population in a year, multiply the total
+by each age's proportion before fitting. A biomass index requires matching
+weights at age and a compatible composition basis for conversion to numbers.
+Reconstructed observations share information from the same total. They use
+the index-at-age likelihood, which differs from fitting a total index and its
+composition as separate likelihood components.
+
 For a catch-only model, keep \code{index} as a zero-row table with its required
 columns. Catchability and survey observation-SD settings then contribute no
 parameters. Model identification still depends on the remaining assumptions.

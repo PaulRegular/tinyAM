@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Reject explicitly labelled age compositions in catch and survey inputs.
+  `check_tam_data()` warns when repeated annual sums suggest age proportions.
+
 * Pool complete native-age observations for Poisson-link delta plus groups.
   Keep incomplete tail observations missing and preserve native counts for
   observed-catch hindcasts.

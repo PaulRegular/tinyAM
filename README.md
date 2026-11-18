@@ -103,14 +103,21 @@ Years 1954–2025; ages 0–20
 The four required tables have numeric `year`, `age` and `obs` columns.
 `catch$obs` contains estimated catch numbers for each year and age, with
 separate rows for each fleet when applicable. Fitting annual catch totals,
-age or length compositions, or totals and compositions jointly is unsupported.
+catch age or length compositions, or totals and compositions jointly is
+unsupported.
 Convert matching totals and age compositions to estimated catch numbers at age
-before fitting. The other `obs` columns contain survey indices, individual
-weights or proportions mature.
+before fitting.
 
-Index rows also identify `survey` and `samp_time`: `0.8` means sampling
+`index$obs` contains a survey index for each survey, year and age in that
+survey's units, such as fish per tow. Fitting a total survey index, survey
+age or length compositions, or a joint total-and-composition likelihood is
+unsupported.
+Index rows also identify `survey` and `samp_time`, where `0.8` means sampling
 eight-tenths of the way through the year. `q_block` groups ages sharing
-catchability in the example.
+catchability in the example. The remaining `obs` columns contain individual
+weights and proportions mature.
+See [input help](https://paulregular.github.io/tinyAM/reference/as_tam_data.html)
+for preparing the catch and survey inputs.
 
 Catch covariates explain F means, F process SDs/correlation groups and catch
 observation SDs; index covariates explain q and index SDs. The optional
@@ -124,7 +131,6 @@ type must cover the same biological year-age grid. Optional `catch$fleet` adds
 separate fisheries on one shared population: supply a complete year–age grid
 per fleet, with missing observations as `NA`. Catch weights may be shared or
 fully fleet-specific using `weight$fleet`; stock weights have no fleet label.
-See [input help](https://paulregular.github.io/tinyAM/reference/as_tam_data.html).
 
 ```r
 dat <- cod_obs                    # replace with your own named list of tables

@@ -194,9 +194,9 @@
 #'
 #' @description
 #' Estimates abundance, recruitment, and mortality from catch numbers at age
-#' and survey indices. Fitting historical catch totals, age or length compositions,
-#' or totals and compositions jointly is unsupported. See [as_tam_data()] for
-#' input preparation.
+#' and survey indices at age. Fitting historical catch totals, total survey
+#' indices, age or length compositions, or totals and compositions jointly is
+#' unsupported. See [as_tam_data()] for input preparation.
 #'
 #' Returns population trends, observation diagnostics, parameter estimates,
 #' and uncertainty tables. Use `N_settings`, `F_settings`, and
@@ -236,8 +236,9 @@
 #'
 #' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`) and optional `pop_covariates`. A [tam_data][as_tam_data]
-#'   object or plain list can be used. The weight table may distinguish complete
-#'   stock and catch weights with `type`;
+#'   object or plain list can be used. Supply `index$obs` for each survey, year
+#'   and age in the survey's units, such as fish per tow. The weight table may
+#'   distinguish complete stock and catch weights with `type`;
 #'   stock weights supply both purposes when catch weights are absent.
 #'   See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,

@@ -134,6 +134,17 @@
 #' convert them to estimated catch numbers at age before fitting. Converting
 #' biomass totals requires appropriate catch weights at age.
 #'
+#' Supply an abundance index for each survey, year and age in `data$index$obs`,
+#' in the survey's units (for example, fish per tow). tinyAM does not fit a
+#' total survey index, survey age or length compositions, or the two jointly.
+#' If a total index in numbers and age proportions by number describe the
+#' same survey, sampling period and population in a year, multiply the total
+#' by each age's proportion before fitting. A biomass index requires matching
+#' weights at age and a compatible composition basis for conversion to numbers.
+#' Reconstructed observations share information from the same total. They use
+#' the index-at-age likelihood, which differs from fitting a total index and its
+#' composition as separate likelihood components.
+#'
 #' For a catch-only model, keep `index` as a zero-row table with its required
 #' columns. Catchability and survey observation-SD settings then contribute no
 #' parameters. Model identification still depends on the remaining assumptions.
@@ -276,9 +287,10 @@ print.tam_data <- function(x, n = 5, ...) {
 #' `data` must be a list containing data.frames `catch`, `index`,
 #' `weight`, and `maturity`. Each table must include columns `year`, `age`,
 #' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
-#' and numeric for `obs`. The catch table's `obs` column contains catch numbers
-#' at age. Historical catch totals and age or length compositions are
-#' unsupported fitting inputs. See [as_tam_data()] for input preparation.
+#' and numeric for `obs`. Supply catch numbers at age in `catch$obs` and
+#' survey indices at age in `index$obs`. Total catch, total survey indices,
+#' and age or length compositions are unsupported fitting inputs, separately
+#' or jointly. See [as_tam_data()] for input preparation.
 #'
 #' Additional requirements:
 #' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
@@ -306,13 +318,22 @@ print.tam_data <- function(x, n = 5, ...) {
 #'   requires nonempty labels on every row. Units never change input values.
 #'   See [as_tam_data()] for units of derived quantities.
 #'
+#' Explicit age-composition unit labels such as `"proportion_at_age"` in catch
+#' or index data produce an error. For a fleet or survey without a recognizable
+#' count or count-rate unit, the check warns if observations across ages sum
+#' to within 0.005 of one in every comparable year. This requires at least
+#' three years with all ages in the series observed and at least two positive
+#' ages in each of those years. The warning asks you to verify the scale.
+#'
 #' On failure the function aborts with a `cli` error. On success, it prints a
 #' concise summary and returns `TRUE` invisibly. Use `quiet = TRUE` to suppress
-#' the success summary; validation errors are always reported.
+#' the summary and the advisory composition warning. Validation errors are
+#' always reported.
 #'
 #' @param data A named list expected to contain data.frames `catch`, `index`,
 #'   `weight`, and `maturity` with the columns described above.
-#' @param quiet Logical. Suppress the success summary? Defaults to `FALSE`.
+#' @param quiet Logical. Suppress the success summary and advisory composition
+#'   warning? Defaults to `FALSE`.
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
@@ -497,7 +518,8 @@ check_tam_data <- function(data, quiet = FALSE) {
     }
   }
 
-  .data_units(obs)
+  units <- .data_units(obs)
+  .check_age_compositions(obs, units, quiet)
   if (!quiet) {
     n_fleets <- if ("fleet" %in% names(obs$catch)) length(unique(obs$catch$fleet)) else 1L
     n_surveys <- length(unique(obs$index$survey))
@@ -507,6 +529,64 @@ check_tam_data <- function(data, quiet = FALSE) {
     ))
   }
   invisible(TRUE)
+}
+
+.check_age_compositions <- function(obs, units, quiet) {
+  survey_labels <- sprintf('survey "%s"', names(units$index))
+  labels <- c("catch data", survey_labels)
+  unit_keys <- trimws(gsub("[[:space:]_-]+", " ",
+    tolower(c(units$numbers, units$index))))
+  composition_labels <- c("age composition", "composition at age",
+    "proportion at age", "proportions at age", "percent at age", "percentage at age")
+  labelled <- labels[unit_keys %in% composition_labels]
+  if (length(labelled)) {
+    cli::cli_abort(c(
+      "Age composition supplied for {labelled}.",
+      "i" = "Supply catch numbers at age or survey indices at age. See {.help as_tam_data}."
+    ))
+  }
+  if (quiet) return(invisible(NULL))
+
+  affected <- character()
+  if (is.na(.unit_scale(units$numbers, "numbers"))) {
+    fleets <- if ("fleet" %in% names(obs$catch)) {
+      split(obs$catch, as.character(obs$catch$fleet))
+    } else {
+      list(obs$catch)
+    }
+    fleet_labels <- if (is.null(names(fleets))) "catch data" else {
+      sprintf('catch fleet "%s"', names(fleets))
+    }
+    affected <- fleet_labels[vapply(fleets, .looks_like_age_composition, logical(1))]
+  }
+  known_index <- vapply(units$index, function(unit) {
+    is.finite(.count_unit(unit)$scale)
+  }, logical(1))
+  surveys <- split(obs$index, as.character(obs$index$survey))[!known_index]
+  affected <- c(affected, survey_labels[!known_index][
+    vapply(surveys, .looks_like_age_composition, logical(1))])
+  if (length(affected)) {
+    cli::cli_warn(c(
+      "Input looks like age composition for {affected}.",
+      "i" = "Values across ages repeatedly sum to one. Check that {.field obs} contains catch numbers or survey indices at age, in the original observation units."
+    ))
+  }
+  invisible(NULL)
+}
+
+.looks_like_age_composition <- function(data) {
+  n_ages <- length(unique(data$age))
+  if (n_ages < 2L) return(FALSE)
+
+  years <- split(seq_len(nrow(data)), data$year)
+  complete <- Filter(function(rows) {
+    length(rows) == n_ages && !anyDuplicated(data$age[rows]) &&
+      !anyNA(data$obs[rows])
+  }, years)
+  length(complete) >= 3L && all(vapply(complete, function(rows) {
+    values <- data$obs[rows]
+    sum(values > 0) >= 2L && abs(sum(values) - 1) <= 0.005
+  }, logical(1)))
 }
 
 # Select stock or catch weights; stock is the fallback only when catch is absent.

@@ -10,7 +10,8 @@ check_tam_data(data, quiet = FALSE)
 \item{data}{A named list expected to contain data.frames \code{catch}, \code{index},
 \code{weight}, and \code{maturity} with the columns described above.}
 
-\item{quiet}{Logical. Suppress the success summary? Defaults to \code{FALSE}.}
+\item{quiet}{Logical. Suppress the success summary and advisory composition
+warning? Defaults to \code{FALSE}.}
 }
 \value{
 \code{TRUE} (invisibly) if validation passes; otherwise aborts.
@@ -20,9 +21,10 @@ Validates the minimal structure required by \code{\link[=prepare_tam]{prepare_ta
 \code{data} must be a list containing data.frames \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. Each table must include columns \code{year}, \code{age},
 and \code{obs}. Types must be numeric (integerish allowed) for \code{year} and \code{age},
-and numeric for \code{obs}. The catch table's \code{obs} column contains catch numbers
-at age. Historical catch totals and age or length compositions are
-unsupported fitting inputs. See \code{\link[=as_tam_data]{as_tam_data()}} for input preparation.
+and numeric for \code{obs}. Supply catch numbers at age in \code{catch$obs} and
+survey indices at age in \code{index$obs}. Total catch, total survey indices,
+and age or length compositions are unsupported fitting inputs, separately
+or jointly. See \code{\link[=as_tam_data]{as_tam_data()}} for input preparation.
 
 Additional requirements:
 \itemize{
@@ -52,9 +54,17 @@ requires nonempty labels on every row. Units never change input values.
 See \code{\link[=as_tam_data]{as_tam_data()}} for units of derived quantities.
 }
 
+Explicit age-composition unit labels such as \code{"proportion_at_age"} in catch
+or index data produce an error. For a fleet or survey without a recognizable
+count or count-rate unit, the check warns if observations across ages sum
+to within 0.005 of one in every comparable year. This requires at least
+three years with all ages in the series observed and at least two positive
+ages in each of those years. The warning asks you to verify the scale.
+
 On failure the function aborts with a \code{cli} error. On success, it prints a
 concise summary and returns \code{TRUE} invisibly. Use \code{quiet = TRUE} to suppress
-the success summary; validation errors are always reported.
+the summary and the advisory composition warning. Validation errors are
+always reported.
 }
 \examples{
 data(cod_obs)
