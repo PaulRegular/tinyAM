@@ -32,7 +32,7 @@ unavailable, and the published age-specific surfaces lack reported
 uncertainty. No plot-derived values or fitted estimates are being substituted
 for inputs.
 
-[Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_saithe_north_sea.md).
+[Official source review](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/ices_saithe_north_sea.md).
 
 ## Additional inherited translation context
 

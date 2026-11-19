@@ -257,7 +257,7 @@ Use short biological explanations rather than only process names or formulas.
 Identify whether each choice preserves, approximates, or omits the source
 assumption. Honor previously agreed stock-specific choices and record them
 here. Include source references where needed, without repeating the full
-curation history from [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/source_reviews).
+curation history from [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/data-raw/source_reviews).
 
 Pass this Markdown to `vis_tam(background = background)`. The dashboard should
 display a Background page only when text is supplied; ordinary dashboards

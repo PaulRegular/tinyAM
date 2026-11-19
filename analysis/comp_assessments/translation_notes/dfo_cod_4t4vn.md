@@ -21,4 +21,4 @@ The source models age-2 recruitment as lagged SSB times an AR1 recruitment
 rate. The retained tinyAM age-3 entry follows a RW; it is not the same
 stock–recruit relationship.
 
-[Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_4t4vn.md).
+[Official source review](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/dfo_cod_4t4vn.md).

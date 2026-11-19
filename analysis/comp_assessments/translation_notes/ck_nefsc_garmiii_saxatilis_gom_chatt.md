@@ -28,7 +28,7 @@ definitions remain approximate. Fixed M matches because it is supplied as an
 input, not estimated. See the local dashboard for the year- and age-specific
 comparisons.
 
-[Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md).
+[Official source review](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md).
 
 ## Additional inherited translation context
 

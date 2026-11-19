@@ -1,6 +1,6 @@
 # Northeast Arctic saithe source review: tinyAM translation notes
 
-Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ck_ices_afwg_virens_nea_1_2.md).
+Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/ck_ices_afwg_virens_nea_1_2.md).
 
 ## Outputs and tinyAM translation
 

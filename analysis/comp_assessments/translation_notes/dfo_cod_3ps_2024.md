@@ -1,6 +1,6 @@
 # DFO 3Ps Atlantic cod, 2024 assessment: tinyAM translation notes
 
-Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ck_dfo_morhua_3ps.md).
+Transferred from the pre-cleanup SAIO review without refitting. Check the registered stock script and review tier for current settings. [Official source review](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/ck_dfo_morhua_3ps.md).
 
 ## tinyAM translation readiness
 

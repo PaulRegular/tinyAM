@@ -2,7 +2,7 @@
 
 Transferred from the [SAIO source review](https://github.com/PaulRegular/saio/blob/4b347a10b95e8d1f9b3d34156bf58ed63c82f775/source_reviews/dfo_cod_3pn4rs.md) during the repository cleanup. These are previously recorded settings, caveats and diagnostics, not new fitting results. The registered stock script defines the current model; check its curated or preliminary tier before using these notes.
 
-Official assessment evidence is maintained in [SAIO](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_3pn4rs.md).
+Official assessment evidence is maintained in [SAIO](https://github.com/PaulRegular/saio/blob/main/data-raw/source_reviews/dfo_cod_3pn4rs.md).
 
 ## Expanded-library review
 
@@ -27,7 +27,7 @@ despite a 0.939 trend correlation. The limited index coverage and simplified
 population processes remain substantial differences; retain the fit as a
 numerically successful but weakly matching first translation.
 
-The [public source manifest](https://github.com/PaulRegular/saio/blob/main/provenance/dfo_cod_3pn4rs_2025/sources.csv) also lists the source files and checksums. The local SAIO cache keeps a copy at
+The [public source manifest](https://github.com/PaulRegular/saio/blob/main/data-raw/provenance/dfo_cod_3pn4rs_2025/sources.csv) also lists the source files and checksums. The local SAIO cache keeps a copy at
 `source_cache/dfo_cod_3pn4rs/dfo_cod_3pn4rs_2025/manifest.csv`.
 `scripts/dfo_cod_3pn4rs/038_import_dfo_cod_3pn4rs_2025.R` reproduces table imports and
 digitizes the fitted biological curves from the cached assessment PDF;
