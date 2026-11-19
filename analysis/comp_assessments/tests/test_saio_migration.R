@@ -194,15 +194,20 @@ local({
     !any(grepl("/experiments/", curated_index, fixed = TRUE)),
     !any(grepl("/experiments/", preliminary_index, fixed = TRUE)))
 
-  # Current SAIO commits release manifests, while the verified CSVs are
-  # restored outside Git. Use the same fixture to check both storage formats.
-  stopifnot(requireNamespace("readr", quietly = TRUE), requireNamespace("openssl", quietly = TRUE))
+  # Released data can be read directly from compressed files outside Git.
+  stopifnot(requireNamespace("saio", quietly = TRUE), requireNamespace("openssl", quietly = TRUE))
   stopifnot(identical(.saio_comparison_revision,
     "c36cc22df29dc0efb9a96b7e2500caf4bec36c86"))
-  git("rm", "-f", "--", paste0("database/", names(tables), ".csv"))
   dir.create("data_repo/database/releases")
   release_ids <- c("002", "003")
   source_note <- 'Reported as "main series", then checked.\nReview appendix.'
+  csv_bytes <- function(lines, eol) charToRaw(paste0(paste(lines, collapse = eol), eol))
+  digest <- function(x) unclass(as.character(openssl::sha256(x)))
+  write_gzip <- function(bytes, path) {
+    connection <- gzfile(path, "wb")
+    on.exit(close(connection))
+    writeBin(bytes, connection)
+  }
   write_release <- function(tag, destination, species) {
     dir.create(destination, showWarnings = FALSE)
     release_tables <- tables
@@ -215,41 +220,40 @@ local({
       assessment_id = release_ids, type = "ageing_error_sd", age = c(0.5, 1.5),
       value = c(0.15, 0.25), length_bin = c("25-40 cm", "20"), weight_bin = NA_real_)
     release_tables$outputs$assessment_id <- release_ids
-    files <- file.path(destination, paste0(names(release_tables), ".csv"))
-    for (i in seq_along(files)) write.csv(release_tables[[i]], files[[i]], row.names = FALSE)
-    # A release may omit the trailing optional fields in individual input rows.
-    input_lines <- readLines(files[[4L]])
-    input_lines[[2L]] <- sub(",NA$", "", input_lines[[2L]])
-    writeLines(input_lines, files[[4L]])
-    csv <- lapply(files, function(path) readBin(path, "raw", n = file.size(path)))
-    assets <- lapply(csv, memCompress, type = "gzip")
-    digest <- function(x) unclass(as.character(openssl::sha256(x)))
+    lines <- lapply(release_tables, function(table) capture.output(write.csv(table, row.names = FALSE)))
+    # A release may omit trailing optional fields in individual input rows.
+    lines$inputs[[2L]] <- sub(",NA$", "", lines$inputs[[2L]])
+    csv <- lapply(lines, csv_bytes, eol = "\r\n")
+    asset_names <- paste0(names(release_tables), ".csv.gz")
+    files <- file.path(destination, asset_names)
+    for (i in seq_along(files)) write_gzip(csv[[i]], files[[i]])
+    assets <- lapply(files, function(path) readBin(path, "raw", n = file.size(path)))
     manifest <- data.frame(release = tag, schema_version = 1, table = names(release_tables),
-      asset = paste0(names(release_tables), ".csv.gz"),
-      rows = vapply(release_tables, nrow, integer(1)), csv_bytes = lengths(csv),
-      csv_sha256 = vapply(csv, digest, character(1)), asset_bytes = lengths(assets),
-      asset_sha256 = vapply(assets, digest, character(1)))
-    path <- paste0("database/releases/", tag, ".csv")
-    write.csv(manifest, file.path("data_repo", path), row.names = FALSE)
+      asset = asset_names, rows = vapply(release_tables, nrow, integer(1)),
+      csv_bytes = lengths(csv), csv_sha256 = vapply(csv, digest, character(1)),
+      asset_bytes = lengths(assets), asset_sha256 = vapply(assets, digest, character(1)))
+    manifest_lines <- capture.output(write.csv(manifest, row.names = FALSE))
+    # Match the CRLF release asset and LF manifest blob used by published comparisons.
+    writeBin(csv_bytes(manifest_lines, "\r\n"), file.path(destination, "manifest.csv"))
+    path <- file.path("database", "releases", paste0(tag, ".csv"))
+    writeBin(csv_bytes(manifest_lines, "\n"), file.path("data_repo", path))
     path
   }
   previous_tag <- "saio-2026-11-14-expansion"
   latest_tag <- "saio-2026-11-16-curation"
-  previous_path <- write_release(previous_tag, "previous", "Earlier restored species")
-  git("add", previous_path)
-  commit("previous released snapshot")
-  latest_path <- write_release(latest_tag, "data_repo/database", "Current restored species")
-  git("add", latest_path)
-  commit("latest released snapshot")
-  manifest_commit <- git("rev-parse", "HEAD")[[1L]]
+  previous_dir <- "previous data"
+  latest_dir <- "current data"
+  previous_path <- write_release(previous_tag, previous_dir, "Earlier released species")
+  latest_path <- write_release(latest_tag, latest_dir, "Current released species")
+  git("add", previous_path, latest_path)
+  commit("released manifests")
+  previous_blob <- git("rev-parse", paste0("HEAD:", previous_path))[[1L]]
   manifest_blob <- git("rev-parse", paste0("HEAD:", latest_path))[[1L]]
-  writeLines("Restore the data outside Git.", "data_repo/README.md")
-  git("add", "README.md")
-  commit("docs only")
-  write_release("saio-2026-11-18-uncommitted", "uncommitted", "Unreleased species")
 
-  latest <- read_database(saio_repo = "data_repo")
-  stopifnot(identical(latest$stocks$scientific_name, "Current restored species"),
+  Sys.setenv(SAIO_DATABASE_DIR = latest_dir)
+  selected <- read_database(assessment_id = "002")
+  latest <- read_database()
+  stopifnot(identical(latest$stocks$scientific_name, "Current released species"),
     identical(latest$stocks$stock_id, "001"),
     identical(latest$assessments$stock_id, rep("001", 2L)),
     identical(latest$assessments$assessment_id, release_ids),
@@ -265,33 +269,70 @@ local({
     identical(latest$database_selection, "local_release"),
     identical(latest$database_release, latest_tag),
     identical(latest$database_ref, latest_tag),
-    identical(latest$commit, manifest_commit),
+    identical(latest$commit, NA_character_),
     identical(latest$database_key, manifest_blob),
-    identical(latest, read_database(saio_repo = "data_repo", release = latest_tag)))
-  previous <- read_database(saio_repo = "data_repo", release = previous_tag, database_dir = "previous")
-  stopifnot(identical(previous$stocks$scientific_name, "Earlier restored species"),
+    identical(latest, read_database(release = latest_tag)),
+    identical(.assessment_cache_key(), manifest_blob))
+  stopifnot(identical(selected, read_database(assessment_id = "002")),
+    identical(selected$assessments$assessment_id, "002"),
+    identical(selected$stocks, latest$stocks),
+    all(vapply(selected[c("assumptions", "inputs", "outputs")],
+      function(table) identical(table$assessment_id, "002"), logical(1L))),
+    identical(selected$database_key, manifest_blob))
+  previous <- read_database(release = previous_tag, database_dir = previous_dir)
+  stopifnot(identical(previous$stocks$scientific_name, "Earlier released species"),
     identical(previous$database_release, previous_tag),
-    identical(previous$database_key, git("rev-parse", paste0("HEAD:", previous_path))[[1L]]),
+    identical(previous$database_key, previous_blob),
     identical(pinned, read_database(saio_repo = "data_repo", revision = revision)),
     length(unique(vapply(list(latest, previous, pinned), .assessment_cache_key, character(1)))) == 3L)
-  Sys.setenv(SAIO_DATABASE_DIR = "previous")
-  stopifnot(identical(previous, read_database(saio_repo = "data_repo", release = previous_tag)),
-    identical(latest, read_database(saio_repo = "data_repo", database_dir = "data_repo/database")))
-  Sys.unsetenv("SAIO_DATABASE_DIR")
+  testthat::expect_error(read_database(release = previous_tag), previous_tag, fixed = TRUE)
+  Sys.setenv(SAIO_DATABASE_DIR = previous_dir)
+  stopifnot(identical(previous, read_database(release = previous_tag)),
+    identical(latest, read_database(database_dir = latest_dir)))
+  Sys.setenv(SAIO_DATABASE_DIR = latest_dir)
 
-  # Exercise missing files after a successful read and same-size tampering.
-  stopifnot(identical(latest, read_database(saio_repo = "data_repo")))
-  released_stocks <- "data_repo/database/stocks.csv"
+  # A fit saved with the old manifest key is still found for the same release.
+  release_cache <- file.path(.assessment_results("curated"), "cache", manifest_blob, "002")
+  dir.create(release_cache, recursive = TRUE)
+  release_fit <- structure(list(marker = "released fit",
+    assessment_provenance = list(database_key = manifest_blob)), class = "tam_fit")
+  saveRDS(release_fit, file.path(release_cache, "fit.rds"))
+  stopifnot(identical(.assessment_cached_fit("002", "curated", latest), release_fit),
+    is.null(.assessment_cached_fit("002", "curated", previous)))
+
+  # Plotting needs only the small catalogue tables, even if inputs are absent.
+  released_inputs <- file.path(latest_dir, "inputs.csv.gz")
+  stopifnot(file.rename(released_inputs, paste0(released_inputs, ".saved")))
+  catalogue <- read_database(tables = c("stocks", "assessments"))
+  stopifnot(identical(catalogue$stocks, latest$stocks),
+    identical(catalogue$assessments, latest$assessments),
+    identical(catalogue$database_key, manifest_blob),
+    !any(c("assumptions", "inputs", "outputs") %in% names(catalogue)))
+  testthat::expect_error(read_database(), "inputs\\.csv\\.gz")
+  stopifnot(file.rename(paste0(released_inputs, ".saved"), released_inputs))
+
+  # The parsed table still has to match the manifest's declared row count.
+  manifest_path <- file.path(latest_dir, "manifest.csv")
+  manifest_bytes <- readBin(manifest_path, "raw", n = file.size(manifest_path))
+  wrong_rows <- read.csv(manifest_path)
+  wrong_rows$rows[wrong_rows$table == "stocks"] <- 2L
+  write.csv(wrong_rows, manifest_path, row.names = FALSE)
+  testthat::expect_error(read_database(tables = "stocks"), "row counts differ.*stocks")
+  writeBin(manifest_bytes, manifest_path)
+
+  # Exercise missing assets after a successful read and same-size tampering.
+  stopifnot(identical(latest, read_database()))
+  released_stocks <- file.path(latest_dir, "stocks.csv.gz")
   stopifnot(file.rename(released_stocks, paste0(released_stocks, ".saved")))
-  testthat::expect_error(read_database(saio_repo = "data_repo"), "stocks\\.csv")
+  testthat::expect_error(read_database(), "stocks\\.csv\\.gz")
   stopifnot(file.rename(paste0(released_stocks, ".saved"), released_stocks))
   size <- file.size(released_stocks)
   stamp <- file.mtime(released_stocks)
-  corrupted <- transform(latest$stocks, scientific_name = "Corrupt restored species")
-  write.csv(corrupted, released_stocks, row.names = FALSE)
+  corrupted <- readBin(released_stocks, "raw", n = size)
+  corrupted[[20L]] <- as.raw(bitwXor(as.integer(corrupted[[20L]]), 1L))
+  writeBin(corrupted, released_stocks)
   Sys.setFileTime(released_stocks, stamp + 2)
   stopifnot(file.size(released_stocks) == size)
-  testthat::expect_error(read_database(saio_repo = "data_repo"), "stocks\\.csv")
-  testthat::expect_error(read_database(saio_repo = "data_repo", release = previous_tag), "stocks\\.csv")
+  testthat::expect_error(read_database(), "[Cc]hecksum mismatch.*stocks\\.csv\\.gz")
 })
 cat("SAIO release and legacy reads, tier dispatch, and cache provenance checks passed.\n")

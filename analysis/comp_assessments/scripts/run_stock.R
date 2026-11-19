@@ -6,9 +6,8 @@ source(file.path(root, "R", "run_assessment.R"))
 
 translation_tier <- "curated"
 assessment_id <- "noaa_sablefish_pacific_coast_2025"
-# Supply a release or historical revision to reproduce a saved fit.
-database <- read_database()
-source <- read_assessment(assessment_id, database)
+# Select a different downloaded release with SAIO_DATABASE_DIR.
+source <- read_assessment(assessment_id)
 # Set FALSE to load the inputs for an edited fit_tam() call.
 do_fit <- TRUE
 silent <- FALSE

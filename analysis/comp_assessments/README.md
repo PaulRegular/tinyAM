@@ -26,42 +26,50 @@ definitions still need a reviewed conversion. Neither status counts as a fit.
 
 ## 1. Read local SAIO data
 
-Both tiers use the newest published SAIO release manifest in the local SAIO checkout.
-The reader checks the five restored CSVs against that manifest. Install the R
-packages `readr` and `openssl` to read and verify the release.
+Install the SAIO package once in RStudio. Download the latest release before
+starting a comparison.
 
-Update your SAIO checkout to get the latest manifest. Download the five
-`.csv.gz` files and `manifest.csv` from the matching release. From the SAIO
-checkout, run `Rscript scripts/003_restore_release.R path/to/assets`. Restore
-into an empty target directory. Supply a second path argument to the restore
-script to keep releases in separate directories.
-[SAIO releases](https://github.com/PaulRegular/saio/releases) ·
-[SAIO restore instructions](https://github.com/PaulRegular/saio#getting-the-data)
+```r
+install.packages("pak")
+pak::pak("PaulRegular/saio")
+saio::download_database()
+```
+
+Both tiers read this local compressed copy and verify its files against the
+release manifest. You can run fits and plots offline. A single-stock run
+scans the compressed tables and keeps only the selected assessment in memory.
+A batch reads the data once. Overview plots read just the two catalogue tables.
+[SAIO releases](https://github.com/PaulRegular/saio/releases)
+
+Run the analysis scripts from the tinyAM repository root. If you keep the
+data on another drive or use a specific release for a comparison, give that
+release its own folder. Set `SAIO_DATABASE_DIR` for the scripts in your
+current R session.
+
+```r
+saio_dir <- saio::download_database(
+  release = "saio-2026-11-16-curation",
+  database_dir = "D:/SAIO/curation"
+)
+Sys.setenv(SAIO_DATABASE_DIR = saio_dir)
+```
+
+You can also pass `database_dir` directly to `read_database()`. Supply
+`release` to check that the local copy matches the tag you want to use.
 
 ```r
 source("analysis/comp_assessments/R/run_assessment.R")
-database <- read_database()
-database$database_ref
-```
-
-Run from the tinyAM repository root. The reader looks for `saio` next to the
-primary tinyAM checkout, including when you run from a linked worktree.
-Set `SAIO_REPO` to locate another checkout. Restored tables go under that
-checkout's `database/` folder by default. Set `SAIO_DATABASE_DIR` or pass
-`database_dir` for another location. To select an older release, pass
-`release` and the directory where its tables are restored.
-
-```r
 database <- read_database(release = "saio-2026-11-16-curation",
-  database_dir = "path/to/restored/tables")
+  database_dir = saio_dir)
+database$database_release
 ```
 
 For the historical 28-stock comparison, use
 `read_database(revision = "c36cc22df29dc0efb9a96b7e2500caf4bec36c86")`.
-A Git revision selects a historical commit that contains the five tables.
-If its LFS objects are missing locally, run `git lfs fetch origin <sha>`
-from the SAIO checkout. Pass the same `database` to the fitting and overview
-scripts to keep their source selection consistent.
+This path reads the five tables from the historical SAIO Git commit.
+Set `SAIO_REPO` if the checkout is in another location. If its LFS objects
+are missing locally, run `git lfs fetch origin <sha>` from the SAIO checkout.
+Pass the same `database` to the fitting and overview scripts.
 
 One preliminary English Channel plaice recipe retains its documented native-SAM starting-value retry. That optional retry needs `source_cache/ices_plaice_7d_2026/fit_local_locked.RData`, copied manually from the reviewed source artifact.
 
@@ -73,6 +81,7 @@ For a batch, open `scripts/run_all.R`. Its stages are deliberately separate:
 
 ```r
 future::plan(future::multisession, workers = 10)
+database <- read_database()
 runs <- run_assessments(database = database, tier = "curated",
   cache = TRUE, save_results = TRUE, timeout = 20 * 60)
 ```
@@ -112,6 +121,6 @@ The hindcast default conditions each forecast on actual aggregate catch, while h
 
 See the [November 2026 curated snapshot](snapshots/saio-2026-11-16-curation/README.md) for the comparison figures, outcomes, and run provenance.
 
-Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO data key>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record the SAIO release and manifest commit, or the selected historical SAIO commit, along with the tinyAM revision. Existing historical results keep their original provenance.
+Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO data key>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record the SAIO release tag and a key from its manifest, or the selected historical SAIO commit, along with the tinyAM revision. Existing historical results keep their original provenance.
 
 The scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited reviews are in [translation_notes/](translation_notes/README.md); official source evidence is maintained in SAIO. The migration record is in [migration/](migration/README.md). No operational assessment or study hypothesis is changed by this workflow.

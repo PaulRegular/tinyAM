@@ -2,4 +2,4 @@
 
 Source changes and validation belong in SAIO. [SAIO protocol](https://github.com/PaulRegular/saio/blob/main/PROTOCOL.md)
 
-tinyAM reads the latest restored SAIO release from a local SAIO checkout. [Analysis workflow](README.md)
+tinyAM reads a local compressed SAIO release through the `saio` R package. [Analysis workflow](README.md)

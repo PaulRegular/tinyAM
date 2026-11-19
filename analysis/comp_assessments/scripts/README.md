@@ -2,12 +2,16 @@
 
 Run these scripts from the tinyAM repository root in RStudio.
 
-The scripts read the latest release restored in the local SAIO checkout. Set `SAIO_REPO` to locate the checkout and `SAIO_DATABASE_DIR` for an alternate restoration directory. Select reproducible older inputs with `read_database(release = ...)` or `read_database(revision = ...)`. [Analysis workflow](../README.md#1-read-local-saio-data)
+The scripts use a compressed release downloaded with `saio::download_database()`.
+Set `SAIO_DATABASE_DIR` to use a copy in a custom local folder. Use
+`read_database(release = ...)` to check the tag of a local release. Use
+`read_database(revision = ...)` and `SAIO_REPO` for historical Git snapshots.
+[Analysis workflow](../README.md#1-read-local-saio-data)
 
-1. `run_stock.R` chooses a stock and tier, fits its recipe, and previews the supplied fit independently.
+1. `run_stock.R` chooses a stock and tier, reads the selected assessment, fits its recipe, and previews the supplied fit independently.
 2. `run_all.R` reads the database once, configures the worker count, fits and checkpoints the batch, then renders dashboards and overview figures in separate sections.
 3. `observation_readiness.R` audits the supplied `database` or reads the selected SAIO release when run alone.
-4. `stats_plots.R` and `trend_plots.R` rebuild overview figures from results matching the selected source revision.
+4. `stats_plots.R` and `trend_plots.R` rebuild overview figures from results matching the selected source revision. When run on their own, they read only the stock and assessment catalogues.
 
 `run_assessment(..., fit = FALSE)` prepares inputs without final or preliminary fits. The batch functions honor your existing future plan; choose `future::sequential` for troubleshooting. `run_all.R` selects a 20-minute per-assessment deadline; use `timeout = Inf` for unrestricted fitting. A finite deadline requires `callr` and records a timeout without retuning the model.
 

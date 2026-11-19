@@ -403,7 +403,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
                            log_file = NULL, tier = NULL) {
   entry <- .assessment_translation(assessment_id, tier, required = FALSE)
   tier <- if (is.null(entry)) "curated" else entry$tier[[1]]
-  if (is.null(database)) database <- read_database()
+  if (is.null(database)) database <- read_database(assessment_id = assessment_id)
   database$translation_tier <- tier
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
     length(cache) != 1L || is.na(cache) || !is.logical(cache)) {

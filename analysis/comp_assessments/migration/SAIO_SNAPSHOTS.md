@@ -1,6 +1,6 @@
 # Source snapshots
 
-This is the historical migration record. The revisions below remain in Git and any existing local caches. Current runs use the latest restored SAIO release by default. [Analysis workflow](../README.md#1-read-local-saio-data)
+This is the historical migration record. The revisions below remain in Git and any existing local caches. Current runs use a local compressed SAIO release. [Analysis workflow](../README.md#1-read-local-saio-data)
 
 The canonical working tables on main are the expanded source database extracted from tinyAM comp-assessments 34470212e1102f3f31bf3f08c26a8a72a985c948.
 

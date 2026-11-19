@@ -13,7 +13,8 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "translation_registry.R"))
 if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
 results_dir <- .assessment_results(translation_tier)
-plot_database <- if (exists("database", inherits = FALSE)) database else read_database()
+plot_database <- if (exists("database", inherits = FALSE)) database else
+  read_database(tables = c("stocks", "assessments"))
 .assessment_check_results_revision(results_dir, plot_database)
 translation_ids <- assessment_translations(translation_tier)$assessment_id
 source(file.path(root, "R", "plot_stock_order.R"))

@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/R/plot_stock_order.R")
 source("analysis/comp_assessments/R/run_assessment.R")
 root <- "analysis/comp_assessments"
-database <- read_database()
+database <- read_database(tables = c("stocks", "assessments"))
 assessments <- database$assessments
 stocks <- database$stocks
 ids <- intersect(assessment_translations("curated")$assessment_id, assessments$assessment_id)
