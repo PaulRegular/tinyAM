@@ -1,10 +1,70 @@
 ---
-title: "tinyAM: Exploring assumptions in age-structured stock assessments"
+title: "`tinyAM`: An accessible R framework for exploring the assumptions behind age-structured stock assessment models"
 format: docx
 bibliography: references.bib
 execute:
   enabled: false
 ---
+
+# Abstract
+
+# Introduction
+
+Fish populations are one of the last wild resources managed globally. Not only are they a key source of wild food, they are an economic driver, contribution $X annually. This motivates the collection of extensive data on these wild populations and while fish populations are hard to study, some core ecological concepts have been derived from data collected on fish populations (e.g., match-mismatch hypothesis). The need to predict the future of these populations and identify levels of sustainable use often spurrs efforts to collect information on the age structure of the population and the composition of ages in fisheries. As such, it has become commonplace for the field of fisheries science and management to apply age-structured models to study their population ecology and demography, which enables better predictions of population size under varying levels of fisheries removals.
+
+Age-structured models applied in fisheries science found its roots in the Leslie matrix, and they began to be commonly applied in the 1960s when computers made large matrix calculations piratical. Methods have continued to advance, but a basic cohort equation lies at the core of all age-structured stock assessment models. Indeed, age-structured models may be the most actively used in the field of fisheries science.
+
+The active and common use of such models have contributed to a continued evolution of methods and tools, starting from aspict to apply virtual population analyses (VPA), to Stock Synthesis and a4a to apply statistical catch at age (SCAA), to state-space approaches enabled by WHAM and SAM. Consequently, the field has been at the forefront of statistical and programmatic advancement, introducing tools such as TMB and RTMB that have been applicable well beyond the field of fisheries science. However, one difficulty that practitioners may face is that the learning curve behind these methods is steep. It requires a high bar of statistical and programmatic knowledge. Yet at the core of these models are true questions of population ecologists. There are likely ideas that biologists and ecologists have that they want to apply to age-structured analyses, yet the statistical and programmatic requirements act as a barrier to the testing of their ideas.
+
+Here we introduce a tiny assessment model, `tinyAM`, which is an R package designed to make age-structured stock assessment models more accessible. Ultimately, assessment models express hypotheses about where unexplained variation arises: recruitment, abundance deviations, fishing mortality, natural mortality, or monitoring program gaps or sampling errors. This framework lets users change one or more assumption to examine their consequences using the same diagnostic, simulation, and forecasting tools. The interface is designed to be expressive and intuitive, leveraging principles of tidy data, the flexibility of R formulas, and the use of print methods and interactive visuals via `plotly` and `flesdashboard` to rapidly develop and compare multiple models. The 'tidy' prefix refers to a small modeling vocabulary where complexity emerges from combining understandable components rather than choosing among many special-purpose models. The overall goal is to make age-structured assessment models more accessible to biologists and ecologists; though they may not have extensive statistical and programming traing, they understand the fundamentals of population ecology and work in the tidyverse and are familiar with R packages like glmmTMB.
+
+
+# The `tinyAM` package
+
+## Age-structured stock assessment models
+
+## Package structure and use
+
+### Installation
+
+# Case studies
+
+## Northern cod
+
+## Numerical agreement under matching assumptions
+
+## Approximating assessments across the north Pacific and Atlantic
+
+# Final remarks
+
+# Author contributions
+
+# Acknodledgements
+
+# Funding information
+
+# Data availability statement
+
+# References
+
+::: {#refs}
+:::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Drafting outline for an Application in *Methods in Ecology and Evolution*. Aim for roughly 3,300–3,600 words in total, leaving room within the 4,000-word limit for captions, statements and references.
 
@@ -89,10 +149,6 @@ Report the denominators in sequence: cases considered, input blockers, cases fit
 
 Add a separate title page, contributions, disclosures and the Application Code Checklist. Record the exact software and data revisions and the scripts and outputs needed to regenerate the main figures. Use a separate run for fits and figure generation, then render the manuscript from the saved outputs. Review the journal’s AI disclosure requirements when preparing the submission.
 
-## References
-
-::: {#refs}
-:::
 
 <!--
 Draft from this file and render with: quarto render tinyAM.qmd --to docx
