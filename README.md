@@ -141,8 +141,9 @@ check_tam_data(dat)               # validate before fitting
 Catch in **thousand fish** and weight in **kg** give biomass and SSB in **tonnes**.
 Optional `unit` columns label values; they do not convert them. Survey units
 can differ. Use `NA` for unavailable catch and index observations. The default
-lognormal also excludes sampled zeros. Use `pld_lognormal()` to fit sampled
-zeros alongside positive observations. Weights and maturities must be complete.
+lognormal also excludes sampled zeros. Use a delta family such as
+`delta_lognormal()`, its `type = "poisson-link"` option, or `tweedie()` to fit
+sampled zeros alongside positive observations. Weights and maturities must be complete.
 See [observation families](https://paulregular.github.io/tinyAM/reference/observation_families.html).
 
 See [`?check_tam_data`](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)

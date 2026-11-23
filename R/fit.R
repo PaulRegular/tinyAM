@@ -86,6 +86,10 @@
       if (length(start[[shape]])) {
         start[[shape]] <- .gengamma_starts(start[[shape]], source$dat, dat, type)
       }
+      power <- paste0("logit_tweedie_power_", type)
+      if (length(start[[power]])) {
+        start[[power]] <- .tweedie_starts(start[[power]], source$dat, dat, type)
+      }
     }
     if (identical(source$dat$rec$type, "off") && !is.null(source$rep$recruitment)) {
       years <- source$dat$rec$eligible
@@ -116,7 +120,7 @@
     for (type in c("catch", "index")) {
       dispersion <- function(d) {
         x <- d$obs_map[d$obs_map$type == type, , drop = FALSE]
-        kind <- if (is.null(x$family)) rep("lognormal", nrow(x)) else sub("^pld_", "", x$family)
+        kind <- if (is.null(x$family)) rep("lognormal", nrow(x)) else sub("^delta_", "", x$family)
         species <- .observation_series(x, type)
         vapply(split(kind, species), function(z) z[1L], character(1))
       }
@@ -341,7 +345,7 @@ fit_tam <- function(
     proj_settings = proj_settings
   )
   if (isTRUE(add_osa_res) && .obs_has_non_lognormal(dat)) {
-    cli::cli_abort("One-step-ahead residuals are unavailable for PLD, Gamma or generalized gamma fits. Use quantile residuals.")
+    cli::cli_abort("One-step-ahead residuals are available only for all-lognormal fits. Use quantile residuals for delta, Tweedie, Gamma or generalized gamma observations.")
   }
   par <- make_par(dat)
   formula_advisories <- rbind(

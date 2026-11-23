@@ -28,14 +28,14 @@ navbar:
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
-      - text: Poisson-link delta observations
-        href: articles/poisson-link-delta.html
+      - text: Handling zeros in catch and survey observations
+        href: articles/handling-zeros.html
 articles:
 - title: Guides
   contents:
   - '`articles/compare-assessments`'
   - '`articles/multiple-fisheries-surveys`'
-  - '`articles/poisson-link-delta`'
+  - '`articles/handling-zeros`'
 reference:
 - title: Model overview and example data
 - contents:

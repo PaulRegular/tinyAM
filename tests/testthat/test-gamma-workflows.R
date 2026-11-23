@@ -41,11 +41,11 @@ gamma_workflow_settings <- function(data = gamma_workflow_inputs()) {
     F_settings = list(process = "off", mu_form = ~1, age_breaks = 3:7),
     M_settings = list(process = "off", mu_supplied = ~I(.3)),
     catch_settings = list(family = stats::Gamma(link = "log")),
-    index_settings = list(family = list(RV = pld_gengamma(y50 = 240, Q = -.20)),
+    index_settings = list(family = list(RV = delta_gengamma(type = "poisson-link", y50 = 240, Q = -.20)),
       q_form = ~1, sd_form = ~0, sd_supplied = ~I(.36)))
 }
 
-test_that("Gamma and PLD generalized gamma work together through fit, simulation and forecasts", {
+test_that("Gamma and Delta generalized gamma work together through fit, simulation and forecasts", {
   settings <- gamma_workflow_settings()
   fit <- do.call(fit_tam, c(settings, list(silent = TRUE)))
   expect_true(fit$is_converged)
@@ -77,18 +77,15 @@ test_that("Gamma and PLD generalized gamma work together through fit, simulation
     c(catch$is_observed, index$is_observed)])))
   expect_true(all(is.na(catch$quantile_res[catch$is_structural])))
   expect_true(is.finite(stats::AIC(fit)))
-  expect_error(cAIC(fit), "unavailable")
+  expect_true(is.finite(cAIC(fit)))
   expect_no_warning(stats::AIC(fit, fit))
-  different <- fit
-  different$dat$obs_map$family[different$dat$obs_map$type == "catch"] <- "gengamma"
-  expect_error(stats::AIC(fit, different), "observation families")
 
   per_fish <- settings
   for (type in c("catch", "index")) {
     per_fish$data[[type]]$obs <- 1000 * per_fish$data[[type]]$obs
     per_fish$data[[type]]$unit <- "fish"
   }
-  per_fish$index_settings$family <- pld_gengamma(y50 = 240000, Q = -.20)
+  per_fish$index_settings$family <- delta_gengamma(type = "poisson-link", y50 = 240000, Q = -.20)
   scaled <- do.call(prepare_tam, per_fish)
   par <- fit$obj$env$parList(par = fit$parameter_values)
   par$log_r0 <- par$log_r0 + log(1000)
@@ -115,9 +112,9 @@ test_that("Gamma and PLD generalized gamma work together through fit, simulation
     (1 - index_forecast$p_zero)^2)
 })
 
-test_that("PLD Gamma and estimated generalized gamma shape are available in fitted models", {
+test_that("Delta Gamma and estimated generalized gamma shape are available in fitted models", {
   settings <- gamma_workflow_settings()
-  settings$catch_settings <- list(family = pld_gamma(y50 = 80))
+  settings$catch_settings <- list(family = delta_gamma(type = "poisson-link", y50 = 80))
   settings$index_settings$family <- gengamma()
   fit <- do.call(fit_tam, c(settings, list(silent = TRUE)))
   expect_true(fit$is_converged)
@@ -172,8 +169,8 @@ test_that("family assignments protect observation comparisons and dispersion sem
   expect_error(do.call(prepare_tam, settings), "requires independent")
 })
 
-test_that("new PLD quantile residuals stay finite at low encounter intensity", {
-  for (kind in c("pld_gamma", "pld_gengamma")) {
+test_that("new Delta quantile residuals stay finite at low encounter intensity", {
+  for (kind in c("delta_gamma", "delta_gengamma")) {
     s <- .4
     # At this shape, the generalized gamma positive component is Gamma.
     d <- data.frame(family = kind, obs = c(0, .25, .25),

@@ -58,7 +58,8 @@ test_that("Laplace marginal likelihood agrees with an exact Gaussian integral", 
 test_that("comparison checks observations and units, allowing row reordering", {
   f <- ic_test_fit()
   changed <- f
-  changed$dat$observed[1] <- changed$dat$observed[1] + .01
+  observed_row <- which(changed$dat$is_observed)[1]
+  changed$dat$obs_values[observed_row] <- changed$dat$obs_values[observed_row] + 1
   expect_error(AIC(f, changed), "same included")
   expect_error(cAIC(f, changed), "same included")
   changed <- f
@@ -68,25 +69,66 @@ test_that("comparison checks observations and units, allowing row reordering", {
   rows <- rev(seq_len(nrow(f$dat$obs_map)))
   changed$dat$obs_map <- f$dat$obs_map[rows, ]
   changed$dat$is_observed <- f$dat$is_observed[rows]
-  changed$dat$observed <- f$dat$log_obs[rows][changed$dat$is_observed]
+  changed$dat$obs_values <- f$dat$obs_values[rows]
   expect_identical(tinyAM:::.aic_observations(f), tinyAM:::.aic_observations(changed))
 })
 
-test_that("delta comparisons require matching families and included zero values", {
+test_that("delta and Tweedie criteria compare models on the same sampled zeros", {
   data <- cod_obs
   data$index <- data$index[data$index$age <= 5, ]
   data$index$obs[data$index$year == 1983 & data$index$age == 3] <- 0
   baseline <- ic_test_fit(data = data)
-  pld <- ic_test_fit(data = data, index_settings = list(family = pld_lognormal(y50 = 1e3)))
-  expect_equal(attr(suppressWarnings(logLik(pld)), "nobs"), sum(pld$dat$is_observed))
-  expect_true(is.finite(suppressWarnings(AIC(pld))))
-  expect_error(AIC(baseline, pld), "same observation families")
-  expect_error(cAIC(pld), "unavailable for Poisson-link delta")
-  expect_error(cAIC(baseline, pld), "unavailable for Poisson-link delta")
-  expect_no_warning(suppressWarnings(AIC(pld, pld)))
-  changed <- pld
-  changed$dat$obs_values[pld$dat$pld$zero[1]] <- 1
-  expect_error(AIC(pld, changed), "same included")
+  poisson <- ic_test_fit(data = data,
+    index_settings = list(family = delta_lognormal(type = "poisson-link", y50 = 1e3)))
+  logit <- ic_test_fit(data = data,
+    index_settings = list(family = delta_gamma(y50 = 1e3)))
+  tw <- ic_test_fit(data = data,
+    index_settings = list(family = tweedie(power = 1.5)))
+  expect_equal(attr(suppressWarnings(logLik(poisson)), "nobs"), sum(poisson$dat$is_observed))
+  expect_error(AIC(baseline, poisson), "same included catch and survey observations")
+  expect_error(cAIC(baseline, poisson), "same included catch and survey observations")
+  expect_true(all(is.finite(suppressWarnings(AIC(logit, poisson, tw))$AIC)))
+  expect_true(all(is.finite(suppressWarnings(cAIC(logit, poisson, tw))$cAIC)))
+  changed <- poisson
+  changed$dat$obs_values[poisson$dat$delta$zero[1]] <- 1
+  expect_error(AIC(poisson, changed), "same included catch and survey observations")
+  expect_error(cAIC(poisson, changed), "same included catch and survey observations")
+
+  data$index$obs[data$index$obs == 0 & !is.na(data$index$obs)] <- NA_real_
+  positive <- ic_test_fit(data = data)
+  gamma <- ic_test_fit(data = data, index_settings = list(family = stats::Gamma(link = "log")))
+  tw_positive <- ic_test_fit(data = data,
+    index_settings = list(family = tweedie(power = 1.5)))
+  expect_true(all(is.finite(suppressWarnings(AIC(positive, gamma, tw_positive))$AIC)))
+  expect_true(all(is.finite(suppressWarnings(cAIC(positive, gamma, tw_positive))$cAIC)))
+})
+
+test_that("conditional fixed EDF counts estimated family parameters by series", {
+  data <- cod_obs
+  index <- subset(data$index, age <= 5)
+  index$obs[index$year == 1983 & index$age == 3] <- 0
+  data$index <- rbind(transform(index, survey = "A"), transform(index, survey = "B"),
+    transform(index, survey = "C"))
+  estimated <- ic_test_fit(data = data, index_settings = list(sd_form = ~0 + survey,
+    family = list(A = delta_lognormal(), B = delta_gengamma(type = "poisson-link"),
+      C = tweedie())))
+  fixed <- ic_test_fit(data = data, index_settings = list(sd_form = ~0 + survey,
+    family = list(A = delta_lognormal(y50 = 1e3),
+      B = delta_gengamma(type = "poisson-link", y50 = 1e3, Q = 0),
+      C = tweedie(power = 1.5))))
+  estimated_ic <- suppressWarnings(cAIC(estimated, details = TRUE))
+  fixed_ic <- suppressWarnings(cAIC(fixed, details = TRUE))
+  expect_equal(estimated_ic$edf_fixed - fixed_ic$edf_fixed, 4)
+  observation <- tinyAM:::.fitted_objective(estimated, "observation")
+  expect_equal(estimated_ic$logLik, -as.numeric(observation$env$f(estimated$parameter_values)))
+  expect_equal(estimated_ic$cAIC, -2 * estimated_ic$logLik + 2 * estimated_ic$EDF)
+  expect_gt(estimated_ic$n_random, 0)
+  cache <- withr::local_tempfile(fileext = ".rds")
+  saveRDS(estimated, cache)
+  cached <- readRDS(cache)
+  cached_ic <- suppressWarnings(cAIC(cached, details = TRUE))
+  rownames(cached_ic) <- rownames(estimated_ic)
+  expect_equal(cached_ic, estimated_ic)
 })
 
 test_that("simulation preserves the distinction between sampled and structural zeros", {
@@ -95,7 +137,7 @@ test_that("simulation preserves the distinction between sampled and structural z
   data$catch$obs[data$catch$age == 2] <- 0
   data$catch$obs[data$catch$year == 1983 & data$catch$age == 3] <- NA_real_
   fit <- ic_test_fit(data = data, F_settings = list(process = "iid", mu_form = ~1,
-    age_breaks = 3:6), catch_settings = list(family = pld_lognormal(y50 = 1e3)))
+    age_breaks = 3:6), catch_settings = list(family = delta_lognormal(type = "poisson-link", y50 = 1e3)))
   sims <- sim_tam(fit, n = 2L, par_uncertainty = "none", progress = FALSE, seed = 12)
   catch <- sims$catch
   missing <- catch$year == 1983 & catch$age == 3

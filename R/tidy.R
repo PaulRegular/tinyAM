@@ -81,14 +81,18 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @details
 #' For lognormal observations, `pred` is the median and `sd` is the marginal
 #' SD of log observations. For Gamma and generalized gamma, `pred` is the
-#' arithmetic mean. For Poisson-link delta families, `pred` is the arithmetic
-#' mean including zeros. In those families, `sd` describes the positive
-#' component. The `sd_scale` column identifies a log SD, CV or Prentice scale.
+#' arithmetic mean. For delta and Tweedie families, `pred` is the arithmetic
+#' mean including zeros. For delta families `sd` describes the positive
+#' component. The `sd_scale` column identifies a log SD, CV, Prentice scale or
+#' square-root Tweedie dispersion.
 #' Fits using these families also report the `family`, the scale of `pred` in
 #' `pred_scale`, the arithmetic mean in `pred_mean`, the positive-component
-#' mean and median. Poisson-link delta rows include zero and positive probabilities (`p_zero`, `p_positive`
-#' and their logs). Generalized gamma rows include the signed `gengamma_Q`.
-#' Standardized residuals use the positive component's log mean and log SD.
+#' mean and median. Delta and Tweedie rows include zero and positive
+#' probabilities (`p_zero`, `p_positive` and their logs). Delta rows identify
+#' `delta_type`. Generalized gamma rows include the signed `gengamma_Q`.
+#' Tweedie rows report `tweedie_power` and `tweedie_phi` and use response-scale
+#' Pearson residuals. Other standardized residuals use the positive
+#' component's log mean and log SD.
 #' Standardized residuals (`std_res`) use fitted states. Quantile residuals
 #' (`quantile_res`) use one conditional Gaussian draw when fitted random effects
 #' and usable precision are available. All-lognormal fits without random effects
@@ -147,7 +151,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   obs_pred
 }
 
-.tidy_obs_predictions <- function(fit, interval = .95) {
+.tidy_obs_predictions <- function(fit, interval = .95, positive_medians = TRUE) {
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
   log_pred <- split(fit$rep$log_pred, fit$dat$obs_map$type)
@@ -204,6 +208,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       rows <- which(map$type == name)
       d <- obs_pred[[name]]
       d$family <- map$family[rows]
+      d$delta_type <- map$delta_type[rows]
       d$is_structural <- map$is_structural[rows]
       d$is_observed <- map$is_observed[rows]
       d$log_p_zero <- fit$rep$log_p_zero[rows]
@@ -213,17 +218,24 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       d$log_pred_positive <- fit$rep$log_pred_positive[rows]
       d$p_zero <- exp(d$log_p_zero)
       d$p_positive <- exp(d$log_p_positive)
-      gamma <- d$family %in% c("gamma", "pld_gamma")
+      gamma <- .positive_family(d$family) == "gamma"
       gengamma <- .is_gengamma_family(d$family)
+      tweedie <- d$family == "tweedie"
       d$sd_scale <- rep("log SD", nrow(d))
       d$sd_scale[gamma] <- "CV"
       d$sd_scale[gengamma] <- "Prentice scale"
+      d$sd_scale[tweedie] <- "sqrt(phi)"
       d$gengamma_Q <- rep(NA_real_, nrow(d))
       if (any(gengamma)) d$gengamma_Q[gengamma] <- fit$rep$observation_Q[rows[gengamma]]
+      if (!is.null(fit$rep$tweedie_power)) {
+        d$tweedie_power <- fit$rep$tweedie_power[rows]
+        d$tweedie_phi <- rep(NA_real_, nrow(d))
+        d$tweedie_phi[tweedie] <- d$sd[tweedie]^2
+      }
       d$log_obs_positive_mean <- d$log_pred_positive + d$sd^2 / 2
-      if (any(gamma | gengamma)) {
-        d$log_obs_positive_mean[gamma | gengamma] <-
-          fit$rep$log_obs_positive_mean[rows[gamma | gengamma]]
+      other_mean <- gamma | gengamma | tweedie
+      if (any(other_mean)) {
+        d$log_obs_positive_mean[other_mean] <- fit$rep$log_obs_positive_mean[rows[other_mean]]
       }
       log_center <- d$log_pred_positive
       log_sd <- d$sd
@@ -236,6 +248,14 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
         d$log_pred_positive[i] <- moments$median_log
         log_center[i] <- moments$mean_log
         log_sd[i] <- moments$sd_log
+      }
+      if (any(tweedie)) {
+        i <- which(tweedie & !d$is_structural)
+        d$log_pred_positive[tweedie] <- NA_real_
+        if (positive_medians) {
+          d$log_pred_positive[i] <- .tweedie_log_positive_median(log_pred[[name]][i],
+            d$sd[i], d$tweedie_power[i], d$log_p_positive[i])
+        }
       }
 
       mean_prediction <- d$family != "lognormal"
@@ -250,7 +270,12 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       positive <- which(d$is_observed & d$obs > 0)
       log_obs <- log(d$obs[positive])
       d$log_res[positive] <- log_obs - d$log_pred_positive[positive]
-      d$std_res[positive] <- (log_obs - log_center[positive]) / log_sd[positive]
+      i <- positive[!tweedie[positive]]
+      d$std_res[i] <- (log(d$obs[i]) - log_center[i]) / log_sd[i]
+      i <- which(tweedie & d$is_observed)
+      log_mean <- log_pred[[name]][i]
+      log_response_sd <- log(d$sd[i]) + d$tweedie_power[i] * log_mean / 2
+      d$std_res[i] <- exp(log(d$obs[i]) - log_response_sd) - exp(log_mean - log_response_sd)
       d$log_pred_positive[d$is_structural] <- NA_real_
       d$log_obs_positive_mean[d$is_structural] <- NA_real_
       d$pred_positive_median[d$is_structural] <- NA_real_
@@ -261,6 +286,66 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   obs_pred
 }
 
+.tweedie_unit_dispersion <- function(log_mean, sd, power) {
+  exp(2 * log(sd) + (power - 2) * log_mean)
+}
+
+.observation_family_label <- function(family, delta_type = NULL) {
+  labels <- c(lognormal = "Lognormal", gamma = "Gamma", gengamma = "Generalized gamma",
+    delta_lognormal = "Delta lognormal", delta_gamma = "Delta Gamma",
+    delta_gengamma = "Delta generalized gamma", tweedie = "Tweedie")
+  label <- unname(labels[as.character(family)])
+  type <- which(.is_delta_family(family) & !is.na(delta_type))
+  label[type] <- paste0(label[type], " (", delta_type[type], ")")
+  label
+}
+
+.tweedie_log_cdf <- function(log_y, log_mean, sd, power, lower.tail) {
+  log_y <- log_y - log_mean
+  phi <- .tweedie_unit_dispersion(log_mean, sd, power)
+  out <- rep(NA_real_, length(log_y))
+  valid <- which(!is.na(log_y) & is.finite(phi) & phi > 0 & is.finite(power))
+  out[valid[log_y[valid] == Inf]] <- if (lower.tail) 0 else -Inf
+  valid <- valid[log_y[valid] < Inf]
+  for (p in unique(power[valid])) {
+    rows <- valid[power[valid] == p]
+    out[rows] <- tweedie::ptweedie(exp(log_y[rows]), mu = 1, phi = phi[rows],
+      power = p, lower.tail = lower.tail, log.p = TRUE)
+  }
+  out
+}
+
+.tweedie_log_positive_median <- function(log_mean, sd, power, log_positive) {
+  phi <- .tweedie_unit_dispersion(log_mean, sd, power)
+  # The conditional median cuts the positive probability mass in half. The
+  # upper-tail target remains identifiable when the lower tail rounds to one.
+  log_tail <- log_positive - log(2)
+  probability <- -expm1(log_tail)
+  out <- rep(NA_real_, length(log_mean))
+  valid <- which(is.finite(log_mean) & is.finite(log_tail) & is.finite(phi) &
+    phi > 0 & is.finite(power))
+  for (p in unique(power[valid])) {
+    rows <- valid[power[valid] == p & probability[valid] < 1]
+    if (!length(rows)) next
+    out[rows] <- log(tweedie::qtweedie(probability[rows], mu = 1, phi = phi[rows], power = p))
+  }
+  for (i in valid[!is.finite(out[valid])]) {
+    objective <- function(log_y) {
+      .tweedie_log_cdf(log_y, 0, sqrt(phi[i]), power[i], lower.tail = FALSE) - log_tail[i]
+    }
+    lower <- log(.Machine$double.xmin)
+    # Twice the conditional mean is an upper bound on a positive median.
+    upper <- min(-log_tail[i], log(.Machine$double.xmax))
+    lower_value <- objective(lower)
+    upper_value <- objective(upper)
+    if (!is.na(lower_value) && lower_value >= 0 && !is.na(upper_value) && upper_value <= 0) {
+      out[i] <- stats::uniroot(objective, c(lower, upper), f.lower = lower_value,
+        f.upper = upper_value, tol = 1e-9)$root
+    }
+  }
+  out[!is.finite(out)] <- NA_real_
+  log_mean + out
+}
 
 #' Tidy reported trends
 #'
@@ -313,7 +398,7 @@ tidy_rep <- function(fit) {
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
   keep[names(keep) %in% c("log_q_base", "q_power", "gengamma_Q_report",
-    "observation_Q", "log_obs_positive_mean")] <- FALSE
+    "observation_Q", "log_obs_positive_mean", "tweedie_power")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -432,6 +517,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
   vals$gengamma_Q_report <- NULL
+  vals$tweedie_power_report <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     if (length(dim(vals[[i]])) >= 2L) {
@@ -590,6 +676,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
 #' - For generalized gamma, `gengamma_Q` shows the signed shape by fleet or
 #'   survey. Estimated shapes use standard errors on the reported scale.
+#' - For delta families, `y50_catch` and `y50_index` show the soft detection
+#'   scales and identify the delta type. For Tweedie, `tweedie_power_catch` and
+#'   `tweedie_power_index` show the variance power by fleet or survey. Estimated
+#'   powers use standard errors on `logit(power - 1)`.
 #' - For `log_r`, `year` contains eligible recruitment process years (by default
 #'   years 2:Y). Fixed early `log_r_init` states also carry year labels.
 #'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
@@ -635,7 +725,8 @@ tidy_par <- function(fit, interval = 0.95) {
 
   ran_nms <- intersect(fit$obj$env$.random, nms)
   fix_nms <- setdiff(nms, c(ran_nms, "log_y50_index", "log_y50_catch",
-    "eta_gengamma_Q_catch", "eta_gengamma_Q_index"))
+    "eta_gengamma_Q_catch", "eta_gengamma_Q_index",
+    "logit_tweedie_power_catch", "logit_tweedie_power_index"))
   z <- stats::qnorm(0.5 + interval / 2)
   smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
     if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
@@ -753,6 +844,8 @@ tidy_par <- function(fit, interval = 0.95) {
   }
   shape <- .tidy_gengamma_Q(fit, z)
   if (!is.null(shape)) fixed <- stack_list(list(fixed, shape), label = NULL)
+  power <- .tidy_tweedie_power(fit, interval)
+  if (!is.null(power)) fixed <- stack_list(list(fixed, power), label = NULL)
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
   fixed <- fixed[, c(

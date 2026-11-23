@@ -82,7 +82,8 @@ plot_resid <- function(
   osa <- values("osa_res")
   quantile <- values("quantile_res")
   family <- as.character(values("family"))
-  pld <- .is_pld_family(family)
+  delta <- .is_delta_family(family)
+  tweedie <- family %in% "tweedie"
   non_lognormal <- !is.na(family) & family != "lognormal"
   quantile_method <- as.character(values("quantile_method"))
   sampled <- quantile_method %in% "mle-mvn"
@@ -91,12 +92,14 @@ plot_resid <- function(
   # state quantile view. Keep values and gaps exactly as retained otherwise.
   if (!"quantile_method" %in% names(data)) quantile[!non_lognormal] <- standardized[!non_lognormal]
   eligible <- rep(TRUE, nrow(data))
-  if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | pld & data$obs == 0)
+  if ("obs" %in% names(data)) {
+    eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | (delta | tweedie) & data$obs == 0)
+  }
   if ("is_proj" %in% names(data)) eligible <- eligible & !is.na(data$is_proj) & !data$is_proj
   eligible <- eligible & !(values("is_structural") %in% TRUE | values("is_observed") %in% FALSE)
   osa[!eligible] <- standardized[!eligible] <- NA_real_
   osa[non_lognormal] <- NA_real_
-  if ("obs" %in% names(data)) standardized[which(data$obs == 0)] <- NA_real_
+  if ("obs" %in% names(data)) standardized[which(data$obs == 0 & !tweedie)] <- NA_real_
   quantile[!eligible] <- NA_real_
   model <- if ("model" %in% names(data)) as.character(data$model) else rep("Model", nrow(data))
   models <- if (is.factor(data$model)) levels(data$model) else unique(model)
@@ -109,6 +112,9 @@ plot_resid <- function(
   quantile_label[quantile_method %in% "mle-eb"] <- "Fitted-state quantile residuals (mle-eb)"
   fallback <- values("quantile_status") %in% "fallback"
   quantile_label[fallback] <- paste0(quantile_label[fallback], " [fallback]")
+  standardized_label <- rep("Standardized residuals", nrow(data))
+  standardized_label[delta] <- "Standardized positive-component residuals"
+  standardized_label[tweedie] <- "Pearson residuals (response scale)"
   data$.residual_value <- rep(NA_real_, nrow(data))
   data$.residual_type <- rep(NA_character_, nrow(data))
   data$.residual_source <- rep(NA_character_, nrow(data))
@@ -125,7 +131,7 @@ plot_resid <- function(
     data$.residual_type[rows] <<- selected
     label <- switch(selected, osa = paste0("OSA residuals (", method[rows], ")"),
       quantile = quantile_label[rows],
-      standardized = ifelse(pld[rows], "Standardized positive-component residuals", "Standardized residuals"))
+      standardized = standardized_label[rows])
     data$.residual_source[rows] <<- label
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
@@ -149,7 +155,7 @@ plot_resid <- function(
 .annual_zero_counts <- function(data, years = NULL) {
   required <- c("year", "family", "is_proj", "is_observed", "is_structural", "obs", "p_zero")
   if (!is.data.frame(data) || !all(required %in% names(data))) return(NULL)
-  history <- which(.is_pld_family(data$family) & !data$is_proj & is.finite(data$year))
+  history <- which(.is_zero_family(data$family) & !data$is_proj & is.finite(data$year))
   if (!length(history)) return(NULL)
   data <- data[history, , drop = FALSE]
   if (is.null(data$model)) data$model <- "Model"

@@ -49,8 +49,8 @@ and observation densities for the selected \link[=observation_families]{observat
 effects are integrated out by \code{\link[=fit_tam]{fit_tam()}}, not by this function itself.
 Positive densities are evaluated on log observations. Predictions on the
 natural scale are conditional medians for ordinary lognormal series and
-arithmetic means for Gamma, generalized gamma, and PLD series. For PLD
-the mean includes zeros and positives.
+arithmetic means for Gamma, generalized gamma, delta and Tweedie series.
+Delta and Tweedie means include zeros and positives.
 Catchability uses the link chosen by \code{index_settings$q_link}: the log link
 exponentiates the formula predictor, while the logit link applies the inverse
 logit and restricts q to between zero and one. Both estimation and simulation

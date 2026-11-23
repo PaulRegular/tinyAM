@@ -3,7 +3,15 @@
 * Reject explicitly labelled age compositions in catch and survey inputs.
   `check_tam_data()` warns when repeated annual sums suggest age proportions.
 
-* Pool complete native-age observations for Poisson-link delta plus groups.
+* Add `"logit-link"` (default) and `"poisson-link"` types for
+  `delta_lognormal()`, `delta_gamma()`, and `delta_gengamma()`. Add `tweedie()` with
+  an optional fixed power for catch and survey observations.
+
+* Replace the previous Poisson-link-only constructors with the `delta_*()` interface. Shared
+  observation-family help describes prediction scales, dispersion, and zeros.
+  The Northern cod guide compares four families in a common assessment.
+
+* Pool complete native-age observations for delta and Tweedie plus groups.
   Keep incomplete tail observations missing and preserve native counts for
   observed-catch hindcasts.
 
@@ -11,15 +19,16 @@
   fits. Keep fitted-state quantiles available through `method = "mle-eb"` and
   standardized residuals for lognormal fits without random effects.
 
-* Add Gamma and generalized gamma observations, including Poisson-link delta
-  forms. Use `stats::Gamma(link = "log")`, `gengamma()`, `pld_gamma()`, or
-  `pld_gengamma()` in catch and index settings.
+* Add Gamma and generalized gamma observations. Use `stats::Gamma(link = "log")`
+  or `gengamma()` in catch and index settings.
 
-* Use `pld_lognormal()` in catch or index settings to fit sampled zeros with
-  one fixed or estimated soft detection scale per fleet or survey. PLD
-  constructors expose `link = "log"` for the overall arithmetic mean.
-  The default `lognormal()` continues to fit positive observations. PLD outputs
-  include fitted zero probabilities and randomized quantile residuals.
+* Calculate conditional AIC for all observation families. AIC and cAIC can
+  compare families that use identical observations and units, including sampled
+  zeros where applicable.
+
+* Delta families fit one fixed or estimated soft detection scale per fleet or
+  survey. The overall arithmetic mean uses a log link.
+  Outputs include fitted zero probabilities and randomized quantile residuals.
 
 * Rename the catchability marker `power()` to `q_power()` to avoid masking
   `stats::power()`. Use `q_power(N)` in catchability formulas.

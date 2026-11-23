@@ -299,7 +299,7 @@ print.tam_data <- function(x, n = 5, ...) {
 #'   `[0, 1]` for every year and age. Absence means zero; see [prepare_tam()].
 #' - Non-missing observations must be finite and non-negative; maturity must
 #'   be a proportion in `[0, 1]`. Zero catch and index values are allowed.
-#'   The default lognormal likelihood excludes zeros. Poisson-link delta
+#'   The default lognormal likelihood excludes zeros. Delta and Tweedie
 #'   families can fit sampled zeros. See [observation_families].
 #' - `catch` and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range

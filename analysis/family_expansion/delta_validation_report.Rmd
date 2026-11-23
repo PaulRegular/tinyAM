@@ -1,0 +1,283 @@
+---
+title: "What do sampled zeros tell us about older fish?"
+subtitle: "Six observation families for catch and survey data in SimSurvey"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+params:
+  result: null
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+source("delta_report_summary.R", encoding = "UTF-8")
+study <- delta_report_read(params$result)
+fits <- filter(study$fits, experiment == "spatial")
+```
+
+```{r progress, echo=FALSE, results='asis'}
+# Show progress on an unfinished run before writing conclusions about it.
+gates <- study$gates
+if (nrow(gates)) gates <- filter(gates, experiment %in% c("spatial", "variable-M"))
+if (!all(c("spatial", "variable-M") %in%
+         gates$experiment[gates$status %in% c("pilot-limited", "complete", "narrowed-complete")])) {
+  cat("## Study in progress\n\n", delta_report_runtime(fits),
+      " The synthesis uses both the fixed- and variable-mortality comparisons.\n\n")
+  if (nrow(gates)) print(knitr::kable(select(gates, experiment, status, reason)))
+  knitr::knit_exit()
+}
+```
+
+```{r outcomes, include=FALSE}
+scores <- delta_report_passed(study$scores, fits)
+recovery <- delta_report_passed(study$recovery, fits)
+scores <- scores[delta_report_analysis_scope(scores), ]
+recovery <- recovery[delta_report_analysis_scope(recovery), ]
+observations <- filter(study$observations, experiment == "spatial")
+# Exclude an entire history's score for that program if some eligible cells
+# could not be scored. The runner also verifies identical held-out rows.
+for (rule in list(c("brier", "n_brier", "n"),
+                  c("log_rmse", "n_positive_scored", "n_positive"),
+                  c("positive_coverage", "n_positive_coverage", "n_positive"))) {
+  complete <- !is.na(scores[[rule[2]]]) & scores[[rule[2]]] == scores[[rule[3]]]
+  scores[[rule[1]]][!complete] <- NA_real_
+  if (rule[1] == "brier") scores$mean_zero[!complete] <- NA_real_
+}
+primary <- filter(scores, delta_report_primary(scores))
+all_positive <- delta_report_pairs(scores, "log_rmse", extra = "component", count = "n_positive")
+zero_pairs <- delta_report_pairs(scores, "brier", extra = "component", count = "n")
+all_recovery <- delta_report_pairs(recovery, "absolute", extra = "metric")
+older <- filter(recovery, delta_report_primary(recovery), metric == "Age 14+ abundance")
+mortality_pairs <- delta_report_mortality_pairs(recovery)
+clean <- filter(older, driver == "high_f", window == "full") |>
+  group_by(family) |>
+  summarise(fold_error = exp(mean(absolute)), .groups = "drop")
+fold_ln <- clean$fold_error[clean$family == "lognormal"]
+fold_others <- clean$fold_error[clean$family != "lognormal"]
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, dpi = 135,
+  fig.width = 9.2, fig.height = 4.6, out.width = "100%", fig.align = "center")
+theme_set(theme_bw(base_size = 12) + theme(panel.grid.minor = element_blank(),
+  strip.background = element_rect(fill = "grey96"), legend.position = "bottom"))
+save_figure <- function(plot, file, width, height) {
+  ggsave(file.path(dirname(params$result), file), plot, width = width, height = height,
+    dpi = 160, bg = "white")
+  plot
+}
+```
+
+## Abstract
+
+A zero catch at age can mean that few fish of that age remain or that the monitoring program
+missed them. How much does an assessment learn by using those zeros? Six observation families
+were fitted to eight 30-year SimSurvey populations. Each population was sampled under two
+fishing shares and three monitoring efforts. A fresh sample tested the predictions, and the
+known population showed whether better predictions translated into better stock estimates.
+All five families that used zeros improved predictions of positive survey observations at
+every effort level when natural mortality was held at its realized mean. Gains for positive
+catches were less consistent. When fishing accounted for 90% of all deaths, the ordinary
+lognormal overestimated the abundance of fish aged 14 and older. At standard effort its
+estimates typically missed the truth by a factor of `r sprintf("%.1f", fold_ln)`,
+compared with `r sprintf("%.2f–%.2f", min(fold_others), max(fold_others))` for the five alternatives.
+At the 10% fishing share, older-fish recovery showed little consistent improvement with fixed
+natural mortality. All five alternatives improved on lognormal when natural mortality could
+vary. **Sampled zeros can materially improve estimates of scarce older fish, but their value
+depends on how well the assessment represents mortality.** A delta lognormal is a reasonable
+first comparison for such data. The pilot gives little reason to choose a more flexible
+positive distribution routinely.
+
+## Why the same stock can produce different numbers of zeros
+
+SimSurvey generated recruitment, survival and spatial distributions over 30 years.
+Each history supplied the same fish, total mortality and whole-area research vessel (RV) survey to two fisheries
+in turn. One fishery targeted 90% of deaths and the other 10%. Both fished all ages with
+equal selectivity. Survey catchability was fixed at one in the simulation and in tinyAM,
+so the survey measured abundance on a known scale. Within each history, monitoring effort
+varied while the population and realized catches stayed fixed. Standard effort sampled
+160 survey sets and 50% of fishing operations. Low and high effort halved and doubled those
+numbers, keeping the biological sampling rules within a set or operation fixed.
+
+At standard effort, 16% of catch-at-age observations were zero in the high-fishing case,
+compared with 41% in the low-fishing case, even though **exactly the same population**
+was available. The survey helps explain why older fish deserve special attention. At ages
+1–13, 36% of standard-effort survey observations were zero. At ages 14 and older, 94% were
+zero. A positive-only analysis sees the few samples in which those older fish appeared.
+
+```{r zero-by-effort, fig.height=4.5, fig.cap="Figure 1. How often a monitored age was recorded as zero. The fishing shares use identical populations and survey samples, so there is one survey series. At every effort level the smaller fishery recorded more catch zeros. Within each program, more monitoring reduced zeros even though abundance was unchanged. Bars show 95% intervals for the mean across eight independent histories."}
+save_figure(delta_report_zero_figure(observations), "sampled-zeros-by-effort.png", 9.2, 4.5)
+```
+
+## When do better predictions translate into better stock estimates?
+
+Each assessment fitted the same family to both catch and survey. Ordinary lognormal used
+positive observations. The four delta models used both the chance of encountering fish
+and the amount observed on an encounter. They combined two encounter curves (logit-link or
+Poisson-link) with two positive distributions (lognormal or generalized gamma). Tweedie
+linked the frequency of zeros and the spread of positive amounts through a single
+distribution. Ordinary lognormal interprets the population prediction as a median. Delta
+and Tweedie interpret it as a mean across zeros and positive observations. The comparison
+therefore measures the practical effect of changing family, including this change in scale.
+Catch and survey families changed together, so their individual contributions to stock recovery remain unresolved.
+
+**A fresh survey was easier to predict.** With natural mortality \(M\) held at its realized
+mean, every family that used zeros reduced error in positive survey observations at both
+fishing shares and all three effort levels. The catch results depended on the setting. For
+example, at the low fishing share and standard effort, all five had slightly to moderately
+*larger* mean errors for positive catch, with intervals that included no difference.
+All five predicted whether a sample was zero better than ordinary lognormal, which assigns
+a zero probability to that event. At standard effort, their mean predicted zero frequencies
+were within about four percentage points of the observed frequencies for each program and
+setting. That agreement alone gave little guidance on which family to use.
+
+**The largest gains concerned older fish.** At the high fishing share and standard effort,
+every alternative reduced the error in abundance at ages 14 and older on the same eight
+histories (Figure 2, top row). The improvement persisted during the ten years with the
+lowest true spawning stock biomass (SSB). At the low fishing share, the catch had more zeros,
+yet the improvement in older-fish recovery was unclear when \(M\) was fixed.
+Allowing \(M\) to vary changed the result. All five alternatives then recovered older fish
+and SSB more accurately than the ordinary lognormal on seven or eight paired histories.
+The ordinary lognormal overestimated older abundance in this setting, while estimates from
+the five alternatives were much closer to the truth.
+
+```{r outcome-overview, fig.width=10.4, fig.height=8.3, fig.cap="Figure 2. How the six observation families performed at standard effort. The diamond marks ordinary lognormal at zero change. Its label gives the mean error across its own successful histories. Each circle shows the change in error on histories where both that family and ordinary lognormal succeeded. Parentheses give history counts, bars show 95% intervals for paired changes, and points to the left favour the alternative. The first two columns score positive observations in a fresh sample of the same years. The third scores abundance summed over ages 14 and older against the simulated population over 30 years."}
+save_figure(delta_report_outcome_figure(primary, older),
+  "observation-and-stock-recovery.png", 10.4, 8.3)
+```
+
+**Mortality rates and uncertainty are harder to recover.** At the low fishing share, changing
+from fixed to variable \(M\) reduced older-fish error within each of the five families that
+used zeros. The same change increased the error within ordinary lognormal. The paired
+intervals for changes in fishing, natural and total mortality error all included zero.
+Recruitment also showed little consistent benefit from changing observation family.
+Even in the complete high-fishing, standard-effort comparison, nominal 95% SSB intervals
+covered the true biomass in only 30–57% of years, averaged across histories for each family.
+A better point estimate can still carry too little uncertainty.
+
+## Conclusion
+
+For a catch or survey program that genuinely sampled fish and recorded zeros, **compare a
+delta lognormal with the ordinary lognormal when an assessment depends on scarce ages.**
+Switching from ordinary lognormal to a family that uses zeros changed older-fish recovery
+more than switching between the two delta encounter curves. Both delta lognormals also gave useful
+uncertainty estimates for *observations* in the complete high-fishing comparison. Their
+90% prediction intervals covered 89–90% of positive catches and about 90–91% of positive
+survey observations. Tweedie was competitive on older-fish recovery. The generalized gamma
+positive component gave no consistent additional benefit, and two Poisson-link generalized
+gamma fits severely overestimated older fish at low fishing and low effort despite passing
+the numerical checks.
+
+The comparison between fishing shares points to a practical diagnostic. **Ask whether zeros
+reflect poor sampling, few removals, or genuinely low abundance before interpreting them
+as evidence about mortality.** Sampling the same stock less often produced more zeros.
+Allowing natural mortality to vary when it accounted for most deaths changed what the
+assessment could learn about abundance. For an applied assessment, compare predicted and
+observed zeros by age, check how well the families predict fresh positive survey and catch
+observations, and examine older abundance and SSB under plausible mortality assumptions.
+The eight histories support testing this approach. They leave the choice between logit-link
+and Poisson-link delta, and the precision with which fishing and natural mortality can be
+separated, open.
+
+## Supporting results
+
+<details>
+<summary>Study design, numerical success and mortality accounting</summary>
+
+The assessment used random-walk recruitment, cohort deviations off and an age–year AR(1)
+process for fishing mortality \(F\) around a constant mean. The main fits supplied a constant
+\(M\) equal to the mean realized \(Z-F\) for that history and fishing share. Annual \(M\)
+still varied in the population. The sensitivity fit estimated age–year AR(1) deviations in
+\(M\) around the same supplied value. A fixed, known survey catchability and access to the
+mean of true \(M\) gave the assessment more information than is usually available in practice.
+The population retained survivors at age 20. Primary fits used ages 1–20+ and summed fitted
+abundance at ages 14 and older. A standard-effort sensitivity pooled those ages into one
+14+ observation before fitting.
+
+The pilot attempted eight independent histories. Expansion to 24 required at least seven
+shared numerical successes for each family comparison at standard effort. The weakest
+fixed-\(M\) comparison had four. The low-fishing variable-\(M\) series was completed.
+The high-fishing variable-\(M\) trial stopped after 22 attempts and contributes only to the
+numerical counts. Here \(F\) and \(M\) both vary, and the flat selectivity offers little
+age contrast to help separate them. Rates are reconstructed using integer catches, which
+can also produce near-zero or slightly negative realized \(M\) at some ages in the high
+fishing case.
+
+```{r successful-fits}
+reliability <- fits |>
+  filter(status != "Pending") |>
+  mutate(Share = if_else(driver == "high_f", "90%", "10%"),
+    Mortality = if_else(mortality == "known", "Fixed mean M", "Variable M")) |>
+  group_by(Share, Mortality) |>
+  summarise(Passed = sum(status == "Passed"), Attempted = n(), .groups = "drop")
+knitr::kable(reliability, caption = "SimSurvey fit attempts across families, efforts and age resolutions. Only successful pairs contribute to performance comparisons.")
+```
+
+```{r true-mortality, fig.cap="Fishing, natural and total mortality over the 30 years. Lines are medians and bands show the middle 80% of histories. Rates use true abundance weights at ages 5–10. Each paired scenario shares the same population and total mortality."}
+rates <- study$reference |>
+  filter(experiment == "spatial", age %in% 5:10, N > 0) |>
+  distinct(driver, id, year, age, N, Z, F_realized, M_realized) |>
+  group_by(driver, id, year) |>
+  summarise(Fishing = weighted.mean(F_realized, N), Natural = weighted.mean(M_realized, N),
+    Total = weighted.mean(Z, N), .groups = "drop") |>
+  tidyr::pivot_longer(c(Fishing, Natural, Total), names_to = "rate", values_to = "value") |>
+  group_by(driver, year, rate) |>
+  summarise(lo = quantile(value, .1), hi = quantile(value, .9), value = median(value),
+    .groups = "drop") |>
+  mutate(share = if_else(driver == "high_f", "90% fishing share", "10% fishing share"))
+colours <- c(Fishing = "#e34f20", Natural = "#003e56", Total = "#028482")
+ggplot(rates, aes(year, value, colour = rate, fill = rate)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi), alpha = .13, colour = NA) +
+  geom_line(linewidth = .85) + facet_wrap(~share) + scale_colour_manual(values = colours) +
+  scale_fill_manual(values = colours) + labs(x = "Year", y = "Mortality per year", fill = NULL, colour = NULL)
+```
+
+</details>
+
+<details>
+<summary>Scoring, sampling effort and sensitivity to the plus group</summary>
+
+A second, independently drawn monitoring sample tested predictions for the same stock and
+years, with the same underlying removals. For each observed age and year, the Brier score
+is the squared difference between predicted zero probability and the zero indicator.
+Positive log-RMSE is the root mean squared difference between the log of the conditional
+positive median and the log of the observed positive amount. An error of zero is ideal on
+both scores. To measure stock recovery, estimates were compared with the known simulated
+truth. The error factor in the abstract is
+\(\exp\{\operatorname{mean}(|\log(\widehat N_{14+}/N_{14+})|)\}\),
+with equal weight given to each year within a history and to each history. A factor of
+one means exact recovery. Mean errors in \(F\), \(M\) and \(Z\) use the absolute difference
+in rates per year.
+
+For each alternative, the comparison includes only histories on which both it and the
+reference model passed numerical checks. Predictions are compared on the same eligible
+age–year observations. Bars in Figure 2 use a paired \(t\) interval across independent
+histories. The effort levels, fishing shares and assessment settings reuse those histories.
+All comparisons have fewer than the 12 common successes prespecified for firm interpretation.
+
+At the high share, raising monitoring effort preserved the improvement in older abundance.
+At the lowest effort the five mean differences still favoured families using zeros, but
+each interval included zero. Pooling ages before fitting also weakened the contrast. At
+standard effort, the 14+ fits retained only five or six matched high-fishing histories per
+alternative, with all five intervals for improvement in older-fish recovery spanning zero.
+The comparison files below include both age resolutions, all three effort levels, the full
+history and the ten lowest-SSB years. A negative difference means lower error for the named
+family. In the mortality sensitivity it means lower error with variable \(M\).
+
+```{r comparison-files, results='asis'}
+download_summary <- function(data, filename, label) {
+  contents <- paste(utils::capture.output(utils::write.csv(data, row.names = FALSE)), collapse = "\n")
+  uri <- paste0("data:text/csv;charset=utf-8;base64,", base64enc::base64encode(charToRaw(enc2utf8(contents))))
+  cat(as.character(htmltools::tags$p(htmltools::tags$a(href = uri, download = filename, label))), "\n\n")
+}
+predictions <- bind_rows(mutate(zero_pairs$summary, metric = "Brier score"),
+  mutate(all_positive$summary, metric = "Positive log-RMSE"))
+download_summary(predictions, "paired-observation-errors.csv", "Paired differences in observation scores (CSV)")
+download_summary(all_recovery$summary, "paired-stock-errors.csv", "Paired differences in stock recovery (CSV)")
+download_summary(mortality_pairs$summary, "paired-mortality-models.csv", "Variable versus fixed mean natural mortality (CSV)")
+intervals <- bind_rows(
+  mutate(delta_report_summarize(scores, "positive_coverage", "component"), metric = "Positive 90% interval"),
+  delta_report_summarize(recovery, "coverage", "metric"))
+download_summary(filter(intervals, n_histories > 0), "interval-coverage.csv", "Coverage of positive observation and stock intervals (CSV)")
+```
+
+</details>

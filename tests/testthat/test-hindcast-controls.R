@@ -146,7 +146,7 @@ test_that("hindcasts report delta occurrence alongside positive index scores", {
   future::plan(future::sequential)
   f <- hindcast_fixture()
   i <- f$obs_pred$index
-  i$family <- "pld_lognormal"
+  i$family <- "delta_lognormal"
   i$p_zero <- .25
   i$is_structural <- FALSE
   i$log_pred_positive <- log(i$obs)

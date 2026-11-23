@@ -13,7 +13,7 @@
       sd = if (stochastic) 0.3 else NULL, mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1, age_breaks = 3:6),
     catch_settings = list(cor_struct = "ar1"),
-    index_settings = list(q_form = ~1, family = if (mixed) pld_lognormal(100) else lognormal()),
+    index_settings = list(q_form = ~1, family = if (mixed) delta_lognormal(type = "poisson-link", y50 = 100) else lognormal()),
     proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1))
   parameters <- make_par(dat)
   map <- list(log_mu_f = factor(NA))

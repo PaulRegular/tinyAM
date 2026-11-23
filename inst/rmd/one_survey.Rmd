@@ -25,7 +25,7 @@ d |>
     .groups = "drop"
   ) |> 
   mutate(
-    obs = ifelse(obs == 0 & !tinyAM:::.is_pld_family(family), NA, obs)
+    obs = ifelse(obs == 0 & !tinyAM:::.is_zero_family(family), NA, obs)
   ) |> 
   plot_obs_pred(
     color = ~model,

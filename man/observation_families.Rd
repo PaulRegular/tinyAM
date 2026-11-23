@@ -3,190 +3,237 @@
 \name{observation_families}
 \alias{observation_families}
 \alias{lognormal}
-\alias{pld_lognormal}
-\alias{pld_gamma}
+\alias{delta_lognormal}
+\alias{delta_gamma}
 \alias{gengamma}
-\alias{pld_gengamma}
+\alias{delta_gengamma}
+\alias{tweedie}
 \title{Observation families for catch and survey data}
 \usage{
-lognormal(link = "log")
+lognormal()
 
-pld_lognormal(y50 = NULL, link = "log")
+delta_lognormal(type = "logit-link", y50 = NULL)
 
-pld_gamma(y50 = NULL, link = "log")
+delta_gamma(type = "logit-link", y50 = NULL)
 
-gengamma(link = "log", Q = NULL)
+gengamma(Q = NULL)
 
-pld_gengamma(y50 = NULL, Q = NULL, link = "log")
+delta_gengamma(type = "logit-link", y50 = NULL, Q = NULL)
+
+tweedie(power = NULL)
 }
 \arguments{
-\item{link}{Link for the assessment prediction. Only \code{"log"} is supported.
-For PLD families, the link applies to the overall assessment prediction,
-the arithmetic mean across zeros and positives. The prediction on the
-link scale is \eqn{\log\widetilde{Y}_i}. The complementary log-log link
-applies to the encounter probability described in Details.}
+\item{type}{Link for the chance of recording a positive observation.
+Choose \code{"logit-link"} (default) or \code{"poisson-link"}. Both use the assessment
+prediction as the arithmetic mean across zeros and positives.}
 
-\item{y50}{Optional positive soft detection scale in the observation's units
-(the predicted level at which half of observations are expected to be zero).
-By default, the model estimates a separate scale for each selected fleet
-or survey.}
+\item{y50}{Optional positive soft detection scale in the observation's units:
+the predicted level at which half of observations are expected to be zero.
+The default estimates a separate scale for each selected fleet or survey.}
 
 \item{Q}{Optional fixed Prentice shape parameter for generalized gamma.
 The default estimates a separate signed shape for each selected series.}
+
+\item{power}{Optional fixed Tweedie variance power strictly between 1 and 2.
+The default estimates a separate power for each selected fleet or survey.}
 }
 \value{
 A family specification for \code{\link[=fit_tam]{fit_tam()}} or \code{\link[=prepare_tam]{prepare_tam()}}.
 }
 \description{
-Lognormal, Gamma and generalized gamma families fit positive observations.
-Poisson-link delta (PLD) families also use sampled zeros.
+The default lognormal family fits positive observations. Gamma and
+generalized gamma are also available for positive observations. Delta and
+Tweedie families also use sampled zeros. The observation family describes
+variation around the predicted catch or survey index.
 }
 \details{
 Supply a family in \code{catch_settings$family} or \code{index_settings$family}.
 A single family applies to the whole observation type. A named list selects
-families by fleet or survey, with the default lognormal for unlisted series.
+families by fleet or survey; unlisted series use \code{lognormal()}.
 Unlabelled catches use the name \code{"Fishery"}.
 
-Use \code{\link[stats:Gamma]{stats::Gamma()}} with \code{link = "log"} for Gamma observations. For that
-family and \code{gengamma()}, the prediction is the arithmetic mean.
-Positive-only families exclude sampled zeros.
-\subsection{Poisson-link delta}{
-
-Let \eqn{Y_i} be a recorded catch or survey index for an age and year, and
-let \eqn{\widetilde{Y}_i} be its prediction from the population model. The
-catch prediction comes from the Baranov catch equation. The survey prediction
-is abundance at sampling time scaled by catchability. Poisson-link delta
-(PLD) uses this prediction to explain both the chance of recording a positive
-value and the size of positive observations (Thorson 2018, see also the
-\href{https://sdmtmb.github.io/sdmTMB/articles/poisson-link.html}{sdmTMB Poisson-link delta guide}).
-
-tinyAM adapts Thorson's parameterization by using the assessment prediction
-as the overall mean. Each fleet or survey \eqn{j} has a soft detection scale
-\eqn{\widetilde{Y}_{50,j}} (the predicted catch or index at which half of
-observations are expected to be zero). The prediction and the scale use the
-observation's units.
-
-\strong{Encounter.} Conditional on the population states and parameters, recording
-a positive value is a binomial outcome with one trial and probability
-\eqn{p_{+,i}}. The probability of recording zero is the chance of zero
-events under a Poisson distribution with mean \eqn{\lambda_i}.
-\deqn{\lambda_i = \log(2)\frac{\widetilde{Y}_i}{\widetilde{Y}_{50,j}},
-\qquad p_{0,i} = \Pr(Y_i = 0) = e^{-\lambda_i},
-\qquad p_{+,i} = \Pr(Y_i > 0) = 1-p_{0,i}.}{
-lambda_i = log(2) * Ytilde_i / Ytilde_50,j,
-p_0,i = Pr(Y_i = 0) = exp(-lambda_i),
-p_+,i = Pr(Y_i > 0) = 1 - p_0,i.}
-Doubling the prediction from the soft detection scale to twice that level
-lowers the chance of recording zero from 50\% to 25\%. The encounter component
-uses a complementary log-log link for the probability of a positive.
-\deqn{\operatorname{cloglog}(p_{+,i}) =
-\log\!\big[-\log(1-p_{+,i})\big] = \log\lambda_i.}{
-cloglog(p_+,i) = log(-log(1 - p_+,i)) = log(lambda_i).}
-
-\strong{Positive observations.} The positive component uses a log link for its
-arithmetic mean \eqn{m_{+,i}}, with
-\eqn{\log m_{+,i} = \log\widetilde{Y}_i - \log p_{+,i}}. Dividing by the
-probability of a positive keeps the average across zeros and positives equal
-to the assessment prediction.
-\deqn{m_{+,i} = \frac{\widetilde{Y}_i}{p_{+,i}},
-\qquad p_{+,i}\,m_{+,i} = \widetilde{Y}_i.}{
-m_+,i = Ytilde_i / p_+,i, and p_+,i * m_+,i = Ytilde_i.}
-
-The positive distribution can be lognormal, Gamma, or generalized gamma.
-For example, with a lognormal positive component,
-\deqn{\log Y_i \mid Y_i > 0 \sim
-N\!\left(\log m_{+,i}-\frac{\sigma_i^2}{2},\ \sigma_i^2\right).}{
-log(Y_i) given Y_i > 0 follows Normal(log(m_+,i) - sigma_i^2 / 2, sigma_i^2).}
-Here \eqn{\sigma_i} controls the spread on the log scale. Subtracting
-\eqn{\sigma_i^2/2} gives the positive observations an arithmetic mean of
-\eqn{m_{+,i}}. The default, positive-only \code{lognormal()} family uses the
-assessment prediction as its conditional median.
-
-\strong{Likelihood.} A recorded zero contributes the log probability of recording
-zero. A positive contributes the log probability of recording a positive
-plus the log density of its size. Let \eqn{g_{+,i}} be the chosen positive
-density on the log-observation scale.
-\deqn{\ell_i = \begin{cases}
-\log p_{0,i}, & Y_i = 0, \\[4pt]
-\log p_{+,i} + \log g_{+,i}(\log Y_i), & Y_i > 0.
-\end{cases}}{
-ell_i = log(p_0,i) if Y_i = 0, or
-log(p_+,i) + log(g_+,i(log(Y_i))) if Y_i > 0.}
-
-The \code{q_link} setting determines how the catchability formula maps to
-catchability in the survey prediction.
+Use \code{\link[stats:family]{stats::Gamma()}} with \code{link = "log"} for positive Gamma observations.
+The prediction has a different interpretation across families:\tabular{lll}{
+   Family \tab Population prediction \tab Sampled zeros \cr
+   \code{lognormal()} \tab Median of positives \tab Excluded \cr
+   Gamma, generalized gamma \tab Arithmetic mean of positives \tab Excluded \cr
+   Delta, Tweedie \tab Arithmetic mean across zeros and positives \tab Included \cr
 }
 
-\subsection{Dispersion, shape and observation support}{
 
-For lognormal families, the observation SD settings specify the log-SD of
-positives. For Gamma families, they specify the coefficient of variation of
-positives. Gamma shape is the inverse squared coefficient of variation.
-For generalized gamma, these settings specify the Prentice scale
-\eqn{\sigma}. Use one constant scale per generalized gamma series. If a
-fixed \eqn{Q} is negative, supply its scale, with no fitted multiplier,
-satisfying \eqn{1+\sigma Q>0}. Estimated shapes satisfy this finite-mean
-condition by construction.
+Let \eqn{Y_i} be an observed catch or survey index for an age and year,
+and let \eqn{\widetilde{Y}_i} be the population-model prediction:
+Baranov catch for a fishery, or abundance at sampling time scaled by
+catchability for a survey. The index \eqn{j} identifies its fleet or survey.
+All probabilities, densities, means and medians below are conditional on
+the model states and parameters.
+\subsection{Delta observations}{
 
-Generalized gamma becomes Gamma at \eqn{Q=\sigma} and mean-parameterized
-lognormal at \eqn{Q=0}. The latter is the same distribution family as
-\code{lognormal()}, with the population prediction representing the mean rather
-than the median. \code{pld_gengamma(Q = 0)} gives \code{pld_lognormal()}.
-Gamma, generalized gamma and PLD observations are conditionally independent.
-Use separate SD coefficients for series whose dispersion scales differ.
-Within-year age correlation (\code{cor_struct = "ar1"}) can be used for ordinary
-lognormal series, including lognormal series in a mixed-family fit.
-Standardized and quantile residuals use marginal observation distributions
-and retain that correlation. Use a Gaussian one-step-ahead algorithm for
-correlated observations in an all-lognormal fit. See \code{\link[=residuals.tam_fit]{residuals.tam_fit()}}.
+Delta models describe whether a sample records any fish and how much it
+records when fish are observed (Stefánsson, 1996). In tinyAM, both parts use
+the same predicted catch or survey index, \eqn{\widetilde{Y}_i}. This
+prediction is the arithmetic mean across zeros and positives.
+
+Each fleet or survey has a soft detection scale, \eqn{\widetilde{Y}_{50,j}},
+in the same units as the prediction. It is the predicted level at which
+half of sampled observations are expected to be zero. Let
+\eqn{r_i=\widetilde{Y}_i/\widetilde{Y}_{50,j}} be the prediction relative to
+that scale, \eqn{p_{+,i}=\Pr(Y_i>0)} the probability of a positive, and
+\eqn{p_{0,i}=\Pr(Y_i=0)=1-p_{+,i}} the probability of zero.
+
+With \code{type = "logit-link"}, the odds of recording a positive equal
+\eqn{r_i}.
+\deqn{\operatorname{logit}(p_{+,i})=\log r_i,\qquad
+p_{+,i}=\frac{r_i}{1+r_i}.}
+
+With \code{type = "poisson-link"}, a positive represents at least one event
+under a Poisson model with rate \eqn{\lambda_i}. This adapts the encounter
+model of Thorson (2018).
+\deqn{\lambda_i=\log(2)\,r_i,\qquad p_{+,i}=1-e^{-\lambda_i}.}
+This is equivalent to a complementary log-log (cloglog) link.
+
+The assessment prediction averages zeros and positives. Dividing by the
+probability of a positive gives the mean among positive observations.
+\deqn{m_{+,i}=\widetilde{Y}_i/p_{+,i},\qquad
+p_{+,i}m_{+,i}=\widetilde{Y}_i.}
+For example, if the prediction is 10 and 25\% of samples are expected to
+be positive, the positives average \eqn{10/0.25=40}. Averaging them with
+the remaining 75\% zeros gives the overall mean of 10.
+
+As the prediction approaches zero, this mean approaches
+\eqn{\widetilde{Y}_{50,j}} for the logit link and
+\eqn{\widetilde{Y}_{50,j}/\log(2)} for the Poisson link.
+Positives can follow a lognormal, Gamma or generalized gamma distribution.
+For delta lognormal,
+\deqn{\log Y_i\mid Y_i>0\sim
+N\!\left(\log m_{+,i}-\sigma_i^2/2,\sigma_i^2\right).}
+Let \eqn{g_{+,i}(z)} be the conditional density of \eqn{\log Y_i}
+given a positive observation. The observation log-likelihood contribution is
+\deqn{\ell_i=\begin{cases}
+\log p_{0,i}, & Y_i=0,\\[4pt]
+\log p_{+,i}+\log g_{+,i}(\log Y_i), & Y_i>0.
+\end{cases}}
+The \code{q_link} setting separately controls the catchability formula.
+}
+
+\subsection{Tweedie observations}{
+
+A compound Poisson–Gamma model represents an observation as the sum of a
+Poisson number of positive Gamma contributions (Foster and Bravington, 2013).
+Zero contributions give an observed zero. The Tweedie family uses the overall arithmetic mean
+\eqn{\widetilde{Y}_i}, dispersion \eqn{\phi_i>0}, and power
+\eqn{1<p_j<2}:
+\deqn{\operatorname{Var}(Y_i)=\phi_i\widetilde{Y}_i^{\,p_j},\qquad
+\Pr(Y_i=0)=\exp\!\left[-\frac{\widetilde{Y}_i^{\,2-p_j}}{\phi_i(2-p_j)}\right].}
+Its spread and zero probability are coupled; it has no separate \code{y50}.
+The positive part is a mixture of Gamma distributions, rather than one
+Gamma distribution. Power is constant within a fleet or survey.
+Endpoints are excluded: this interface does not fit Poisson or Gamma limits.
+
+Dunn and Smyth (2005) describe numerical evaluation of the Tweedie density.
+
+Write \eqn{f_{\mathrm{Tw}}(Y_i)} for the full Tweedie density on the
+response scale at a positive observation, with parameters
+\eqn{\widetilde{Y}_i,\phi_i,p_j}. Then
+\deqn{\ell_i=\begin{cases}
+-\frac{\widetilde{Y}_i^{\,2-p_j}}{\phi_i(2-p_j)}, & Y_i=0,\\[6pt]
+\log f_{\mathrm{Tw}}(Y_i)+\log Y_i, & Y_i>0.
+\end{cases}}
+The positive Tweedie density already includes the probability of a
+positive, so no separate \eqn{\log p_{+,i}} is added. The \eqn{\log Y_i}
+term expresses the positive density on the log-observation scale, matching
+the other families; zero observations retain their discrete mass.
+}
+
+\subsection{Dispersion and shape}{
+
+Observation SD settings describe log-SD for lognormal positives,
+coefficient of variation for Gamma positives, and Prentice scale
+\eqn{\sigma} for generalized gamma positives. For Tweedie, they specify
+\eqn{\sqrt{\phi_i}}, so the response SD is
+\eqn{\sqrt{\phi_i}\widetilde{Y}_i^{\,p_j/2}}. These are different scales;
+give series with different distribution families separate dispersion coefficients.
+
+Tweedie dispersion depends on the observation units. Multiplying observations
+and predictions by \eqn{c} changes \eqn{\phi_i} to \eqn{c^{2-p_j}\phi_i};
+it is neither a coefficient of variation nor a log-SD.
+
+Generalized gamma uses one constant Prentice scale per series. For fixed
+negative \code{Q}, supply that scale without a fitted multiplier and require
+\eqn{1+\sigma Q>0} for a finite mean. Estimated shapes satisfy this
+condition by construction. It becomes Gamma at \eqn{Q=\sigma}, and
+mean-parameterized lognormal at \eqn{Q=0}. \code{delta_gengamma(Q = 0)} gives
+the corresponding \code{delta_lognormal()}.
+}
+
+\subsection{Observation support and diagnostics}{
 
 Use zero for a sampled nondetection and \code{NA} for a missing observation.
-Estimating the soft detection scale requires both sampled zeros and positives.
-A fixed scale can be used with all-positive data. Each fitted series needs
-at least one positive observation. Catch at structurally unfished ages is
-deterministic.
+Each fitted non-lognormal series needs a positive observation. Estimating
+delta \code{y50} also needs sampled zeros; a fixed \code{y50} permits all-positive
+data. Tweedie power can be weakly estimated near either endpoint.
+Catch at structurally unfished ages is deterministic.
 
-For a native-age series, \code{\link[=prepare_tam]{prepare_tam()}} sums the observations from the
-modeled plus age through the oldest biological age, separately by year and
-series. Each age needs one sampled value, including any sampled zeros. An
-absent age or \code{NA} makes that terminal observation missing. The chosen
-positive-component family applies to the pooled value.
+For native-age delta or Tweedie data, \code{\link[=prepare_tam]{prepare_tam()}} sums the modeled plus
+age through the oldest biological age separately by year and series. Every
+age needs a sampled value, including zeros; an absent age or \code{NA} makes the
+terminal observation missing. The specified family applies to that sum.
+A series without recorded values above the modeled plus age is treated as
+already pooled. This resolution is determined across all supplied years
+and retained within retrospective folds.
 
-A series with no recorded values above the modeled plus age in the supplied
-data is treated as already pooled at that age. Older catch rows may be
-present with missing observations to complete the input grid. The input
-resolution is determined across all supplied years and is used in each
-retrospective fold. Biological inputs can extend to older ages.
+Observed-catch hindcasts use original counts and biological-age weights.
+With already pooled catches and older biological ages, use
+\code{proj_settings = list(F_mult = 1)} in \code{\link[=fit_hindcast]{fit_hindcast()}}.
 
-Observed-catch hindcasts use the original counts and weights by biological
-age to compute held-out yield. If only pooled counts are available with older
-biological ages, use \code{proj_settings = list(F_mult = 1)} in \code{\link[=fit_hindcast]{fit_hindcast()}}.
+Gamma, generalized gamma, delta and Tweedie errors are conditionally
+independent. \code{cor_struct = "ar1"} applies only to ordinary lognormal
+series, including those in mixed-family fits. Standardized and quantile
+residuals use marginal distributions and retain any across-age dependence.
+OSA is supported only for all-lognormal fits; see \code{\link[=residuals.tam_fit]{residuals.tam_fit()}}.
 
-PLD assumes independent observation errors conditional on the fitted states
-and a stable soft detection scale across years and ages within each series.
-Sampling effort, the number of fish aged and common sampling units can
-alter detection or induce dependence. Check how fitted zero probabilities
-and positive magnitudes agree with the observations. At very low predictions
-the positive mean approaches \eqn{\widetilde Y_{50}/\log(2)}.
+The log forecast scores from \code{\link[=fit_hindcast]{fit_hindcast()}} use positive observations
+and conditional-positive medians for delta and Tweedie predictions.
+These differ from the full-distribution median, which can be zero.
+Information criteria require matching observation records and likelihood
+measures; see \link{information_criteria} for the comparisons tinyAM supports.
+
+Delta assumes a stable detection scale within each series. Sampling effort,
+ageing intensity and shared sampling units can change detection or induce
+dependence that these independent observation models do not represent.
+Inspect zero calibration alongside positive predictions and uncertainty.
 }
 }
 \examples{
 lognormal()
 stats::Gamma(link = "log")
 gengamma()
-pld_lognormal()
-pld_gamma(y50 = 100)
-pld_gengamma(Q = 0)
-list(RV = pld_lognormal(y50 = 100), Sentinel = lognormal())
+delta_lognormal(type = "logit-link")
+delta_gamma(type = "poisson-link", y50 = 100)
+delta_gengamma(Q = 0)
+tweedie(power = 1.5)
+list(RV = delta_lognormal(y50 = 100), Sentinel = lognormal())
 }
 \references{
+Stefánsson, G. (1996). Analysis of groundfish survey abundance data:
+combining the GLM and delta approaches. ICES Journal of Marine Science.
+\doi{10.1006/jmsc.1996.0079}
+
 Thorson, J. T. (2018). Three problems with the conventional delta-model for
 biomass sampling data, and a computationally efficient alternative.
 Canadian Journal of Fisheries and Aquatic Sciences.
 \doi{10.1139/cjfas-2017-0266}
 
+Foster, S. D. and Bravington, M. V. (2013). A Poisson–Gamma model for
+analysis of ecological non-negative continuous data. Environmental and
+Ecological Statistics. \doi{10.1007/s10651-012-0233-0}
+
 Prentice, R. L. (1974). A log gamma model and its maximum likelihood
 estimation. Biometrika. \doi{10.1093/biomet/61.3.539}
+
+Dunn, P. K. and Smyth, G. K. (2005). Series evaluation of Tweedie
+exponential dispersion model densities. Statistics and Computing.
+\doi{10.1007/s11222-005-4070-y}
 
 Dunic, J. C., Conner, J., Anderson, S. C. and Thorson, J. T. (2025).
 The generalized gamma is a flexible distribution that outperforms

@@ -3,31 +3,35 @@ test_that("Gamma specs use the standard log-link family object", {
   direct <- .obs_families(stats::Gamma(link = "log"), series, "index_settings$family")
   expect_identical(vapply(direct, `[[`, character(1), "name"),
     c(RV = "gamma", Sentinel = "gamma"))
-  mixed <- .obs_families(list(RV = pld_gengamma(y50 = 21, Q = -.2)),
+  mixed <- .obs_families(list(RV = delta_gengamma(type = "poisson-link", y50 = 21, Q = -.2)),
     series, "index_settings$family")
-  expect_identical(mixed$RV$name, "pld_gengamma")
+  expect_identical(mixed$RV$name, "delta_gengamma")
   expect_identical(mixed$RV$y50, 21)
   expect_identical(mixed$RV$Q, -.2)
   expect_identical(mixed$Sentinel, lognormal())
   expect_error(.obs_families(stats::Gamma(), series, "index_settings$family"), "Gamma")
   expect_error(.obs_families(list(RV = stats::gaussian()), series,
     "index_settings$family"), "Gamma")
-  expect_error(pld_gamma(y50 = 0), "positive finite")
+  expect_error(delta_gamma(type = "poisson-link", y50 = 0), "positive finite")
   expect_error(gengamma(Q = Inf), "one finite number")
-  expect_error(pld_gengamma(Q = c(.1, .2)), "one finite number")
+  expect_error(delta_gengamma(type = "poisson-link", Q = c(.1, .2)), "one finite number")
   expect_error(gengamma(link = "identity"), "link")
 })
 
-test_that("PLD constructors expose the log link without changing positional arguments", {
-  expect_identical(pld_lognormal(20), pld_lognormal(y50 = 20, link = "log"))
-  expect_identical(pld_gamma(40), pld_gamma(y50 = 40, link = "log"))
-  expect_identical(pld_gengamma(60, .2), pld_gengamma(y50 = 60, Q = .2, link = "log"))
-
-  for (constructor in list(pld_lognormal, pld_gamma, pld_gengamma)) {
-    expect_identical(constructor()$link, "log")
-    for (link in list("cloglog", NA_character_, c("log", "log"), NULL)) {
-      expect_error(constructor(link = link), "link = 'log'.*overall assessment prediction")
+test_that("delta constructors select a type and use a fixed observation link", {
+  for (constructor in list(delta_lognormal, delta_gamma, delta_gengamma)) {
+    expect_identical(constructor(), constructor(type = "logit-link"))
+    expect_identical(constructor("poisson-link", 20),
+      constructor(type = "poisson-link", y50 = 20))
+    expect_error(constructor(link = "log"), "unused argument")
+    for (type in list("logit", "standard", NA_character_, c("logit-link", "poisson-link"), NULL)) {
+      expect_error(constructor(type = type), "type")
     }
+  }
+  expect_error(lognormal(link = "log"), "unused argument")
+  expect_error(tweedie(link = "log"), "unused argument")
+  for (power in list(1, 2, NA_real_, Inf, c(1.2, 1.5))) {
+    expect_error(tweedie(power = power), "power")
   }
 })
 
@@ -41,7 +45,7 @@ test_that("Gamma density uses a log observation measure and CV dispersion", {
     expected, tolerance = 1e-12)
   expect_equal(.positive_log_cdf("gamma", log(y), log(mean), cv),
     stats::pgamma(y, shape = cv^-2, scale = mean * cv^2, log.p = TRUE), tolerance = 1e-13)
-  expect_equal(.positive_log_summary("pld_gamma", log(mean), cv)$median_log,
+  expect_equal(.positive_log_summary("delta_gamma", log(mean), cv)$median_log,
     log(stats::qgamma(.5, shape = cv^-2, scale = mean * cv^2)), tolerance = 1e-13)
   expect_true(is.finite(.positive_log_cdf("gamma", -1000, 0, .5)))
 })
@@ -67,12 +71,12 @@ test_that("generalized gamma agrees with independent Prentice calculations", {
   for (Q in c(-1.8, -.7, -.15, .1, .75, 2)) test_ref(Q)
   expect_equal(.gengamma_log_density(y, m, sd, 0),
     stats::dnorm(y, m - sd^2 / 2, sd, log = TRUE))
-  expect_equal(.positive_log_cdf("pld_gengamma", y, m, sd, Q = 0),
-    .positive_log_cdf("pld_lognormal", y, m, sd), tolerance = 1e-14)
+  expect_equal(.positive_log_cdf("delta_gengamma", y, m, sd, Q = 0),
+    .positive_log_cdf("delta_lognormal", y, m, sd), tolerance = 1e-14)
   expect_equal(.gengamma_log_density(y, m, sd, sd),
     .gamma_log_density(y, m, sd), tolerance = 1e-12)
-  expect_equal(.positive_log_summary("pld_gengamma", m, sd, sd),
-    .positive_log_summary("pld_gamma", m, sd), tolerance = 1e-12)
+  expect_equal(.positive_log_summary("delta_gengamma", m, sd, sd),
+    .positive_log_summary("delta_gamma", m, sd), tolerance = 1e-12)
 })
 
 test_that("the Prentice tape retains the signed shape derivatives through zero", {
@@ -116,7 +120,7 @@ test_that("Gamma and generalized gamma simulation preserve conditional means", {
   n <- 20000L
   m <- 3
   for (case in list(list(f = "gamma", Q = 0), list(f = "gengamma", Q = -.35),
-      list(f = "pld_gengamma", Q = .55))) {
+      list(f = "delta_gengamma", Q = .55))) {
     log_draw <- .draw_positive_log_obs(case$f, rep(log(m), n), .42, case$Q)
     summary <- .positive_log_summary(case$f, log(m), .42, case$Q)
     expect_true(all(is.finite(log_draw)))

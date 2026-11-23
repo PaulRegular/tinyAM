@@ -22,10 +22,10 @@ terminal_pooling_data <- function() {
   )
 }
 
-test_that("native PLD terminal sums require every sampled age within each series", {
+test_that("native Delta terminal sums require every sampled age within each series", {
   raw <- terminal_pooling_data()
   original <- raw
-  families <- list(Native = pld_gamma(10), Pooled = pld_gengamma(10, Q = 0))
+  families <- list(Native = delta_gamma(type = "poisson-link", y50 = 10), Pooled = delta_gengamma(type = "poisson-link", y50 = 10, Q = 0))
   dat <- prepare_tam(raw, ages = 2:4,
     catch_settings = list(family = families, sd_form = ~ 0 + fleet),
     index_settings = list(family = families, sd_form = ~ 0 + survey, q_form = ~ 0 + survey))
@@ -42,7 +42,7 @@ test_that("native PLD terminal sums require every sampled age within each series
   expect_equal(d$samp_time, rep(.25, 5L))
   expect_equal(d$label, rep("Native-4", 5L))
   map <- dat$obs_map
-  zeros <- dat$pld$zero
+  zeros <- dat$delta$zero
   expect_true(any(map$age[zeros] == 4L & map$year[zeros] == 2001))
   expect_false(any(map$age[zeros] == 4L & map$year[zeros] == 2002))
 
@@ -50,10 +50,10 @@ test_that("native PLD terminal sums require every sampled age within each series
     subset(raw$index, year == 2002 & age == 4L & survey == "Native"))
   expect_error(prepare_tam(raw, ages = 2:4,
     index_settings = list(family = families, sd_form = ~ 0 + survey, q_form = ~ 0 + survey)),
-    "Native PLD.*one row per year, age and series")
+    "Native.*one row per year, age and series")
 })
 
-test_that("a training fold retains native PLD support when only later tail ages were sampled", {
+test_that("a training fold retains native Delta support when only later tail ages were sampled", {
   d <- expand.grid(year = 2000:2004, age = 2:6)
   d$obs <- rep(c(20, 15, 0, 2, 1), each = 5)
   d$obs[d$age > 4L & d$year <= 2002] <- NA_real_
@@ -62,8 +62,8 @@ test_that("a training fold retains native PLD support when only later tail ages 
     weight = transform(d, obs = age),
     maturity = transform(d, obs = as.numeric(age >= 4)))
   args <- list(data = raw, ages = 2:4,
-    index_settings = list(family = pld_lognormal(10), q_form = ~1),
-    catch_settings = list(family = pld_lognormal(10)))
+    index_settings = list(family = delta_lognormal(type = "poisson-link", y50 = 10), q_form = ~1),
+    catch_settings = list(family = delta_lognormal(type = "poisson-link", y50 = 10)))
   full <- do.call(prepare_tam, args)
   fold <- do.call(prepare_tam, c(args, list(years = 2000:2002,
     proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1))))
@@ -71,7 +71,7 @@ test_that("a training fold retains native PLD support when only later tail ages 
     expect_equal(subset(full$obs[[type]], age == 4L)$obs, c(NA, NA, NA, 3, 3))
     expect_true(all(is.na(subset(fold$obs[[type]], age == 4L)$obs)))
   }
-  expect_length(fold$pld$zero, 0L)
+  expect_length(fold$delta$zero, 0L)
 
   reference <- list(dat = full, refit_args = list(data = raw))
   controls <- .hindcast_controls(reference, 2003:2004, .retro_projection(NULL))
@@ -92,8 +92,8 @@ test_that("Northern cod native pooling matches the earlier 14+ inputs", {
     prepooled[[type]] <- if (type == "index") subset(d, age <= 14L) else d
   }
   prep <- function(x) prepare_tam(x, years = 1983:2025, ages = 2:14,
-    index_settings = list(q_form = ~ mono(q_block), family = pld_lognormal()),
-    catch_settings = list(family = pld_lognormal()))
+    index_settings = list(q_form = ~ mono(q_block), family = delta_lognormal(type = "poisson-link")),
+    catch_settings = list(family = delta_lognormal(type = "poisson-link")))
   native <- prep(raw)
   legacy <- prep(prepooled)
   expect_identical(native$obs, legacy$obs)

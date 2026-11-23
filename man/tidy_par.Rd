@@ -85,6 +85,10 @@ Labels are added where applicable:
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
 \item For generalized gamma, \code{gengamma_Q} shows the signed shape by fleet or
 survey. Estimated shapes use standard errors on the reported scale.
+\item For delta families, \code{y50_catch} and \code{y50_index} show the soft detection
+scales and identify the delta type. For Tweedie, \code{tweedie_power_catch} and
+\code{tweedie_power_index} show the variance power by fleet or survey. Estimated
+powers use standard errors on \code{logit(power - 1)}.
 \item For \code{log_r}, \code{year} contains eligible recruitment process years (by default
 years 2:Y). Fixed early \code{log_r_init} states also carry year labels.
 Full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}; parent pairs and process diagnostics

@@ -105,18 +105,23 @@
   if (!is.null(predictions)) {
     family <- dat$obs_map$family
     draw <- draw & family == "lognormal"
-    delta <- which(dat$is_observed & .is_pld_family(family))
+    delta <- which(dat$is_observed & .is_delta_family(family))
     positive <- delta[log(stats::runif(length(delta))) < predictions$log_p_positive[delta]]
     log_obs[delta] <- -Inf
-    lognormal <- positive[family[positive] == "pld_lognormal"]
+    lognormal <- positive[family[positive] == "delta_lognormal"]
     log_obs[lognormal] <- stats::rnorm(length(lognormal),
       predictions$log_pred_positive[lognormal], sd[lognormal])
-    gamma <- c(positive[family[positive] != "pld_lognormal"],
+    gamma <- c(positive[family[positive] != "delta_lognormal"],
       which(dat$is_observed & family %in% c("gamma", "gengamma")))
     for (kind in unique(family[gamma])) {
       rows <- gamma[family[gamma] == kind]
       log_obs[rows] <- .draw_positive_log_obs(kind, predictions$log_obs_positive_mean[rows],
         sd[rows], predictions$observation_Q[rows])
+    }
+    tweedie <- which(dat$is_observed & family == "tweedie")
+    if (length(tweedie)) {
+      log_obs[tweedie] <- .draw_tweedie_log_obs(mean[tweedie], sd[tweedie],
+        predictions$tweedie_power[tweedie])
     }
   }
   if (!.obs_has_correlation(dat)) {
@@ -137,4 +142,20 @@
   }
   log_obs[draw] <- mean[draw] + z[draw] * sd[draw]
   log_obs
+}
+
+.draw_tweedie_log_obs <- function(log_mean, sd, power) {
+  sd <- rep_len(sd, length(log_mean))
+  power <- rep_len(power, length(log_mean))
+  log_phi <- 2 * log(sd)
+  log_intensity <- (2 - power) * log_mean - log_phi - log(2 - power)
+  count <- stats::rpois(length(log_mean), exp(log_intensity))
+  out <- rep(-Inf, length(count))
+  out[is.na(count)] <- NA_real_
+  positive <- which(count > 0)
+  shape <- count[positive] * (2 - power[positive]) / (power[positive] - 1)
+  log_scale <- log_phi[positive] + log(power[positive] - 1) +
+    (power[positive] - 1) * log_mean[positive]
+  out[positive] <- log_scale + log(shape) + .log_gamma_relative_draw(shape)
+  out
 }

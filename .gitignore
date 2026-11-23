@@ -50,6 +50,7 @@ rsconnect/
 
 # Output in the analysis folder
 *.html
+!/pkgdown/templates/*.html
 analysis/*.html
 *.rds
 analysis/*.rds

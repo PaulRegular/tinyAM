@@ -23,7 +23,7 @@
 #' including `reverse`, are retained. When SAM is also loaded, parallel OSA
 #' calculations use the existing sequential safeguard.
 #' OSA requires all observations to use the default lognormal family. Use
-#' quantile residuals for fits with Poisson-link delta, Gamma or generalized
+#' quantile residuals for fits with delta, Tweedie, Gamma or generalized
 #' gamma observations.
 #'
 #' Temporary RTMB objectives protect the fitted parameters, uncertainty and
@@ -159,7 +159,7 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
   if (.obs_has_non_lognormal(fit$dat)) {
     cli::cli_abort(c(
       "One-step-ahead residuals require an all-lognormal fit.",
-      "i" = "Use residuals(fit, type = 'quantile') for Poisson-link delta, Gamma and generalized gamma observations."
+      "i" = "Use residuals(fit, type = 'quantile') for delta, Tweedie, Gamma and generalized gamma observations."
     ))
   }
 }

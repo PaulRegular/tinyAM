@@ -25,8 +25,8 @@
 #' effects are integrated out by [fit_tam()], not by this function itself.
 #' Positive densities are evaluated on log observations. Predictions on the
 #' natural scale are conditional medians for ordinary lognormal series and
-#' arithmetic means for Gamma, generalized gamma, and PLD series. For PLD
-#' the mean includes zeros and positives.
+#' arithmetic means for Gamma, generalized gamma, delta and Tweedie series.
+#' Delta and Tweedie means include zeros and positives.
 #' Catchability uses the link chosen by `index_settings$q_link`: the log link
 #' exponentiates the formula predictor, while the logit link applies the inverse
 #' logit and restricts q to between zero and one. Both estimation and simulation
@@ -374,32 +374,53 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   # Internal reporting modes share the fitted population and observation equations.
   if (identical(dat$.likelihood_component, "design")) {
-    return(c(log_pred[is_observed], sd_obs[is_observed], par$logit_rho_obs))
+    # Only Tweedie uses dispersion for a zero. Family-specific coordinates
+    # are present only for estimated parameters in series with observations.
+    has_dispersion <- is_observed & (obs_values > 0 | obs_map$family == "tweedie")
+    return(c(log_pred[is_observed], sd_obs[has_dispersion], par$logit_rho_obs,
+      par$log_y50_catch, par$log_y50_index,
+      par$eta_gengamma_Q_catch, par$eta_gengamma_Q_index,
+      par$logit_tweedie_power_catch, par$logit_tweedie_power_index))
   }
-  pld <- if (.obs_has_pld(dat)) .pld_predictions(dat, par, log_pred, sd_obs, zero_catch)
-  positive <- dat$pld$positive
-  zero_encounter <- sum(pld$log_p_zero[dat$pld$zero])
-  positive_encounter <- pld$log_p_positive[positive]
-  gamma_rows <- obs_map$family %in% c("gamma", "pld_gamma")
+  delta <- if (.obs_has_delta(dat)) .delta_predictions(dat, par, log_pred, sd_obs, zero_catch)
+  positive <- dat$delta$positive
+  zero_encounter <- sum(delta$log_p_zero[dat$delta$zero])
+  positive_encounter <- delta$log_p_positive[positive]
+  gamma_rows <- obs_map$family %in% c("gamma", "delta_gamma")
   gengamma_rows <- .is_gengamma_family(obs_map$family)
-  extended_families <- any(gamma_rows | gengamma_rows)
+  tweedie_rows <- obs_map$family == "tweedie"
+  extended_families <- any(gamma_rows | gengamma_rows | tweedie_rows)
   if (extended_families) {
-    if (is.null(pld)) {
-      pld <- list(log_p_zero = rep(-Inf, n_obs), log_p_positive = numeric(n_obs),
+    if (is.null(delta)) {
+      delta <- list(log_p_zero = rep(-Inf, n_obs), log_p_positive = numeric(n_obs),
         log_pred_positive = log_pred, log_mean_positive = log_pred)
     }
-    log_obs_positive_mean <- pld$log_mean_positive
+    log_obs_positive_mean <- delta$log_mean_positive
     lognormal <- obs_map$family == "lognormal"
     log_obs_positive_mean[lognormal] <- log_pred[lognormal] + sd_obs[lognormal]^2 / 2
+    tweedie_power <- .tweedie_power(dat, par, sd_obs)
+    tw <- which(tweedie_rows & !zero_catch)
+    if (length(tw)) {
+      components <- .tweedie_components(log_pred[tw], sd_obs[tw], tweedie_power[tw])
+      delta$log_p_zero[tw] <- components$log_p_zero
+      delta$log_p_positive[tw] <- components$log_p_positive
+      log_obs_positive_mean[tw] <- components$log_mean
+      # Conditional medians require a numeric CDF and are added when tidying.
+      delta$log_pred_positive[tw] <- NA_real_
+    }
+    structural_tweedie <- which(tweedie_rows & zero_catch)
+    delta$log_p_zero[structural_tweedie] <- 0
+    delta$log_p_positive[structural_tweedie] <- -Inf
     observation_Q <- .gengamma_shape(dat, par, sd_obs)
-    pld$log_obs_positive_mean <- log_obs_positive_mean
-    pld$observation_Q <- observation_Q
+    delta$log_obs_positive_mean <- log_obs_positive_mean
+    delta$observation_Q <- observation_Q
+    delta$tweedie_power <- tweedie_power
 
     gaussian <- is_observed & lognormal
-    normal_positive <- positive[obs_map$family[positive] == "pld_lognormal"]
+    normal_positive <- positive[obs_map$family[positive] == "delta_lognormal"]
     observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[gaussian], sd_obs[gaussian]) -
       zero_encounter - sum(positive_encounter) -
-      sum(RTMB::dnorm(log_obs[normal_positive], pld$log_pred_positive[normal_positive],
+      sum(RTMB::dnorm(log_obs[normal_positive], delta$log_pred_positive[normal_positive],
         sd_obs[normal_positive], log = TRUE))
 
     gamma <- which(is_observed & gamma_rows & obs_values > 0)
@@ -418,12 +439,26 @@ nll_fun <- function(par, dat, simulate = FALSE) {
           log_obs[rows], log_obs_positive_mean[rows], sigma, Q))
       }
     }
-  } else if (!is.null(pld)) {
-    gaussian_rows <- dat$pld$lognormal
+    tw_observed <- which(tweedie_rows & is_observed)
+    if (length(tw_observed)) {
+      # The positive densities use log-observation measure, as do the other
+      # families. Sampled zeros keep their discrete probability mass.
+      zero <- tw_observed[obs_values[tw_observed] == 0]
+      positive <- tw_observed[obs_values[tw_observed] > 0]
+      observation_nll <- observation_nll - sum(delta$log_p_zero[zero])
+      if (length(positive)) {
+        observation_nll <- observation_nll - sum(
+          RTMB::dtweedie(obs_values[positive], mu = exp(log_pred[positive]),
+            phi = sd_obs[positive]^2, p = tweedie_power[positive], log = TRUE) +
+            log_obs[positive])
+      }
+    }
+  } else if (!is.null(delta)) {
+    gaussian_rows <- dat$delta$lognormal
     observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[gaussian_rows], sd_obs[gaussian_rows]) -
       zero_encounter -
       sum(positive_encounter +
-        RTMB::dnorm(log_obs[positive], pld$log_pred_positive[positive], sd_obs[positive], log = TRUE))
+        RTMB::dnorm(log_obs[positive], delta$log_pred_positive[positive], sd_obs[positive], log = TRUE))
   } else {
     observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[is_observed], sd_obs[is_observed])
   }
@@ -431,7 +466,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (identical(dat$.likelihood_component, "process")) return(jnll)
   jnll <- jnll + observation_nll
   if (simulate) {
-    log_obs <- .draw_log_observations(dat, par, log_pred, sd_obs, pld)
+    log_obs <- .draw_log_observations(dat, par, log_pred, sd_obs, delta)
   }
 
   ## Derived quantities ----
@@ -604,10 +639,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(total_yield_pred)
 
   REPORT(log_pred)
-  if (!is.null(pld)) {
-    log_p_zero <- pld$log_p_zero
-    log_p_positive <- pld$log_p_positive
-    log_pred_positive <- pld$log_pred_positive
+  if (!is.null(delta)) {
+    log_p_zero <- delta$log_p_zero
+    log_p_positive <- delta$log_p_positive
+    log_pred_positive <- delta$log_pred_positive
     REPORT(log_p_zero)
     REPORT(log_p_positive)
     REPORT(log_pred_positive)
@@ -616,6 +651,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (extended_families) {
     REPORT(log_obs_positive_mean)
     REPORT(observation_Q)
+    if (.obs_has_tweedie(dat)) {
+      REPORT(tweedie_power)
+      tweedie_power_report <- tweedie_power[match(seq_along(dat$tweedie$series), dat$tweedie$group)]
+      REPORT(tweedie_power_report)
+      ADREPORT(tweedie_power_report)
+    }
     if (length(dat$gengamma$series)) {
       gengamma_Q_report <- observation_Q[match(seq_along(dat$gengamma$series), dat$gengamma$group)]
       REPORT(gengamma_Q_report)

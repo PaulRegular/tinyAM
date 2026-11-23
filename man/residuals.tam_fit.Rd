@@ -56,8 +56,10 @@ together, using one algorithm at fitted parameter values. It can be expensive,
 but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
 objectives protect the fitted object's state. For Gamma and generalized gamma, standardized residuals
 use the mean and SD of the log of positive observations. Log residuals use
-the positive median. For any Poisson-link delta family, response residuals
-use the mean including zeros.
+the positive median. Delta lognormal standardized residuals also use the
+positive component. Tweedie standardized residuals are response-scale
+Pearson residuals. Delta and Tweedie response residuals use the mean
+including zeros.
 
 For \code{"mle-mvn"}, fixed effects stay at their estimates and all fitted random
 effects are sampled together. The Gaussian approximation uses their

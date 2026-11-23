@@ -199,7 +199,7 @@
     per_model <- occurrence_signatures[names(models)]
     out$occurrence_comparable <- all(vapply(per_model[-1L], identical, logical(1), per_model[[1L]]))
     if (!out$occurrence_comparable) {
-      cli::cli_inform("Models differ in which Poisson-link delta observations can be scored. Compare Brier scores only for matching cases.")
+      cli::cli_inform("Models differ in which zero occurrence cases can be scored. Compare Brier scores only for matching cases.")
     }
   }
   if (any(!out$fold_diagnostics$is_converged)) cli::cli_warn("Some retrospective fits or projections failed. See fold_diagnostics; failed fits are excluded from scores.")
@@ -266,7 +266,7 @@
 #' Survey log-RMSE pools observation errors. MASE compares absolute log errors
 #' with persistence on identical cases; see [compute_hindcast_mase()]. Overall
 #' MASE averages ages within survey, surveys within horizon, then horizons.
-#' Poisson-link delta, Gamma and generalized gamma models use their positive
+#' Delta, Tweedie, Gamma and generalized gamma models use their positive
 #' conditional medians for both log scores. Age-summed log scores are available
 #' for lognormal surveys with complete, consistent age coverage.
 #'
@@ -280,7 +280,7 @@
 #' Overlapping forecasts are distinct origin/horizon cases from the same data
 #' history.
 #'
-#' For Poisson-link delta models, `occurrence_scores` reports the mean squared
+#' For delta and Tweedie models, `occurrence_scores` reports the mean squared
 #' error of predicted zero probabilities (Brier score), with numbers of scored
 #' observations and zeros. This score includes observed zeros and positives at
 #' eligible ages. It excludes missing and known structural-zero rows. Survey
@@ -303,7 +303,7 @@
 #'   stacked `pop` and `obs_pred` with model, fold and horizon (zero historically);
 #'   `mohns_rho`; detailed `scores`; matched `forecast_pairs`; `fold_diagnostics`;
 #'   and resolved `projection_controls`. Failed references make rho unavailable.
-#'   When there are eligible Poisson-link delta forecasts, also returns
+#'   When there are eligible forecasts from delta or Tweedie models, also returns
 #'   `occurrence_scores`, `occurrence_comparable` and
 #'   `forecast_pairs$occurrence` with the individual cases.
 #'   All-failed runs still return diagnostics.

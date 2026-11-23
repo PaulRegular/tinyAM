@@ -341,16 +341,22 @@
 #' Check that the data support separate estimation of observation and population
 #' process correlations when both are enabled.
 #'
-#' With a Poisson-link delta (PLD) family the population prediction
+#' With a delta family the population prediction
 #' \eqn{\widetilde{Y}_i} is the conditional arithmetic mean across zeros and
 #' positives. Each fleet or survey \eqn{j} has a soft detection scale
 #' \eqn{\widetilde{Y}_{50,j}} (the predicted catch or index at which half of
-#' observations are expected to be zero). The probability of zero is
-#' \eqn{\Pr(Y_i=0)=\exp[-\log(2)\widetilde{Y}_i/\widetilde{Y}_{50,j}]}.
+#' observations are expected to be zero). With
+#' \eqn{r_i=\widetilde{Y}_i/\widetilde{Y}_{50,j}}, the probability of recording a
+#' positive is \eqn{r_i/(1+r_i)} for logit-link delta and
+#' \eqn{1-\exp[-\log(2)r_i]} for Poisson-link delta. The conditional positive mean is
+#' \eqn{\widetilde{Y}_i/\Pr(Y_i>0)}.
 #' The positive component can be lognormal, Gamma, or generalized gamma.
 #' Gamma and generalized gamma also support positive-only fits with predictions
-#' on the arithmetic mean scale. These families and all PLD families use
-#' independent observation errors conditional on the modeled states.
+#' on the arithmetic mean scale. Tweedie observations have arithmetic mean
+#' \eqn{\widetilde{Y}_i}, variance \eqn{\phi_i\widetilde{Y}_i^{\xi_j}}, and
+#' probability of zero \eqn{\exp[-\widetilde{Y}_i^{2-\xi_j}/(\phi_i(2-\xi_j))]}.
+#' All families other than ordinary lognormal use independent observation
+#' errors conditional on the modeled states.
 #' See [observation families][observation_families] for the encounter link,
 #' positive densities and likelihood contributions.
 #'
@@ -360,7 +366,7 @@
 #' surveys may be sparse. Reducing the maximum age sums catch and index within
 #' year (and within survey for indices). Weight and maturity use the hidden-age
 #' abundance and biomass weighting described above. Other covariates come from the plus age
-#' or the first available older age. Native PLD observations are pooled only
+#' or the first available older age. Native delta and Tweedie observations are pooled only
 #' across complete sampled age groups. See [observation families][observation_families]
 #' for details on input resolution and missing terminal observations.
 #'
@@ -471,7 +477,7 @@
 #' Total catch sums numbers; yield uses catch weights, falling back to stock
 #' weights when no catch weights are supplied. Observed totals omit missing cells; predicted
 #' totals sum the catch predictions over all cells. The predictions are medians
-#' for lognormal catch and arithmetic means for PLD catch.
+#' for ordinary lognormal catch and arithmetic means for other catch families.
 #'
 #' Optional `weight$type` distinguishes complete stock and catch weights
 #' on the same biological year-age grid. Untyped or stock-only inputs

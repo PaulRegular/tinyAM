@@ -101,9 +101,12 @@
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
 #'   - `log_y50_catch` and `log_y50_index` for estimated
-#'     [PLD soft detection scales][observation_families].
+#'     [delta soft detection scales][observation_families].
 #'   - `eta_gengamma_Q_catch` and `eta_gengamma_Q_index` for estimated
 #'     Prentice shapes, transformed to keep the arithmetic mean finite.
+#'   - `logit_tweedie_power_catch` and `logit_tweedie_power_index` for
+#'     estimated variance powers, initialized at power 1.5 and transformed
+#'     to stay strictly between 1 and 2.
 #'   - `logit_rho_obs`: adjacent-age log-error correlations for AR1 catch fleets
 #'     and surveys, named by observation series and initialized at correlation 0.5.
 #'   - Gaussian observation-SD terms add signed `eta_sd_catch_*` or
@@ -219,6 +222,8 @@ make_par <- function(dat) {
     if (length(values)) par[[paste0("log_y50_", type)]] <- values
     shape <- .gengamma_parameters(dat, type)
     if (length(shape)) par[[paste0("eta_gengamma_Q_", type)]] <- shape
+    power <- .tweedie_parameters(dat, type)
+    if (length(power)) par[[paste0("logit_tweedie_power_", type)]] <- power
   }
   if (.obs_has_correlation(dat)) {
     groups <- dat$obs_correlation$groups

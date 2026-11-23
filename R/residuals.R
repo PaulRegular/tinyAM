@@ -27,8 +27,10 @@
 #' but does not rerun [fit_tam()] or re-estimate fixed parameters. Temporary
 #' objectives protect the fitted object's state. For Gamma and generalized gamma, standardized residuals
 #' use the mean and SD of the log of positive observations. Log residuals use
-#' the positive median. For any Poisson-link delta family, response residuals
-#' use the mean including zeros.
+#' the positive median. Delta lognormal standardized residuals also use the
+#' positive component. Tweedie standardized residuals are response-scale
+#' Pearson residuals. Delta and Tweedie response residuals use the mean
+#' including zeros.
 #'
 #' For `"mle-mvn"`, fixed effects stay at their estimates and all fitted random
 #' effects are sampled together. The Gaussian approximation uses their
@@ -102,7 +104,7 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
   out <- .bind_rows(lapply(names(tables), function(name) {
     d <- tables[[name]]
     if (!is.data.frame(d) || !nrow(d)) return(NULL)
-    pld <- which(.is_pld_family(d$family))
+    zero_capable <- .is_zero_family(d$family)
     residual <- switch(type, standardized = d$std_res, osa = d$osa_res,
       quantile = d$quantile_res,
       response = d$obs - d$pred, log = {
@@ -119,8 +121,9 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
       })
     if (is.null(residual)) residual <- rep(NA_real_, nrow(d))
     keep <- is.finite(d$obs) & d$obs > 0 & is.finite(residual)
-    if (type %in% c("quantile", "response") && length(pld)) {
-      keep[pld] <- is.finite(d$obs[pld]) & d$obs[pld] >= 0 & is.finite(residual[pld])
+    if (type %in% c("quantile", "response", "standardized")) {
+      zero <- which(d$obs == 0 & if (type == "standardized") d$family %in% "tweedie" else zero_capable)
+      keep[zero] <- is.finite(residual[zero])
     }
     if ("is_proj" %in% names(d)) keep <- keep & !d$is_proj
     residual[!keep] <- NA_real_
@@ -128,7 +131,7 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
       d$osa_method <- rep(if (is.null(metadata$method)) NA_character_ else metadata$method, nrow(d))
     }
     columns <- c("year", "age", "survey", "fleet", "obs", "pred", "unit", "is_proj",
-      "family", "pred_scale")
+      "family", "delta_type", "pred_scale")
     if (type == "osa") columns <- c(columns, "osa_method")
     if (type == "quantile") columns <- c(columns, "quantile_method", "quantile_status", "quantile_detail")
     d <- d[intersect(columns, names(d))]
@@ -205,13 +208,14 @@ add_residuals <- function(fit, type = c("quantile", "osa"), ..., residual_seed =
   mode <- fit$parameter_values
   map <- fit$dat$obs_map
   .with_diagnostic_seed(seed, {
-    zero <- which(map$is_observed & .is_pld_family(map$family) & fit$dat$obs_values == 0)
+    zero <- which(map$is_observed & .is_zero_family(map$family) & fit$dat$obs_values == 0)
     uniforms <- stats::runif(length(zero))
     # At fixed MLEs the random/random block of the joint precision is conditional.
     mode[random] <- mode[random] + .precision_perturbation(precision[random, random, drop = FALSE])
     if (any(!is.finite(mode[random]))) cli::cli_abort("The sampled random effects are non-finite.")
     sampled <- list(dat = fit$dat, rep = fit$obj$report(mode))
-    tables <- .add_quantile_residuals(.tidy_obs_predictions(sampled), seed, uniforms = uniforms)
+    tables <- .add_quantile_residuals(.tidy_obs_predictions(sampled, positive_medians = FALSE),
+      seed, uniforms = uniforms)
     for (name in names(tables)) {
       included <- map$is_observed[map$type == name]
       if (any(!is.finite(tables[[name]]$quantile_res[included]))) {
@@ -293,7 +297,7 @@ add_residuals <- function(fit, type = c("quantile", "osa"), ..., residual_seed =
   seed <- .observation_residual_seed(seed)
   index <- lapply(tables, function(d) {
     if (is.null(d$family)) return(integer())
-    which(.is_pld_family(d$family) & d$is_observed & !d$is_structural & d$obs == 0)
+    which(.is_zero_family(d$family) & d$is_observed & !d$is_structural & d$obs == 0)
   })
   if (is.null(uniforms)) uniforms <- .residual_uniform(sum(lengths(index)), seed)
   offset <- 0L
@@ -304,7 +308,22 @@ add_residuals <- function(fit, type = c("quantile", "osa"), ..., residual_seed =
       which(d$family != "lognormal" & d$is_observed & !d$is_structural & d$obs > 0)
     for (family in unique(d$family[positive])) {
       rows <- positive[d$family[positive] == family]
-      tail <- if (family == "pld_lognormal") {
+      if (family == "tweedie") {
+        log_mean <- d$log_obs_positive_mean[rows] + d$log_p_positive[rows]
+        log_obs <- log(d$obs[rows])
+        log_upper <- .tweedie_log_cdf(log_obs, log_mean, d$sd[rows], d$tweedie_power[rows],
+          lower.tail = FALSE)
+        values[rows] <- stats::qnorm(log_upper, lower.tail = FALSE, log.p = TRUE)
+        use_lower <- which(log_upper > log(.5) | is.na(log_upper))
+        if (length(use_lower)) {
+          i <- rows[use_lower]
+          log_lower <- .tweedie_log_cdf(log_obs[use_lower], log_mean[use_lower],
+            d$sd[i], d$tweedie_power[i], lower.tail = TRUE)
+          values[i] <- stats::qnorm(log_lower, log.p = TRUE)
+        }
+        next
+      }
+      tail <- if (family == "delta_lognormal") {
         function(lower) stats::pnorm(values[rows], lower.tail = lower, log.p = TRUE)
       } else {
         function(lower) .positive_log_cdf(family, log(d$obs[rows]),

@@ -36,7 +36,7 @@
 #'          fitted to aggregate catches. Fleet residuals appear on each
 #'          fleet's page.
 #'          Panels prefer state-sampled quantile residuals for fits with random
-#'          effects. Poisson-link delta panels use quantiles and compare observed
+#'          effects. Delta and Tweedie panels use quantiles and compare observed
 #'          with predicted zero frequencies. Lognormal panels without usable
 #'          sampled quantiles start with standardized residuals. Retained OSAs
 #'          are selectable and partial OSA gaps remain missing.
@@ -306,7 +306,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index", "sd_catch_smooth_fixed", "sd_index_smooth_fixed")] <- "Observation SDs"
   category[par %in% c("y50_catch", "y50_index")] <- "Soft detection scales"
-  category[par == "gengamma_Q"] <- "Observation shape"
+  category[par %in% c("gengamma_Q", "tweedie_power_catch", "tweedie_power_index")] <- "Observation shape"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope|peak|scale|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
