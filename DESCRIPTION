@@ -19,6 +19,7 @@ BugReports:
     https://github.com/PaulRegular/tinyAM/issues
 Imports:
     RTMB (>= 2.0),
+    tweedie (>= 3.2.0),
     MASS,
     Matrix,
     mgcv (>= 1.8-40),

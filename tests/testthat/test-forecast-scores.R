@@ -66,7 +66,7 @@ test_that("overall MASE weights ages, surveys and horizons separately", {
 test_that("delta log scores and the zero Brier score use their own validation cases", {
   actual <- data.frame(year = rep(2000:2001, each = 6), age = rep(1:6, 2),
     survey = rep(c(rep("S", 5), "T"), 2), obs = c(rep(1, 6), 6, 0, NA, 0, 4, 4), is_proj = FALSE,
-    family = c(rep("pld_lognormal", 5), "lognormal"))
+    family = c(rep("delta_lognormal", 5), "lognormal"))
   p <- subset(actual, year == 2001)
   p$is_proj <- TRUE
   p$fold <- 2000

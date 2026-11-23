@@ -269,6 +269,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     historical <- if (is.null(d$is_proj)) rep(TRUE, nrow(d)) else !d$is_proj
     if (nm == "q_modmat" && !is.null(dat$obs_map)) {
       historical <- historical & dat$is_observed[dat$obs_map$type == "index"]
+    } else if (nm %in% c("sd_index_modmat", "sd_catch_modmat") && !is.null(dat$obs_map)) {
+      historical <- historical & .obs_dispersion_support(dat, designs[[nm]])
     } else if (nm %in% c("q_modmat", "sd_index_modmat", "sd_catch_modmat")) {
       historical <- historical & is.finite(d$obs) & d$obs > 0
     }
@@ -325,7 +327,9 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     d <- obs_pred[[type]]
     if (is.null(d) || !all(c("std_res", "year", "age") %in% names(d))) next
     historical <- if (is.null(d$is_proj)) rep(TRUE, nrow(d)) else !d$is_proj
-    observed <- if (is.null(d$obs)) rep(TRUE, nrow(d)) else is.finite(d$obs) & d$obs > 0
+    observed <- if (!is.null(d$is_observed)) d$is_observed %in% TRUE else if (is.null(d$obs)) {
+      rep(TRUE, nrow(d))
+    } else is.finite(d$obs) & d$obs > 0
     d <- d[historical & observed & is.finite(d$std_res), , drop = FALSE]
     if (!nrow(d)) next
     if (is.null(d$survey)) d$survey <- ""
@@ -385,7 +389,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   if (!is.data.frame(d)) {
     return(out)
   }
-  observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
+  observed <- if (is.null(dat$obs_map)) !d$is_proj & is.finite(d$obs) & d$obs > 0 else
+    dat$is_observed[dat$obs_map$type == "index"]
   for (term in dat$q_terms) {
     if (.is_selectivity_curve(term) || term$type == "smooth") next
     if (!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) {
@@ -534,7 +539,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit), .q_power_advisories(fit),
     .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit),
     .smooth_design_advisories(fit$dat), .smooth_fit_advisories(fit),
-    .y50_advisories(fit)
+    .y50_advisories(fit), .tweedie_advisories(fit)
   )
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

@@ -68,7 +68,7 @@ q_power <- function(x, by = NULL) {
   if ("is_proj" %in% names(data)) active <- active & !data$is_proj
   absent <- setdiff(levels, group[active])
   if (length(absent)) {
-    cli::cli_abort("q_power() groups need fitted positive observations or sampled PLD zeros: {paste(absent, collapse = ', ')}.")
+    cli::cli_abort("q_power() groups need fitted positive observations or sampled zeros from a delta or Tweedie family: {paste(absent, collapse = ', ')}.")
   }
   list(by = spec$by, levels = levels, index = index)
 }

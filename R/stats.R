@@ -204,7 +204,7 @@ compute_mohns_rho <- function(data) {
   if (!nrow(pairs) || is.null(pairs$p_zero)) return(data.frame())
   structural <- pairs$is_structural %in% TRUE
   if (!length(structural)) structural <- rep(FALSE, nrow(pairs))
-  eligible <- .is_pld_family(pairs$family) & !structural &
+  eligible <- .is_zero_family(pairs$family) & !structural &
     is.finite(pairs$obs) & pairs$obs >= 0 &
     is.finite(pairs$p_zero) & pairs$p_zero >= 0 & pairs$p_zero <= 1
   out <- pairs[eligible, , drop = FALSE]
@@ -311,7 +311,7 @@ compute_mohns_rho <- function(data) {
 #' With `log = TRUE`, both values are logged first. Log RMSE measures departures
 #' on a relative scale and is often more useful when catch and survey units differ.
 #' It still combines errors from different series and is not a likelihood score.
-#' Zeros and missing pairs are omitted for log RMSE. Poisson-link delta, Gamma
+#' Zeros and missing pairs are omitted for log RMSE. Delta, Tweedie, Gamma
 #' and generalized gamma fits use the positive conditional median for log RMSE
 #' and the arithmetic mean for natural-scale RMSE. Natural-scale scores retain
 #' genuine zeros.
@@ -373,7 +373,7 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
 #'   For multiple horizons the baseline remains fixed at the origin. This is
 #'   an extension of the paper's one-year calculation. Log MASE uses the same
 #'   predictions as log RMSE, including the positive conditional median for
-#'   Poisson-link delta, Gamma and generalized gamma fits.
+#'   Delta, Tweedie, Gamma and generalized gamma fits.
 #' @references Carvalho et al. (2021). A cookbook for using model diagnostics in
 #'   integrated stock assessments. Fisheries Research 240, 105959.
 #'   \doi{10.1016/j.fishres.2021.105959}.

@@ -1289,8 +1289,8 @@ mono <- function(x, by = NULL) {
 .prepare_family_dispersion <- function(dat, type) {
   rows <- which(dat$obs_map$type == type)
   family <- dat$obs_map$family[rows]
-  dispersion <- sub("^pld_", "", family)
-  if (!any(dispersion %in% c("gamma", "gengamma"))) return(dat)
+  dispersion <- sub("^delta_", "", family)
+  if (!any(dispersion %in% c("gamma", "gengamma", "tweedie"))) return(dat)
   design <- dat[[paste0("sd_", type, "_modmat")]]
   terms <- dat[[paste0("sd_", type, "_terms")]]
   setting <- paste0(type, "_settings$sd_form")
@@ -1301,7 +1301,7 @@ mono <- function(x, by = NULL) {
     if (any(shared)) {
       group <- if (type == "catch") "fleet" else "survey"
       cli::cli_abort(c(
-        "{setting} shares a dispersion coefficient across different positive distributions.",
+        "{setting} shares a dispersion coefficient across different observation distributions.",
         "i" = "Give each distribution its own coefficient, for example {.code ~ 0 + {group}}."
       ))
     }
@@ -1341,15 +1341,20 @@ mono <- function(x, by = NULL) {
   dat
 }
 
+.obs_dispersion_support <- function(dat, component) {
+  map <- dat$obs_map[dat$obs_map$type == component, , drop = FALSE]
+  map$is_observed & (dat$obs[[component]]$obs > 0 | map$family == "tweedie")
+}
+
 .check_sd_terms <- function(dat, component) {
   map <- dat$obs_map[dat$obs_map$type == component, , drop = FALSE]
   if (any(map$family != "lognormal")) {
     design <- dat[[paste0("sd_", component, "_modmat")]]
-    positive <- which(map$is_observed & dat$obs[[component]]$obs > 0)
-    if (ncol(design) && qr(design[positive, , drop = FALSE])$rank < ncol(design)) {
+    support <- which(.obs_dispersion_support(dat, component))
+    if (ncol(design) && qr(design[support, , drop = FALSE])$rank < ncol(design)) {
       cli::cli_abort(c(
-        "{component}_settings$sd_form has a rank-deficient design among positive observations.",
-        "i" = "Only positive observations inform the SD. Simplify the SD formula or supply known SDs."
+        "{component}_settings$sd_form has a rank-deficient design among eligible observations.",
+        "i" = "Positive observations inform dispersion; Tweedie zeros also contribute. Simplify the SD formula or supply known dispersions."
       ))
     }
   }
@@ -1362,8 +1367,10 @@ mono <- function(x, by = NULL) {
     cli::cli_abort("Use one RW/AR1 term in {component}_settings$sd_form; overlapping ordered SD processes have not been validated.")
   }
   # A random effect on SD is not additive observation variance on the mean scale.
+  data <- dat$obs[[component]]
+  attr(data, "observation_support") <- .obs_dispersion_support(dat, component)
   .check_q_terms(list(
-    obs = list(index = dat$obs[[component]]), q_terms = terms,
+    obs = list(index = data), q_terms = terms,
     q_modmat = dat[[paste0("sd_", component, "_modmat")]],
     index_settings = list(q_link = NULL)
   ))
@@ -1375,7 +1382,7 @@ mono <- function(x, by = NULL) {
     terms <- dat[[paste0("sd_", component, "_terms")]]
     if (!length(terms)) next
     d <- dat$obs[[component]]
-    observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
+    observed <- .obs_dispersion_support(dat, component)
     for (term in terms) {
       if (term$type == "smooth") next
       if (component == "catch" && term$type == "rw" && term$variable == "age" &&

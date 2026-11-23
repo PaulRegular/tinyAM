@@ -46,7 +46,7 @@ the observations. Results are tidy data frames with a \verb{sim = 1..n} column.
 }
 \details{
 Missing observations and zeros excluded by positive-only families remain
-\code{NA} in the simulated tables. PLD draws can be zero or positive at each
+\code{NA} in the simulated tables. Delta and Tweedie draws can be zero or positive at each
 sampled age. Population states and
 predictions are still calculated throughout the modeled period, including
 projection years. Missing observations are not estimated as extra parameters.

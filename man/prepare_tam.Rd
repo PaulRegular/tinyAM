@@ -198,8 +198,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 \item \code{family}: \link[=observation_families]{Observation family} for all catch data or
 a named list by fleet. The default lognormal fits positive observations.
 \item \code{sd_form}: formula for log dispersion. The \link[=observation_families]{observation family}
-determines whether dispersion is a log-SD, coefficient of variation, or
-Prentice scale. Supported families allow ordinary terms, Gaussian
+determines whether dispersion is a log-SD, coefficient of variation,
+Prentice scale, or square root of Tweedie dispersion. Supported families allow ordinary terms, Gaussian
 \link{formula_effects} such as \code{~ iid(age)}, and penalized
 \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
 \item \code{sd_supplied}: optional one-sided formula giving positive values on the
@@ -287,7 +287,7 @@ abundance \code{N_plus} can then be inspected in the likelihood report (\code{fi
 \item \code{obs_map} — stack of \code{obs$catch} and \code{obs$index} mapping variables
 \item \code{obs_values}, \code{log_obs}, \code{is_observed} - raw observations, log observations
 and a logical vector identifying the stochastic likelihood rows. Sampled
-PLD zeros have log value \code{-Inf}. \code{observed} contains the compact lognormal
+Delta and Tweedie zeros have log value \code{-Inf}. \code{observed} contains the compact lognormal
 likelihood observations.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{mu_m} (or \code{log_mu_supplied_m})
@@ -317,7 +317,8 @@ Required entries cannot be \code{NULL}.
 See \code{\link[=as_tam_data]{as_tam_data()}} for table keys, units, fleet-specific catch weights and
 covariate routing, and \link{cod_obs} for example data. Catch and survey zeros and
 missing values are excluded from the lognormal observation likelihood;
-complete predictions are still calculated. When using a \link[=observation_families]{PLD family},
+complete predictions are still calculated. With a zero-capable
+\link[=observation_families]{observation family},
 native catch and survey observations are pooled into a terminal observation
 only when every biological age in that bin has an observation.
 

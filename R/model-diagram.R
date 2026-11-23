@@ -107,9 +107,12 @@ plot_model <- function(..., model_list = NULL) {
   fleets <- if (isTRUE(dat$has_fleet)) dat$fleets else "Aggregate fishery"
   surveys <- unique(as.character(dat$obs$index$survey))
   family_label <- function(type) {
-    pld <- Filter(function(s) s$type == type, dat$pld$series)
-    if (!length(pld)) return("Lognormal")
-    paste("Poisson-link delta lognormal for", paste(vapply(pld, `[[`, character(1), "name"), collapse = ", "))
+    map <- dat$obs_map[dat$obs_map$type == type, , drop = FALSE]
+    if (!nrow(map)) return("No series")
+    series <- .observation_series(map, type)
+    labels <- .observation_family_label(map$family, map$delta_type)
+    if (length(unique(labels)) == 1L) return(labels[1L])
+    paste(unique(paste(labels, "for", series)), collapse = ", ")
   }
   curve <- dat$rec$curve
   predictors <- function(forms, table, data, exclude = character()) {
@@ -185,9 +188,9 @@ plot_model <- function(..., model_list = NULL) {
       "Shared age blocks share actual M; other cells retain their mean."), "tinyAM-model"),
     catch = card("Catch observations", c("Numbers at age, conditional on population and F.",
       paste("Family:", family_label("catch")),
-      paste("Observation SD:", form(dat$catch_settings$sd_form)),
-      paste("Supplied SD:", form(dat$catch_settings$sd_supplied)),
-      "Poisson-link delta fits sampled zeros. All families exclude missing observations."), "observation_families"),
+      paste("Observation dispersion:", form(dat$catch_settings$sd_form)),
+      paste("Supplied dispersion:", form(dat$catch_settings$sd_supplied)),
+      "Delta and Tweedie families fit sampled zeros. All families exclude missing observations."), "observation_families"),
     survey = card("Survey indices and catchability", c(
       paste("Surveys:", paste(surveys, collapse = ", ")),
       paste("Family:", family_label("index")),
@@ -198,8 +201,8 @@ plot_model <- function(..., model_list = NULL) {
         types <- unique(types[types %in% c("iid", "rw", "ar1", "smooth")])
         if (length(types)) paste(types, collapse = ", ") else "None"
       }),
-      paste("Observation SD:", form(dat$index_settings$sd_form)),
-      paste("Supplied SD:", form(dat$index_settings$sd_supplied)),
+      paste("Observation dispersion:", form(dat$index_settings$sd_form)),
+      paste("Supplied dispersion:", form(dat$index_settings$sd_supplied)),
       "Predictions use each survey's sampling time; q may contain Gaussian effects."), "for_fleet"),
     ssb = card("Spawning biomass and projections", c(
       "SSB uses stock weights, maturity and spawning timing, retaining plus-group biology.",

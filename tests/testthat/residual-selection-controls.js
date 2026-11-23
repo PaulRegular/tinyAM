@@ -115,7 +115,7 @@ async function verifyObservations() {
   assert.equal(single.childElementCount, 0);
   assert.equal(single.layout.margin.t, 35);
 
-  const delta = widget(configs.pld);
+  const delta = widget(configs.delta);
   await finish(delta);
   const deltaType = delta.find('tam-residual-type');
   const deltaModel = delta.find('tam-residual-frame');

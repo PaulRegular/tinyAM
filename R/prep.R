@@ -211,7 +211,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' summed for `catch` and `index` data. Weight and maturity tables retain all
 #' ages for abundance-based aggregation inside [nll_fun()]. Other catch/index
 #' columns retain their values from the plus age or first available older age.
-#' Native PLD observations require a complete sampled bin.
+#' Native delta and Tweedie observations require a complete sampled bin.
 #'
 #' @param obs Named list with data.frames `catch`, `index`, `weight`, `maturity`.
 #' @param plus_age Integer specifying the terminal age to be modeled.
@@ -228,25 +228,25 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     if (!nrow(plus_df)) return(df)
 
     # Infer the input resolution across the supplied series once, including
-    # years outside the fitting window. A legacy pooled series may retain NA
+    # years outside the fitting window. An already pooled series may retain NA
     # placeholders for every older age.
-    pld <- names(Filter(function(spec) .is_pld_family(spec$name), families[[type]]))
+    zero_families <- names(Filter(function(spec) .is_zero_family(spec$name), families[[type]]))
     series <- .observation_series(plus_df, type)
-    native_pld <- unique(series[series %in% pld & plus_df$age > plus_age & !is.na(plus_df$obs)])
+    native_zero <- unique(series[series %in% zero_families & plus_df$age > plus_age & !is.na(plus_df$obs)])
     values <- plus_df["obs"]
-    if (length(native_pld)) {
+    if (length(native_zero)) {
       keys <- c(groups, "age")
-      if (anyDuplicated(plus_df[series %in% native_pld, keys, drop = FALSE])) {
-        cli::cli_abort("Native PLD {.val {type}} plus groups require one row per year, age and series.")
+      if (anyDuplicated(plus_df[series %in% native_zero, keys, drop = FALSE])) {
+        cli::cli_abort("Native zero-capable {.val {type}} plus groups require one row per year, age and series.")
       }
       values$n_sampled <- as.integer(!is.na(plus_df$obs))
     }
     plus_group <- stats::aggregate(values, plus_df[groups], FUN = function(x) {
       if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
     })
-    if (length(native_pld)) {
+    if (length(native_zero)) {
       n_ages <- max(obs$weight$age) - plus_age + 1L
-      incomplete <- .observation_series(plus_group, type) %in% native_pld &
+      incomplete <- .observation_series(plus_group, type) %in% native_zero &
         plus_group$n_sampled != n_ages
       plus_group$obs[incomplete] <- NA_real_
       plus_group$n_sampled <- NULL
@@ -294,7 +294,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' See [as_tam_data()] for table keys, units, fleet-specific catch weights and
 #' covariate routing, and [cod_obs] for example data. Catch and survey zeros and
 #' missing values are excluded from the lognormal observation likelihood;
-#' complete predictions are still calculated. When using a [PLD family][observation_families],
+#' complete predictions are still calculated. With a zero-capable
+#' [observation family][observation_families],
 #' native catch and survey observations are pooled into a terminal observation
 #' only when every biological age in that bin has an observation.
 #'
@@ -481,8 +482,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `family`: [Observation family][observation_families] for all catch data or
 #'   a named list by fleet. The default lognormal fits positive observations.
 #' - `sd_form`: formula for log dispersion. The [observation family][observation_families]
-#'   determines whether dispersion is a log-SD, coefficient of variation, or
-#'   Prentice scale. Supported families allow ordinary terms, Gaussian
+#'   determines whether dispersion is a log-SD, coefficient of variation,
+#'   Prentice scale, or square root of Tweedie dispersion. Supported families allow ordinary terms, Gaussian
 #'   [formula_effects] such as `~ iid(age)`, and penalized
 #'   [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
 #' - `sd_supplied`: optional one-sided formula giving positive values on the
@@ -564,7 +565,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `obs_map` — stack of `obs$catch` and `obs$index` mapping variables
 #' - `obs_values`, `log_obs`, `is_observed` - raw observations, log observations
 #'   and a logical vector identifying the stochastic likelihood rows. Sampled
-#'   PLD zeros have log value `-Inf`. `observed` contains the compact lognormal
+#'   Delta and Tweedie zeros have log value `-Inf`. `observed` contains the compact lognormal
 #'   likelihood observations.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `mu_m` (or `log_mu_supplied_m`)
@@ -815,11 +816,13 @@ prepare_tam <- function(
   dat <- .prepare_observation_rows(dat, obs_fit, families)
   dat$obs_correlation <- .prepare_obs_correlation(dat, series$index)
 
-  sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
+  catch_sd_data <- dat$obs$catch
+  attr(catch_sd_data, "observation_support") <- .obs_dispersion_support(dat, "catch")
+  sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, catch_sd_data, "catch")
   if (!is.null(dat$catch_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(sd_design$matrix)) {
       dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
-      sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
+      sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, catch_sd_data, "catch")
       cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
     dat$log_sd_catch_supplied <- .log_supplied(dat$catch_settings$sd_supplied, dat$obs$catch, "catch sd_supplied")
@@ -831,14 +834,16 @@ prepare_tam <- function(
   dat$sd_catch_terms <- sd_design$terms
 
   has_index <- nrow(dat$obs$index) > 0L
+  index_sd_data <- dat$obs$index
+  attr(index_sd_data, "observation_support") <- .obs_dispersion_support(dat, "index")
   # An absent survey contributes neither catchability nor observation-SD
   # parameters. Avoid evaluating factor/scoped formulas on an empty table.
-  sd_design <- if (has_index) .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index") else
+  sd_design <- if (has_index) .parse_sd_formula(dat$index_settings$sd_form, index_sd_data, "index") else
     list(matrix = matrix(numeric(), 0L, 0L), terms = list())
   if (has_index && !is.null(dat$index_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(sd_design$matrix)) {
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
-      sd_design <- .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index")
+      sd_design <- .parse_sd_formula(dat$index_settings$sd_form, index_sd_data, "index")
       cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
     dat$log_sd_index_supplied <- .log_supplied(dat$index_settings$sd_supplied, dat$obs$index, "index sd_supplied")

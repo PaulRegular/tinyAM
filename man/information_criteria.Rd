@@ -43,11 +43,13 @@ skill.
 \details{
 \strong{Likelihood scale.} Lognormal densities are evaluated on log observations
 without a natural-scale Jacobian. Gamma and generalized gamma densities
-use the same log-observation scale. Poisson-link delta likelihoods include
+use the same log-observation scale. Delta and Tweedie likelihoods include
 the probability of zero and evaluate the positive component on log
-observations. Multiple-model calls require identical included observations,
-units and observation families for each series. Use \code{\link[=fit_hindcast]{fit_hindcast()}} to
-compare predictions across families. cAIC requires an all-lognormal fit.
+observations. Both criteria can compare different families when they use
+the same included catch and survey records, values, and units. A positive-only
+fit that omits recorded zeros uses different observations from a delta or
+Tweedie fit that includes them. Use \code{\link[=fit_hindcast]{fit_hindcast()}} to compare predictions
+on common held-out observations in that case.
 
 \strong{Marginal AIC.} \code{logLik()} returns the optimized Laplace approximation to
 the marginal log-likelihood. Its \code{df} counts all estimated outer parameters,
@@ -64,8 +66,10 @@ calculate the trace without forming a dense inverse.
 
 \code{edf_fixed} is \eqn{p_c}, the number of estimated outer parameters entering
 the conditional observation likelihood, identified using structural
-dependencies of observation predictions, SDs and correlations. It need not equal
-\code{n_fixed}: process-only parameters are excluded. The supplementary Gaussian
+dependencies of observation predictions, dispersion, correlation, and
+family-specific parameters such as detection scale, shape, and power.
+Process-only parameters count toward \code{n_fixed} but are excluded from
+\code{edf_fixed}. The supplementary Gaussian
 example similarly excludes a prior-only parameter. This differs from the
 all-outer-parameter convention currently used by sdmTMB and WHAM.
 Counting follows tinyAM's fitted coordinates. Reparameterizations that move

@@ -104,7 +104,7 @@ yield across models and shows catch at age and residuals for models
 fitted to aggregate catches. Fleet residuals appear on each
 fleet's page.
 Panels prefer state-sampled quantile residuals for fits with random
-effects. Poisson-link delta panels use quantiles and compare observed
+effects. Delta and Tweedie panels use quantiles and compare observed
 with predicted zero frequencies. Lognormal panels without usable
 sampled quantiles start with standardized residuals. Retained OSAs
 are selectable and partial OSA gaps remain missing.

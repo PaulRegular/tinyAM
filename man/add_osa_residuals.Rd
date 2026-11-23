@@ -9,14 +9,14 @@ add_osa_residuals(fit, method = "oneStepGaussianOffMode", ...)
 \arguments{
 \item{fit}{A fitted \code{tam_fit}.}
 
-\item{method}{One algorithm supported by \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}:
+\item{method}{One algorithm supported by \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}:
 \code{"oneStepGaussianOffMode"} (default), \code{"oneStepGaussian"},
 \code{"oneStepGeneric"}, \code{"fullGaussian"}, or \code{"cdf"}.
 Use one of the first four algorithms for models with correlated
 observation errors. RTMB's \code{"cdf"} method does not support its multivariate
 normal density.}
 
-\item{...}{Named computation controls for \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}, such as
+\item{...}{Named computation controls for \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}, such as
 \code{trace}, \code{parallel}, \code{subset}, \code{conditional}, or \code{splineApprox}.
 \code{subset} and \code{conditional} index included log observations in likelihood
 order. Their unrequested rows retain missing residuals.}
@@ -39,7 +39,7 @@ is supplied unless explicitly overridden. Method-dependent upstream defaults,
 including \code{reverse}, are retained. When SAM is also loaded, parallel OSA
 calculations use the existing sequential safeguard.
 OSA requires all observations to use the default lognormal family. Use
-quantile residuals for fits with Poisson-link delta, Gamma or generalized
+quantile residuals for fits with delta, Tweedie, Gamma or generalized
 gamma observations.
 
 Temporary RTMB objectives protect the fitted parameters, uncertainty and

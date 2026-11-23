@@ -1,7 +1,7 @@
-pld_diagnostic_rows <- function() {
+delta_diagnostic_rows <- function() {
   data.frame(year = 2000:2005, age = 2L, survey = "RV", unit = "fish",
     obs = c(0, 2, NA, 0, 0, 0), pred = c(1, 1.5, 2, 0, 2, 1000),
-    family = "pld_lognormal", is_observed = c(TRUE, TRUE, FALSE, FALSE, FALSE, TRUE),
+    family = "delta_lognormal", is_observed = c(TRUE, TRUE, FALSE, FALSE, FALSE, TRUE),
     is_structural = c(FALSE, FALSE, FALSE, TRUE, FALSE, FALSE),
     is_proj = c(FALSE, FALSE, FALSE, FALSE, TRUE, FALSE),
     log_p_zero = c(log(.5), log(.2), log(.3), 0, log(.1), -1000),
@@ -10,7 +10,7 @@ pld_diagnostic_rows <- function() {
 }
 
 test_that("conditional quantile residuals include sampled zeros and use stable tails", {
-  d <- pld_diagnostic_rows()
+  d <- delta_diagnostic_rows()
   old_seed <- .Random.seed
   old_kind <- RNGkind()
   r <- .add_quantile_residuals(list(index = d), seed = 1L)
@@ -33,8 +33,8 @@ test_that("conditional quantile residuals include sampled zeros and use stable t
 })
 
 test_that("retained quantile residuals preserve keys, seeds, and the supplied fit", {
-  d <- pld_diagnostic_rows()
-  fit <- structure(list(dat = list(pld = list(series = list(list()))),
+  d <- delta_diagnostic_rows()
+  fit <- structure(list(dat = list(delta = list(series = list(list()))),
     obs_pred = list(catch = d[FALSE, ], index = d)), class = "tam_fit")
   fit2 <- add_residuals(fit, type = "quantile", residual_seed = 97L)
   expect_null(fit$obs_pred$index$quantile_res)
@@ -51,7 +51,7 @@ test_that("retained quantile residuals preserve keys, seeds, and the supplied fi
 })
 
 test_that("delta displays include zero residuals and maintain calibration support", {
-  d <- pld_diagnostic_rows()
+  d <- delta_diagnostic_rows()
   d$model <- factor("delta")
   d$p_zero <- exp(d$log_p_zero)
   d$pred_positive_mean <- d$pred / exp(d$log_p_positive)
@@ -69,24 +69,24 @@ test_that("delta displays include zero residuals and maintain calibration suppor
 })
 
 test_that("annual zero counts use the same sampled cells and retain unsampled years", {
-  d <- pld_diagnostic_rows()
+  d <- delta_diagnostic_rows()
   d$p_zero <- exp(d$log_p_zero)
   # Two cells in the first year, including one zero. The reference has no
-  # observation-family metadata, and 2003 is wholly absent from the PLD rows.
+  # observation-family metadata, and 2003 is wholly absent from the Delta rows.
   d$year[2L] <- d$year[1L]
   d$age[2L] <- d$age[1L] + 1L
   other <- d[c(1L, 2L), ]
   other$family <- c("lognormal", NA)
   data <- rbind(other, d[-4L, ])
-  data$model <- factor(c("Lognormal", "Reference", rep("PLD", 5)),
-    levels = c("Lognormal", "PLD", "Reference"))
+  data$model <- factor(c("Lognormal", "Reference", rep("Delta", 5)),
+    levels = c("Lognormal", "Delta", "Reference"))
   counts <- .annual_zero_counts(data)
-  expect_equal(as.character(counts$model), rep("PLD", 6))
+  expect_equal(as.character(counts$model), rep("Delta", 6))
   expect_equal(counts$year, 2000:2005)
   expect_equal(counts$n, c(2, NA, NA, NA, NA, 1))
   expect_equal(counts$obs, c(1, NA, NA, NA, NA, 1))
   expect_equal(counts$pred, c(.7, NA, NA, NA, NA, 0))
-  expect_null(.annual_zero_counts(data[data$model != "PLD", ]))
+  expect_null(.annual_zero_counts(data[data$model != "Delta", ]))
   expect_null(.annual_zero_counts(data[!data$is_observed, ]))
 
   traces <- plotly::plotly_build(.plot_annual_zeros(counts,
@@ -99,7 +99,7 @@ test_that("annual zero counts use the same sampled cells and retain unsampled ye
   expect_identical(traces[[2L]]$connectgaps, FALSE)
   expect_identical(traces[[2L]]$line$color, "#003E56")
 
-  alternate <- transform(counts, model = "PLD Gamma", pred = pred / 2)
+  alternate <- transform(counts, model = "Delta Gamma", pred = pred / 2)
   comparison <- rbind(counts, alternate)
   traces <- plotly::plotly_build(.plot_annual_zeros(comparison,
     colors = c("#FF0000", "#003E56", "#000000", "#F95D26")))$x$data

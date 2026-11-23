@@ -65,7 +65,7 @@ A \code{tam_retro} list with \code{fits} nested by model and terminal year;
 stacked \code{pop} and \code{obs_pred} with model, fold and horizon (zero historically);
 \code{mohns_rho}; detailed \code{scores}; matched \code{forecast_pairs}; \code{fold_diagnostics};
 and resolved \code{projection_controls}. Failed references make rho unavailable.
-When there are eligible Poisson-link delta forecasts, also returns
+When there are eligible forecasts from delta or Tweedie models, also returns
 \code{occurrence_scores}, \code{occurrence_comparable} and
 \code{forecast_pairs$occurrence} with the individual cases.
 All-failed runs still return diagnostics.
@@ -111,7 +111,7 @@ flagged and no automatic ranking is produced.
 Survey log-RMSE pools observation errors. MASE compares absolute log errors
 with persistence on identical cases; see \code{\link[=compute_hindcast_mase]{compute_hindcast_mase()}}. Overall
 MASE averages ages within survey, surveys within horizon, then horizons.
-Poisson-link delta, Gamma and generalized gamma models use their positive
+Delta, Tweedie, Gamma and generalized gamma models use their positive
 conditional medians for both log scores. Age-summed log scores are available
 for lognormal surveys with complete, consistent age coverage.
 
@@ -125,7 +125,7 @@ individual ages and also assess mean age, using the lower bound for the plus gro
 Overlapping forecasts are distinct origin/horizon cases from the same data
 history.
 
-For Poisson-link delta models, \code{occurrence_scores} reports the mean squared
+For delta and Tweedie models, \code{occurrence_scores} reports the mean squared
 error of predicted zero probabilities (Brier score), with numbers of scored
 observations and zeros. This score includes observed zeros and positives at
 eligible ages. It excludes missing and known structural-zero rows. Survey

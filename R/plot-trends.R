@@ -16,7 +16,7 @@
 #' recalculating uncertainty. Trend ribbons use `lwr` and `upr` confidence limits;
 #' they are not prediction intervals for future observations. Catch and survey
 #' predictions from [tidy_obs_pred()] are medians for default lognormal
-#' observations and means including zeros for Poisson-link delta families.
+#' observations and means including zeros for delta and Tweedie families.
 #' Subset to a single survey or supply a grouping aesthetic when combining surveys
 #' so distinct series are not connected. A log axis requires positive values.
 #' Both trend and observed/predicted plots accept an `x` formula and `xlab`;
@@ -46,8 +46,8 @@
 #'   observation residuals. Use `y = ~age_block` for shared M state blocks.
 #' @param residual_type Initial observation residual view: `"auto"` (default),
 #'   `"standardized"`, `"osa"` or `"quantile"`. The default uses quantile
-#'   residuals when available from a conditional state draw, or for Poisson-link
-#'   delta, Gamma and generalized gamma observations. Otherwise lognormal
+#'   residuals when available from a conditional state draw, or for delta,
+#'   Tweedie, Gamma and generalized gamma observations. Otherwise lognormal
 #'   panels use standardized residuals. Model frames choose separately.
 #'   Fitted-state lognormal quantiles share the standardized choice.
 #'   Overlays start with quantiles when a model has a distinct quantile method.
@@ -311,14 +311,19 @@ plot_obs_pred <- function(
 
 .obs_family_hover <- function(data) {
   hover <- rep("", nrow(data))
-  pld <- which(.is_pld_family(data$family))
+  zero_family <- which(.is_zero_family(data$family))
   mean <- which(data$family %in% c("gamma", "gengamma"))
-  if (!length(c(pld, mean))) return(hover)
+  if (!length(c(zero_family, mean))) return(hover)
   hover[mean] <- "Prediction: arithmetic mean"
-  hover[pld] <- "Prediction: mean including zeros"
+  hover[zero_family] <- "Prediction: mean including zeros"
   if (all(c("p_zero", "pred_positive_mean") %in% names(data))) {
-    hover[pld] <- paste0(hover[pld], "<br>Probability of zero: ", signif(data$p_zero[pld], 4),
-      "<br>Positive mean: ", signif(data$pred_positive_mean[pld], 4))
+    hover[zero_family] <- paste0(hover[zero_family], "<br>Probability of zero: ",
+      signif(data$p_zero[zero_family], 4), "<br>Positive mean: ",
+      signif(data$pred_positive_mean[zero_family], 4))
+  }
+  if (length(zero_family)) {
+    label <- .observation_family_label(data$family[zero_family], data$delta_type[zero_family])
+    hover[zero_family] <- paste0(hover[zero_family], "<br>Family: ", label)
   }
   hover[which(data$family == "lognormal")] <- "Prediction: median"
   ifelse(nzchar(hover), paste0("<br>", hover), hover)

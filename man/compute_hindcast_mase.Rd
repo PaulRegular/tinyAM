@@ -29,7 +29,7 @@ Numerator and denominator use the same forecast cases:
 For multiple horizons the baseline remains fixed at the origin. This is
 an extension of the paper's one-year calculation. Log MASE uses the same
 predictions as log RMSE, including the positive conditional median for
-Poisson-link delta, Gamma and generalized gamma fits.
+Delta, Tweedie, Gamma and generalized gamma fits.
 }
 \examples{
 compute_hindcast_mase(data.frame(obs = c(2, 4), pred = c(2.1, 3.8),

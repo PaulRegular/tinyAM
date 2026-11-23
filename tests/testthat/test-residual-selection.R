@@ -127,12 +127,12 @@ test_that("native residual selectors replace complete cells in independent widge
   d <- residual_plot_data()
   osa <- residual_config(plot_bubbles(d, frame = ~model))
   d$osa_res <- NA_real_
-  d$family <- ifelse(d$model == "B", "pld_lognormal", "lognormal")
+  d$family <- ifelse(d$model == "B", "delta_lognormal", "lognormal")
   d$obs[7L] <- 0
   d$quantile_res <- d$std_res + .5
-  pld <- residual_config(plot_bubbles(d, frame = ~model))
+  delta <- residual_config(plot_bubbles(d, frame = ~model))
   sampled <- residual_config(plot_bubbles(state_sampled_plot_data(), frame = ~model))
-  jsonlite::write_json(list(osa = osa, pld = pld, sampled = sampled),
+  jsonlite::write_json(list(osa = osa, delta = delta, sampled = sampled),
     config, auto_unbox = TRUE, na = "null", null = "null", digits = NA)
   result <- system2(node, c(shQuote(test_path("residual-selection-controls.js")),
     shQuote(system.file("js", "residual-selection.js", package = "tinyAM")), shQuote(config)),
@@ -206,7 +206,7 @@ test_that("overlay defaults require eligible OSA in every displayed model", {
   expect_true(all(vapply(traces, function(trace) identical(trace$marker$line$width, 0), logical(1))))
 })
 
-test_that("Gamma residuals select quantiles and only PLD includes sampled zeros", {
+test_that("Gamma residuals select quantiles and only Delta includes sampled zeros", {
   d <- residual_plot_data()
   d$osa_res <- NA_real_
   d$family <- ifelse(d$model == "B", "gamma", "lognormal")
@@ -218,7 +218,7 @@ test_that("Gamma residuals select quantiles and only PLD includes sampled zeros"
   expect_identical(lapply(config$viewOptions, `[[`, "labels"),
     list("Standardized / Quantile", c("Standardized", "Quantile")))
   expect_equal(residual_points(config$views[[3L]]$cells[[2L]]), 5L)
-  d$family[d$model == "B"] <- "pld_gengamma"
+  d$family[d$model == "B"] <- "delta_gengamma"
   d$is_observed <- TRUE
   d$is_structural <- FALSE
   d$p_zero <- 0.2

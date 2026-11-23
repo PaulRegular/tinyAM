@@ -77,8 +77,8 @@ observation residuals. Use \code{y = ~age_block} for shared M state blocks.}
 
 \item{residual_type}{Initial observation residual view: \code{"auto"} (default),
 \code{"standardized"}, \code{"osa"} or \code{"quantile"}. The default uses quantile
-residuals when available from a conditional state draw, or for Poisson-link
-delta, Gamma and generalized gamma observations. Otherwise lognormal
+residuals when available from a conditional state draw, or for delta,
+Tweedie, Gamma and generalized gamma observations. Otherwise lognormal
 panels use standardized residuals. Model frames choose separately.
 Fitted-state lognormal quantiles share the standardized choice.
 Overlays start with quantiles when a model has a distinct quantile method.
@@ -119,7 +119,7 @@ These functions display the supplied tables without refitting the model or
 recalculating uncertainty. Trend ribbons use \code{lwr} and \code{upr} confidence limits;
 they are not prediction intervals for future observations. Catch and survey
 predictions from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} are medians for default lognormal
-observations and means including zeros for Poisson-link delta families.
+observations and means including zeros for delta and Tweedie families.
 Subset to a single survey or supply a grouping aesthetic when combining surveys
 so distinct series are not connected. A log axis requires positive values.
 Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};

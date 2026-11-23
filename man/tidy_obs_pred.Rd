@@ -54,14 +54,18 @@ from a fitted TAM object, and adds standardized residuals on the log scale.
 \details{
 For lognormal observations, \code{pred} is the median and \code{sd} is the marginal
 SD of log observations. For Gamma and generalized gamma, \code{pred} is the
-arithmetic mean. For Poisson-link delta families, \code{pred} is the arithmetic
-mean including zeros. In those families, \code{sd} describes the positive
-component. The \code{sd_scale} column identifies a log SD, CV or Prentice scale.
+arithmetic mean. For delta and Tweedie families, \code{pred} is the arithmetic
+mean including zeros. For delta families \code{sd} describes the positive
+component. The \code{sd_scale} column identifies a log SD, CV, Prentice scale or
+square-root Tweedie dispersion.
 Fits using these families also report the \code{family}, the scale of \code{pred} in
 \code{pred_scale}, the arithmetic mean in \code{pred_mean}, the positive-component
-mean and median. Poisson-link delta rows include zero and positive probabilities (\code{p_zero}, \code{p_positive}
-and their logs). Generalized gamma rows include the signed \code{gengamma_Q}.
-Standardized residuals use the positive component's log mean and log SD.
+mean and median. Delta and Tweedie rows include zero and positive
+probabilities (\code{p_zero}, \code{p_positive} and their logs). Delta rows identify
+\code{delta_type}. Generalized gamma rows include the signed \code{gengamma_Q}.
+Tweedie rows report \code{tweedie_power} and \code{tweedie_phi} and use response-scale
+Pearson residuals. Other standardized residuals use the positive
+component's log mean and log SD.
 Standardized residuals (\code{std_res}) use fitted states. Quantile residuals
 (\code{quantile_res}) use one conditional Gaussian draw when fitted random effects
 and usable precision are available. All-lognormal fits without random effects

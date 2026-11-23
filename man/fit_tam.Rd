@@ -208,8 +208,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 \item \code{family}: \link[=observation_families]{Observation family} for all catch data or
 a named list by fleet. The default lognormal fits positive observations.
 \item \code{sd_form}: formula for log dispersion. The \link[=observation_families]{observation family}
-determines whether dispersion is a log-SD, coefficient of variation, or
-Prentice scale. Supported families allow ordinary terms, Gaussian
+determines whether dispersion is a log-SD, coefficient of variation,
+Prentice scale, or square root of Tweedie dispersion. Supported families allow ordinary terms, Gaussian
 \link{formula_effects} such as \code{~ iid(age)}, and penalized
 \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
 \item \code{sd_supplied}: optional one-sided formula giving positive values on the

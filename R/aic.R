@@ -16,11 +16,13 @@
 #' @details
 #' **Likelihood scale.** Lognormal densities are evaluated on log observations
 #' without a natural-scale Jacobian. Gamma and generalized gamma densities
-#' use the same log-observation scale. Poisson-link delta likelihoods include
+#' use the same log-observation scale. Delta and Tweedie likelihoods include
 #' the probability of zero and evaluate the positive component on log
-#' observations. Multiple-model calls require identical included observations,
-#' units and observation families for each series. Use [fit_hindcast()] to
-#' compare predictions across families. cAIC requires an all-lognormal fit.
+#' observations. Both criteria can compare different families when they use
+#' the same included catch and survey records, values, and units. A positive-only
+#' fit that omits recorded zeros uses different observations from a delta or
+#' Tweedie fit that includes them. Use [fit_hindcast()] to compare predictions
+#' on common held-out observations in that case.
 #'
 #' **Marginal AIC.** `logLik()` returns the optimized Laplace approximation to
 #' the marginal log-likelihood. Its `df` counts all estimated outer parameters,
@@ -37,8 +39,10 @@
 #'
 #' `edf_fixed` is \eqn{p_c}, the number of estimated outer parameters entering
 #' the conditional observation likelihood, identified using structural
-#' dependencies of observation predictions, SDs and correlations. It need not equal
-#' `n_fixed`: process-only parameters are excluded. The supplementary Gaussian
+#' dependencies of observation predictions, dispersion, correlation, and
+#' family-specific parameters such as detection scale, shape, and power.
+#' Process-only parameters count toward `n_fixed` but are excluded from
+#' `edf_fixed`. The supplementary Gaussian
 #' example similarly excludes a prior-only parameter. This differs from the
 #' all-outer-parameter convention currently used by sdmTMB and WHAM.
 #' Counting follows tinyAM's fitted coordinates. Reparameterizations that move
@@ -132,36 +136,22 @@ NULL
   for (nm in setdiff(cols, names(d))) d[[nm]] <- NA_character_
   d <- d[, cols, drop = FALSE]
   d[] <- lapply(d, as.character)
-  d$family <- if (is.null(dat$obs_map$family)) rep("lognormal", nrow(d)) else
-    as.character(dat$obs_map$family[dat$is_observed])
-  lognormal <- d$family == "lognormal"
-  d$observed <- numeric(nrow(d))
-  d$observed[lognormal] <- as.numeric(dat$observed)
-  if (any(!lognormal)) {
-    d$observed[!lognormal] <- dat$obs_values[dat$is_observed][!lognormal]
-  }
+  d$observed <- as.numeric(dat$obs_values[dat$is_observed])
   d <- d[do.call(order, c(unname(d[cols]), list(na.last = TRUE))), , drop = FALSE]
   rownames(d) <- NULL
   d
 }
 
-.aic_models <- function(object, dots, labels, conditional = FALSE) {
+.aic_models <- function(object, dots, labels) {
   models <- c(list(object), dots)
   if (any(!vapply(models, inherits, logical(1), "tam_fit"))) {
     cli::cli_abort("All models must be fitted {.cls tam_fit} objects.")
   }
   lapply(models, .aic_validate_fit)
-  other <- vapply(models, function(model) .obs_has_non_lognormal(model$dat), logical(1))
-  if (conditional && any(other)) {
-    cli::cli_abort("cAIC is currently unavailable for Poisson-link delta, Gamma and generalized gamma models. Use marginal AIC for fits with the same observation families, or compare forecasts with {.fn fit_hindcast}.")
-  }
-  if (any(other) && !all(other)) {
-    cli::cli_abort("Models must use the same observation families for AIC comparison. Use {.fn fit_hindcast} to compare predictions across families.")
-  }
   reference <- .aic_observations(object)
   for (model in models[-1L]) {
     if (!identical(reference, .aic_observations(model))) {
-      cli::cli_abort("Models must use the same included catch and survey observations, identities, units and observation families. Compare models fitted to a common dataset with the same families.")
+      cli::cli_abort("Models must use the same included catch and survey observations, including their identities, values, sampling times, and units.")
     }
   }
   names(models) <- make.unique(labels)
@@ -253,7 +243,10 @@ AIC.tam_fit <- function(object, ..., k = 2) {
     cli::cli_abort("Mapped parameter ordering differs from the fitted objective; cAIC cannot align the random effects.")
   }
   if (any(random)) {
-    joint_hessian <- object$obj$env$spHess(mode, random = TRUE)
+    # Serialized RTMB fits can have stale derivative pointers. Rebuild the
+    # joint objective at the fitted mode, as for its separate components.
+    joint <- .fitted_objective(object)
+    joint_hessian <- joint$env$spHess(mode, random = TRUE)
     prior_hessian <- process$env$spHess(mode, random = TRUE)
     negative_edf <- .aic_trace(joint_hessian, prior_hessian)
   } else {
@@ -285,8 +278,7 @@ cAIC <- function(object, ..., details = FALSE) {
   if (!is.logical(details) || length(details) != 1L || is.na(details)) cli::cli_abort("{.arg details} must be TRUE or FALSE.")
   expressions <- as.list(substitute(list(object, ...)))[-1L]
   models <- .aic_models(object, list(...),
-    vapply(expressions, function(x) paste(deparse(x), collapse = ""), character(1)),
-    conditional = TRUE)
+    vapply(expressions, function(x) paste(deparse(x), collapse = ""), character(1)))
   results <- do.call(rbind, lapply(models, .caic_fit))
   results$delta <- results$cAIC - min(results$cAIC)
   results <- results[order(results$cAIC), , drop = FALSE]

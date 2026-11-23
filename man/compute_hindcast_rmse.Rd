@@ -46,7 +46,7 @@ On the natural scale,
 With \code{log = TRUE}, both values are logged first. Log RMSE measures departures
 on a relative scale and is often more useful when catch and survey units differ.
 It still combines errors from different series and is not a likelihood score.
-Zeros and missing pairs are omitted for log RMSE. Poisson-link delta, Gamma
+Zeros and missing pairs are omitted for log RMSE. Delta, Tweedie, Gamma
 and generalized gamma fits use the positive conditional median for log RMSE
 and the arithmetic mean for natural-scale RMSE. Natural-scale scores retain
 genuine zeros.

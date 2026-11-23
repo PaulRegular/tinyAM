@@ -34,7 +34,7 @@ Additional requirements:
 \verb{[0, 1]} for every year and age. Absence means zero; see \code{\link[=prepare_tam]{prepare_tam()}}.
 \item Non-missing observations must be finite and non-negative; maturity must
 be a proportion in \verb{[0, 1]}. Zero catch and index values are allowed.
-The default lognormal likelihood excludes zeros. Poisson-link delta
+The default lognormal likelihood excludes zeros. Delta and Tweedie
 families can fit sampled zeros. See \link{observation_families}.
 \item \code{catch} and \code{maturity} must contain exactly one row for \strong{every}
 \verb{(year, age)} combination over the global modeled range
