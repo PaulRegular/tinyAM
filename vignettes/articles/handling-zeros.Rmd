@@ -169,7 +169,7 @@ Northern cod has **`r zero_count(cod_obs$catch)` recorded catch zeros** and
 1983–2025. Four fits use the same NCAM-inspired population model and differ
 in their catch and survey observation families.
 
-```{r fits, cache=TRUE, results="hide"}
+```{r fits, cache=TRUE, results="hide", warning=FALSE}
 ncam <- fit_tam(cod_obs, years = 1983:2025, ages = 2:20,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
@@ -196,6 +196,7 @@ ncam_poisson <- update(ncam,
 ncam_tweedie <- update(ncam,
   catch_settings = list(family = tweedie()),
   index_settings = list(family = tweedie()),
+  start_par = ncam,
   silent = TRUE
 )
 ```
@@ -204,10 +205,16 @@ The ordinary lognormal likelihood excludes the recorded zeros. Delta and
 Tweedie likelihoods use them. Missing observations contribute to none of
 the likelihoods. The ordinary lognormal prediction is a median, while the
 other three predictions are arithmetic means across zeros and positives.
+The Tweedie fit uses the lognormal fit to initialize shared parameters.
 
-```{r fitted-models, include=FALSE}
+```{r fitted-models, include=FALSE, error=FALSE}
 fits <- list(Lognormal = ncam, `Logit-link delta` = ncam_delta,
   `Poisson-link delta` = ncam_poisson, Tweedie = ncam_tweedie)
+failed <- names(fits)[!vapply(fits, function(fit) isTRUE(fit$is_converged), logical(1))]
+if (length(failed)) {
+  stop("Northern cod fits failed numerical checks: ", paste(failed, collapse = ", "),
+    ". Inspect check_tam() before publishing the comparison.", call. = FALSE)
+}
 zero_fits <- fits[-1L]
 ```
 
@@ -215,7 +222,7 @@ zero_fits <- fits[-1L]
 
 ```{r detection-scales, echo=FALSE}
 parameters <- lapply(fits, function(fit) {
-  subset(tidy_par(fit)$fixed, par %in% c("y50_catch", "y50_index",
+  subset(fit$fixed_par, par %in% c("y50_catch", "y50_index",
     "tweedie_power_catch", "tweedie_power_index"))
 })
 parameters <- stack_list(parameters, label = "model")
@@ -438,9 +445,18 @@ For each target year from 2006 to 2025, hindcasts fit through the previous
 year and forecast one year with terminal F held constant. The same 20
 folds are attempted for every family.
 
-```{r hindcasts, cache=TRUE, dependson="fits"}
+```{r hindcasts, cache=TRUE, dependson="fits", warning=FALSE}
 hind <- fit_hindcast(ncam, ncam_delta, ncam_poisson, ncam_tweedie,
   folds = 20, proj_settings = list(F_mult = 1))
+```
+
+```{r hindcast-coverage, echo=FALSE, results="asis"}
+forecast_folds <- subset(hind$fold_diagnostics, !is_reference)
+n_failed <- sum(!forecast_folds$is_converged)
+if (n_failed) {
+  cat(sprintf("%d of %d forecast fits failed. The scores below use only matched forecasts.\n",
+    n_failed, nrow(forecast_folds)))
+}
 ```
 
 All four models are scored on the same held-out positive survey
@@ -527,14 +543,20 @@ conditional <- cAIC(ncam_delta, ncam_poisson, ncam_tweedie)
 ```{r information-criteria-table, echo=FALSE}
 criteria <- data.frame(Model = names(zero_fits), AIC = marginal$AIC,
   cAIC = conditional[rownames(marginal), "cAIC"])
+best_aic <- criteria$Model[which.min(criteria$AIC)]
+best_caic <- criteria$Model[which.min(criteria$cAIC)]
+criterion_result <- if (identical(best_aic, best_caic)) {
+  paste(best_aic, "has the lowest AIC and cAIC.")
+} else {
+  paste(best_aic, "has the lowest AIC and", best_caic, "has the lowest cAIC.")
+}
 knitr::kable(criteria, digits = 1, row.names = FALSE)
 ```
 
 The lognormal model is excluded because it treats sampled zeros as
 missing and therefore uses different observations. All three fits have
-parameters at their bounds, so the criteria are approximate. Poisson-link
-delta has the lowest AIC and cAIC, followed by logit-link delta. This
-agrees with the ranking of their positive survey hindcasts.
+parameters at their bounds, so the criteria are approximate.
+`r criterion_result`
 
 ## References
 
