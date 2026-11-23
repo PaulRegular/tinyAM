@@ -1,0 +1,573 @@
+---
+title: "Handling zeros in catch and survey observations"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+library(tinyAM)
+
+guide_root <- Sys.getenv("TINYAM_GUIDE_ROOT")
+source_files <- if (nzchar(guide_root)) {
+  c(file.path("R", list.files(file.path(guide_root, "R"), "[.]R$")), "NAMESPACE")
+} else {
+  list.files(system.file("R", package = "tinyAM"), full.names = TRUE)
+}
+source_hashes <- tools::md5sum(if (nzchar(guide_root)) {
+  file.path(guide_root, source_files)
+} else source_files)
+versions <- c(tinyAM = as.character(packageVersion("tinyAM")),
+  R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
+  mgcv = as.character(packageVersion("mgcv")),
+  tweedie = as.character(packageVersion("tweedie")))
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+  cache.extra = list(versions = versions, sources = unname(source_hashes), inputs = cod_obs))
+```
+
+When fish are scarce, a catch or survey sample can record zero for an age
+even if fish of that age are present. Positive-only families, including
+lognormal (the default), Gamma, and generalized gamma, use only positive
+observations in the likelihood. Delta and Tweedie families also use sampled
+zeros.
+
+## Observation models that include sampled zeros
+
+Let \(Y_i\) be a recorded catch or survey index for an age and year, and let
+\(\widetilde{Y}_i\) be its prediction from the population model. The catch
+prediction comes from the Baranov catch equation. The survey prediction is
+abundance at sampling time scaled by catchability.
+
+### Delta observations
+
+Delta models describe whether a sample records any fish and how much it
+records when fish are observed (Stefánsson 1996). In tinyAM, both parts use
+the same predicted catch or survey index, \(\widetilde{Y}_i\). This
+prediction is the arithmetic mean across zeros and positives.
+
+Each fleet or survey \(j\) has a soft detection scale
+\(\widetilde{Y}_{50,j}\), the predicted catch or index at which half of
+observations are expected to be zero. The prediction and the scale use the
+observation's units. Let \(r_i=\widetilde{Y}_i/\widetilde{Y}_{50,j}\) be
+the prediction relative to that scale.
+
+The logit link makes \(r_i\) the odds of recording a positive. The
+Poisson link gives the chance of at least one event under a Poisson model
+with encounter rate \(\lambda_i=\log(2)\,r_i\) (Thorson 2018).
+
+\[
+p_{+,i}=\Pr(Y_i>0)=
+\begin{cases}
+\dfrac{r_i}{1+r_i}, & \text{logit link},\\[4pt]
+1-e^{-\lambda_i}, & \text{Poisson link}.
+\end{cases}
+\]
+
+The Poisson-link case is equivalent to a complementary log-log (cloglog)
+link. The probability of zero is \(p_{0,i}=\Pr(Y_i=0)=1-p_{+,i}\). At
+twice the soft detection scale, it is one-third with the logit link and
+one-quarter with the Poisson link. See also the
+[sdmTMB model description](https://sdmtmb.github.io/sdmTMB/articles/model-description.html#delta-models)
+for delta models with two predictors.
+
+```{r encounter-curves, echo=FALSE}
+relative <- seq(0, 4, length.out = 161)
+curves <- data.frame(relative_prediction = rep(relative, 2),
+  probability = c(1 / (1 + relative), exp(-log(2) * relative)),
+  family = rep(c("Logit-link delta", "Poisson-link delta"), each = length(relative)))
+plotly::plot_ly(curves, x = ~relative_prediction, y = ~probability,
+  color = ~family, colors = tam_pal(2), type = "scatter", mode = "lines",
+  height = 330,
+  hovertemplate = "Prediction / soft detection scale: %{x:.2f}<br>Probability of zero: %{y:.1%}<extra>%{fullData.name}</extra>") |>
+  plotly::layout(xaxis = list(title = "Prediction / soft detection scale"),
+    yaxis = list(title = "Probability of zero", range = c(0, 1), tickformat = ".0%"),
+    legend = list(x = 1, y = 1, xanchor = "right", yanchor = "top"))
+```
+
+The horizontal scale compares predictions relative to the same soft
+detection scale. At large predictions, Poisson-link delta gives a lower
+probability of zero.
+
+For either delta option, the positive component has arithmetic mean
+
+\[
+m_{+,i}=\frac{\widetilde{Y}_i}{p_{+,i}},
+\qquad
+p_{+,i}\,m_{+,i}=\widetilde{Y}_i.
+\]
+
+Only the positives contribute to the overall mean. If the predicted catch
+is 10 and one quarter of samples are positive, the positives must average
+40 so that \(0.25\times40=10\). The positive distribution can be lognormal,
+Gamma, or generalized gamma. For example, delta lognormal uses
+
+\[
+\log Y_i\mid Y_i>0
+\sim N\!\left(\log m_{+,i}-\frac{\sigma_i^2}{2},\ \sigma_i^2\right).
+\]
+
+Here \(\sigma_i\) controls the spread on the log scale. Subtracting
+\(\sigma_i^2/2\) makes \(m_{+,i}\) the arithmetic mean of the positives.
+The default ordinary lognormal family uses the assessment prediction as its
+conditional median.
+
+A sampled zero contributes its log probability. A positive contributes the
+log probability of a positive plus its log density. Writing \(g_{+,i}\)
+for the positive density on the log-observation scale gives
+
+\[
+\ell_i=
+\begin{cases}
+\log p_{0,i}, & Y_i=0,\\[4pt]
+\log p_{+,i}+\log g_{+,i}(\log Y_i), & Y_i>0.
+\end{cases}
+\]
+
+The overall assessment prediction uses a log link. `q_link` independently
+controls how the survey formula maps to catchability.
+
+### Tweedie observations
+
+Tweedie models zeros and positive observations through a single
+distribution. With power \(1<p_j<2\), it describes a sum of a
+Poisson-distributed number of positive Gamma amounts. The sum is zero when
+there are no amounts to add (Foster and Bravington 2013).
+
+The variance and probability of zero depend on the predicted arithmetic
+mean \(\widetilde{Y}_i\), dispersion \(\phi_i\), and the series' power \(p_j\).
+
+\[
+\operatorname{Var}(Y_i)=\phi_i\widetilde{Y}_i^{\,p_j},
+\qquad
+\Pr(Y_i=0)=
+\exp\!\left[-\frac{\widetilde{Y}_i^{\,2-p_j}}{\phi_i(2-p_j)}\right].
+\]
+
+The model estimates power separately for each series unless `power` is
+supplied. The same dispersion and power govern the probability of zero and
+the spread of the positives.
+
+A sampled zero contributes \(\log\Pr(Y_i=0)\). A positive contributes
+\(\log f_{\mathrm{Tw}}(Y_i)+\log Y_i\), where \(f_{\mathrm{Tw}}\) is the
+Tweedie density for positive values on the original observation scale. It
+already includes the probability of recording a positive. The \(\log Y_i\)
+term converts the density to the log-observation scale used in the
+likelihood. See the
+[observation family reference](../reference/observation_families.html)
+for dispersion conventions, restrictions, and the alternative positive
+families.
+
+## Apply the families to Northern cod
+
+```{r zero-counts, include=FALSE}
+years <- 1983:2025
+ages <- 2:20
+zero_count <- function(x) sum(x$obs == 0 & x$year %in% years & x$age %in% ages,
+  na.rm = TRUE)
+```
+
+Northern cod has **`r zero_count(cod_obs$catch)` recorded catch zeros** and
+**`r zero_count(cod_obs$index)` Fall 2J3KL survey zeros** at ages 2–20+ in
+1983–2025. Four fits use the same NCAM-inspired population model and differ
+in their catch and survey observation families.
+
+```{r fits, cache=TRUE, results="hide"}
+ncam <- fit_tam(cod_obs, years = 1983:2025, ages = 2:20,
+  N_settings = list(process = "off", init = "exp"),
+  rec_settings = list(process = "rw"),
+  F_settings = list(process = "ar1", mu_form = ~ 1, mean_ages = 5:14),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3),
+    age_breaks = c(2, 5, 8, 21), mean_ages = 5:14),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block)),
+  silent = TRUE
+)
+
+ncam_delta <- update(ncam,
+  catch_settings = list(family = delta_lognormal(type = "logit-link")),
+  index_settings = list(family = delta_lognormal(type = "logit-link")),
+  silent = TRUE
+)
+
+ncam_poisson <- update(ncam,
+  catch_settings = list(family = delta_lognormal(type = "poisson-link")),
+  index_settings = list(family = delta_lognormal(type = "poisson-link")),
+  silent = TRUE
+)
+
+ncam_tweedie <- update(ncam,
+  catch_settings = list(family = tweedie()),
+  index_settings = list(family = tweedie()),
+  silent = TRUE
+)
+```
+
+The ordinary lognormal likelihood excludes the recorded zeros. Delta and
+Tweedie likelihoods use them. Missing observations contribute to none of
+the likelihoods. The ordinary lognormal prediction is a median, while the
+other three predictions are arithmetic means across zeros and positives.
+
+```{r fitted-models, include=FALSE}
+fits <- list(Lognormal = ncam, `Logit-link delta` = ncam_delta,
+  `Poisson-link delta` = ncam_poisson, Tweedie = ncam_tweedie)
+zero_fits <- fits[-1L]
+```
+
+### Detection and distribution parameters
+
+```{r detection-scales, echo=FALSE}
+parameters <- lapply(fits, function(fit) {
+  subset(tidy_par(fit)$fixed, par %in% c("y50_catch", "y50_index",
+    "tweedie_power_catch", "tweedie_power_index"))
+})
+parameters <- stack_list(parameters, label = "model")
+if (nrow(parameters)) {
+  parameters$par <- paste0("`", parameters$par, "`")
+  knitr::kable(parameters[c("model", "par", "est", "lwr", "upr", "unit")],
+    format = "pipe", digits = 2, row.names = FALSE,
+    col.names = c("Model", "Parameter", "Estimate", "Lower 95%", "Upper 95%", "Units"))
+}
+```
+
+### Which observations are likely to be zero? {.tabset}
+
+The numbers in each cell are observed thousands of fish. Colour gives the
+probability of zero calculated from the selected model. Grey cells mark
+missing observations. Hover shows the recorded value, fitted mean, and
+probability. Small positives stay distinct from zero. In the labels,
+`k` means one thousand of the displayed units.
+
+```{r observation-matrices, include=FALSE}
+observations <- lapply(zero_fits, tidy_obs_pred)
+observation_matrix <- function(data) {
+  cells <- expand.grid(year = years, age = ages)
+  key <- match(paste(cells$year, cells$age), paste(data$year, data$age))
+  observed <- data$obs[key]
+  predicted <- data$pred_mean[key]
+  probability <- ifelse(is.na(observed), NA_real_, data$p_zero[key])
+  number <- function(x) format(x, trim = TRUE, scientific = FALSE, digits = 12)
+  rounded <- ifelse(observed < 10, formatC(observed, format = "f", digits = 1),
+    ifelse(observed < 10000, as.character(round(observed)),
+      paste0(round(observed / 1000), "k")))
+  cells$label <- ifelse(is.na(observed), "\u2013",
+    ifelse(observed == 0, "0", ifelse(observed < 0.1, "<0.1", rounded)))
+  age_labels <- as.character(ages)
+  age_labels[length(ages)] <- paste0(max(ages), "+")
+  age_label <- age_labels[match(cells$age, ages)]
+  fitted_values <- paste0("<br>Fitted mean: ", number(predicted),
+    " thousand fish<br>Probability of zero: ", sprintf("%.2f%%", 100 * probability))
+  hover <- paste0("Year: ", cells$year, "<br>Age: ", age_label, "<br>",
+    ifelse(is.na(observed), "Observation: missing",
+      paste0("Observed: ", number(observed), " thousand fish", fitted_values)))
+  cells$dark <- !is.na(probability) & probability >= 0.65
+  color_scale <- list(c(0, "#f8fbfd"), c(0.5, "#aacdde"), c(1, "#244f67"))
+  p <- plotly::plot_ly(x = ages, y = years,
+    z = matrix(probability, nrow = length(years)),
+    text = matrix(hover, nrow = length(years)),
+    type = "heatmap", colorscale = color_scale, zmin = 0, zmax = 1,
+    xgap = 1, ygap = 1, hoverinfo = "text", hoverongaps = FALSE,
+    colorbar = list(title = list(text = "Probability<br>of zero"), tickformat = ".0%"),
+    height = 850)
+  for (on_dark in c(FALSE, TRUE)) {
+    p <- plotly::add_text(p, data = cells[cells$dark == on_dark, ],
+      x = ~age, y = ~year, text = ~label, hovertext = hover[cells$dark == on_dark],
+      hoverinfo = "text", textposition = "middle center", showlegend = FALSE,
+      textfont = list(size = 10, color = if (on_dark) "white" else "#15252d"),
+      inherit = FALSE)
+  }
+  p <- plotly::layout(p, margin = list(t = 70), plot_bgcolor = "#e3e5e8",
+    xaxis = list(title = "Age", side = "top", tickvals = ages, ticktext = age_labels,
+      showgrid = FALSE, zeroline = FALSE, automargin = TRUE),
+    yaxis = list(title = "Year", range = c(max(years) + .5, min(years) - .5),
+      tickvals = c(1983, seq(1985, 2025, by = 5)), showgrid = FALSE))
+  p <- htmlwidgets::onRender(p, "function(el) {
+    function resize() {
+      window.requestAnimationFrame(function() {
+        if (el.offsetWidth > 0 && el._fullLayout && window.Plotly) {
+          window.Plotly.Plots.resize(el);
+        }
+      });
+    }
+    document.addEventListener('shown.bs.tab', resize);
+    if (window.jQuery) window.jQuery(document).on('shown.bs.tab', resize);
+    window.addEventListener('resize', resize);
+  }")
+  htmltools::div(style = "overflow-x: auto;",
+    htmltools::div(style = "min-width: 865px;", plotly::config(p, displayModeBar = FALSE)))
+}
+observation_matrix_tabs <- function(type) {
+  ids <- paste0("observation-matrix-", type, "-", seq_along(observations))
+  tabs <- lapply(seq_along(observations), function(i) {
+    htmltools::tags$button(names(observations)[i], type = "button",
+      class = "tinyam-matrix-tab", id = paste0(ids[i], "-tab"), role = "tab",
+      `aria-controls` = ids[i], `aria-selected` = if (i == 1L) "true" else "false",
+      tabindex = if (i == 1L) "0" else "-1")
+  })
+  panels <- lapply(seq_along(observations), function(i) {
+    htmltools::div(class = "tinyam-matrix-panel", hidden = if (i == 1L) NULL else "hidden",
+      id = ids[i], role = "tabpanel", `aria-labelledby` = paste0(ids[i], "-tab"),
+      tabindex = "0", observation_matrix(observations[[i]][[type]]))
+  })
+  controller <- "(function() {
+    var root = document.currentScript.parentElement;
+    var tabs = Array.from(root.querySelectorAll('.tinyam-matrix-tab'));
+    var panels = Array.from(root.querySelectorAll('.tinyam-matrix-panel'));
+    function resize() {
+      window.requestAnimationFrame(function() {
+        panels.filter(function(p) { return !p.hidden; }).forEach(function(panel) {
+          panel.querySelectorAll('.plotly').forEach(function(plot) {
+            if (plot.offsetWidth > 0 && plot._fullLayout && window.Plotly) {
+              window.Plotly.Plots.resize(plot);
+            }
+          });
+        });
+      });
+    }
+    function select(index, focus) {
+      tabs.forEach(function(tab, i) {
+        tab.setAttribute('aria-selected', String(i === index));
+        tab.tabIndex = i === index ? 0 : -1;
+        panels[i].hidden = i !== index;
+      });
+      if (focus) tabs[index].focus();
+      resize();
+    }
+    tabs.forEach(function(tab, index) {
+      tab.addEventListener('click', function() { select(index, false); });
+      tab.addEventListener('keydown', function(event) {
+        var next = {ArrowLeft: (index + tabs.length - 1) % tabs.length,
+          ArrowRight: (index + 1) % tabs.length, Home: 0, End: tabs.length - 1}[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        event.stopPropagation();
+        select(next, true);
+      });
+    });
+    if (window.ResizeObserver) {
+      var width = 0;
+      new ResizeObserver(function(entries) {
+        var next = entries[0].contentRect.width;
+        if (next !== width) { width = next; if (width > 0) resize(); }
+      }).observe(root);
+    }
+  }());"
+  style <- ".tinyam-matrix-tablist { display:flex; flex-wrap:wrap; gap:.2rem;
+    border-bottom:1px solid #adc3cc; margin-bottom:.5rem; }
+    .tinyam-matrix-tab { font:inherit; color:inherit; cursor:pointer; background:transparent;
+      padding:.45rem .7rem; border:1px solid transparent; border-radius:.25rem .25rem 0 0; }
+    .tinyam-matrix-tab[aria-selected=true] { color:#003e56; background:#edf4f7; border-color:#adc3cc; }
+    .tinyam-matrix-tab:focus-visible { outline:2px solid #003e56; outline-offset:2px; }
+    .tinyam-matrix-panel[hidden] { display:none !important; }"
+  htmltools::div(class = "tinyam-matrix-tabs", id = paste0("observation-matrix-", type, "-tabs"),
+    htmltools::tags$style(htmltools::HTML(style)),
+    htmltools::div(class = "tinyam-matrix-tablist", role = "tablist",
+      `aria-label` = paste(type, "observation family"), tabs),
+    htmltools::div(class = "tinyam-matrix-panels", panels),
+    htmltools::tags$script(htmltools::HTML(controller)))
+}
+```
+
+#### Catch
+
+```{r catch-matrices, echo=FALSE}
+observation_matrix_tabs("catch")
+```
+
+#### Index
+
+```{r index-matrices, echo=FALSE}
+observation_matrix_tabs("index")
+```
+
+### Number of zeros {.tabset}
+
+For each year, dots count the recorded zeros and lines sum each model's
+fitted probabilities of zero across the same sampled ages. For example, three
+ages with probabilities of 0.2, 0.5, and 0.8 contribute 1.5 expected zeros.
+Both counts use sampled observations with a fitted probability and exclude
+structural zeros. Years without eligible observations leave a gap.
+
+```{r annual-zero-counts, include=FALSE}
+zero_counts <- lapply(c("catch", "index"), function(type) {
+  stack_list(lapply(observations, function(d) {
+    tinyAM:::.annual_zero_counts(d[[type]], years = years)
+  }), label = "model")
+})
+names(zero_counts) <- c("catch", "index")
+```
+
+#### Catch {#catch-zero-counts}
+
+```{r catch-zero-counts, echo=FALSE}
+tinyAM:::.plot_annual_zeros(zero_counts$catch, height = 320)
+```
+
+#### Index {#index-zero-counts}
+
+```{r index-zero-counts, echo=FALSE}
+tinyAM:::.plot_annual_zeros(zero_counts$index, height = 320)
+```
+
+## Compare the assessments
+
+Only six catches and two survey observations are positive at age 20+.
+The terminal abundance estimates therefore draw heavily on the fitted
+population dynamics. Shading marks the low-stock years from 1992 to 2010.
+
+```{r trajectories, echo=FALSE}
+terminal <- stack_list(lapply(fits, function(fit) subset(fit$pop$N, age == 20)),
+  label = "model")
+ssb <- do.call(get_ssb, fits)
+low_stock <- list(type = "rect", xref = "x", yref = "paper",
+  x0 = 1992, x1 = 2010, y0 = 0, y1 = 1, layer = "below",
+  fillcolor = "rgba(170,205,222,0.3)", line = list(width = 0))
+plot_trend(terminal, color = ~model, colors = tam_pal(4),
+  ylab = "Age 20+ abundance (thousands of fish)", add_buttons = FALSE,
+  add_intervals = FALSE) |>
+  plotly::layout(shapes = list(low_stock),
+    yaxis = list(type = "log", range = log10(range(terminal$est) * c(0.8, 1.2))))
+plot_trend(ssb, color = ~model, colors = tam_pal(4),
+  ylab = "Spawning biomass (tonnes)")
+```
+
+These differences describe sensitivity to the observation family.
+Inspect numerical checks and residual diagnostics alongside the trajectories
+in the [Northern cod dashboard](../examples/northern-cod-zeros/index.html).
+
+## Forecast held-out observations
+
+For each target year from 2006 to 2025, hindcasts fit through the previous
+year and forecast one year with terminal F held constant. The same 20
+folds are attempted for every family.
+
+```{r hindcasts, cache=TRUE, dependson="fits"}
+hind <- fit_hindcast(ncam, ncam_delta, ncam_poisson, ncam_tweedie,
+  folds = 20, proj_settings = list(F_mult = 1))
+```
+
+All four models are scored on the same held-out positive survey
+observations. Scores compare predicted medians with observations on
+the log scale, so a twofold overprediction and a twofold underprediction
+count equally. Log-RMSE gives large misses more weight. MASE compares
+mean absolute log error with a simple forecast that carries forward the
+last available positive observation. Lower scores are better, and a MASE
+below one shows that the model beats that benchmark (Carvalho et al. 2021).
+
+```{r hindcast-scores, echo=FALSE}
+survey <- hind$forecast_pairs$index
+survey$log_prediction <- ifelse(survey$model == "ncam",
+  log(survey$pred), survey$log_pred_positive)
+survey <- subset(survey, is.finite(obs) & obs > 0 & is.finite(log_prediction))
+key <- with(survey, interaction(fold, year, age, survey, drop = TRUE))
+support <- split(survey$model, key)
+common <- names(support)[vapply(support, function(x) {
+  length(x) == length(fits) && length(unique(x)) == length(fits)
+}, logical(1))]
+matched <- survey[as.character(key) %in% common, ]
+labels <- c(ncam = "Lognormal", ncam_delta = "Logit-link delta",
+  ncam_poisson = "Poisson-link delta", ncam_tweedie = "Tweedie")
+scores <- do.call(rbind, lapply(names(labels), function(model_name) {
+  d <- subset(matched, model == model_name)
+  data.frame(Model = labels[[model_name]], Cases = nrow(d),
+    `Log-RMSE` = if (nrow(d)) compute_hindcast_rmse(d) else NA_real_,
+    MASE = if (nrow(d)) compute_hindcast_mase(d) else NA_real_, check.names = FALSE)
+}))
+knitr::kable(scores, digits = 2, row.names = FALSE)
+```
+
+The true stock history is unknown, so these scores compare one-year
+forecasts of observed survey indices. On the matched positive records,
+Poisson-link delta had the lowest log-RMSE and MASE.
+
+Brier scores were also calculated to compare forecasts of whether a
+held-out catch or survey observation would be zero. The score averages the
+squared difference between the forecast probability of zero and the
+outcome, coded as one for a zero and zero for a positive. Lower is better,
+and a score of zero indicates perfect forecasts on those records. The
+three models are scored on the same held-out observations.
+
+```{r hindcast-zero-scores, echo=FALSE}
+occurrence <- hind$forecast_pairs$occurrence
+if (NROW(occurrence)) {
+  keys <- intersect(c("type", "fold", "horizon", "year", "age", "survey", "fleet"), names(occurrence))
+  case <- do.call(paste, c(occurrence[keys], sep = "\r"))
+  support <- split(occurrence$model, case)
+  common <- names(support)[vapply(support, function(x) {
+    length(x) == length(zero_fits) && length(unique(x)) == length(zero_fits)
+  }, logical(1))]
+  occurrence <- occurrence[case %in% common, ]
+}
+if (NROW(occurrence)) {
+  groups <- split(occurrence, interaction(occurrence$model, occurrence$type, drop = TRUE))
+  brier <- do.call(rbind, lapply(groups, function(x) {
+    data.frame(Model = unname(labels[x$model[1L]]), Observations = x$type[1L],
+      Cases = nrow(x), Brier = mean(x$brier))
+  }))
+  knitr::kable(brier, digits = 3, row.names = FALSE)
+} else {
+  cat("No zero observations or positives were available on common forecast cases.\n")
+}
+```
+
+Poisson-link delta had the lowest Brier score for catch. It matched Tweedie
+for the survey index at the precision shown. The Brier scores assess
+forecasts for individual observations. For agreement in annual totals,
+see the [number of zeros plots](#number-of-zeros).
+
+## Compare information criteria
+
+Marginal AIC averages the likelihood over the model's random effects.
+Conditional AIC (cAIC) evaluates how well each model would predict repeat
+observations from the same underlying stock history. Both account for
+model complexity, and lower values are better.
+
+```{r information-criteria, warning=FALSE}
+marginal <- AIC(ncam_delta, ncam_poisson, ncam_tweedie)
+conditional <- cAIC(ncam_delta, ncam_poisson, ncam_tweedie)
+```
+
+```{r information-criteria-table, echo=FALSE}
+criteria <- data.frame(Model = names(zero_fits), AIC = marginal$AIC,
+  cAIC = conditional[rownames(marginal), "cAIC"])
+knitr::kable(criteria, digits = 1, row.names = FALSE)
+```
+
+The lognormal model is excluded because it treats sampled zeros as
+missing and therefore uses different observations. All three fits have
+parameters at their bounds, so the criteria are approximate. Poisson-link
+delta has the lowest AIC and cAIC, followed by logit-link delta. This
+agrees with the ranking of their positive survey hindcasts.
+
+## References
+
+Carvalho, F., Winker, H., Courtney, D., et al. 2021. A cookbook for using
+model diagnostics in integrated stock assessments. *Fisheries Research*,
+240, 105959.
+[doi:10.1016/j.fishres.2021.105959](https://doi.org/10.1016/j.fishres.2021.105959).
+
+Foster, S. D., and Bravington, M. V. 2013. A Poisson–Gamma model for analysis
+of ecological non-negative continuous data. *Environmental and Ecological
+Statistics*, 20, 533–552.
+[doi:10.1007/s10651-012-0233-0](https://doi.org/10.1007/s10651-012-0233-0).
+
+Stefánsson, G. 1996. Analysis of groundfish survey abundance data: combining
+the GLM and delta approaches. *ICES Journal of Marine Science*, 53(3), 577–588.
+[doi:10.1006/jmsc.1996.0079](https://doi.org/10.1006/jmsc.1996.0079).
+
+Thorson, J. T. 2018. Three problems with the conventional delta-model for
+biomass sampling data, and a computationally efficient alternative.
+*Canadian Journal of Fisheries and Aquatic Sciences*, 75(9), 1369–1382.
+[doi:10.1139/cjfas-2017-0266](https://doi.org/10.1139/cjfas-2017-0266).
+
+```{r dashboard-export, include=FALSE, cache=FALSE}
+dashboard_cache <- Sys.getenv("TINYAM_ZEROS_GUIDE_FITS")
+if (nzchar(dashboard_cache)) {
+  if (!nzchar(guide_root)) stop("Set TINYAM_GUIDE_ROOT to the checkout when exporting guide fits.")
+  dir.create(dirname(dashboard_cache), recursive = TRUE, showWarnings = FALSE)
+  saveRDS(list(models = fits, inputs = cod_obs, versions = versions,
+    sources = setNames(unname(source_hashes), source_files),
+    background = paste(
+      "### Northern cod observation families",
+      "These NCAM-inspired fits use 1983–2025 and ages 2–20+. Four fits compare ordinary lognormal, logit-link delta lognormal, Poisson-link delta lognormal, and Tweedie catch and survey observations.",
+      "See the [handling zeros guide](../../articles/handling-zeros.html) for the equations and fitted distribution parameters.",
+      sep = "\n\n")), dashboard_cache)
+}
+```

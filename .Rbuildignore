@@ -8,6 +8,7 @@
 ^\.positai$
 ^\.claude$
 ^_pkgdown\.yml$
+^pkgdown$
 ^docs$
 ^AGENTS\.md$
 ^vignettes/articles$
