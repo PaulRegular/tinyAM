@@ -1,10 +1,10 @@
 # Keep the production objective and fitter. Change one summand in private
 # copies of the functions so the ablation uses identical parameter maps,
 # optimizer, starts, positive density and conditional lognormal SDs.
-pld_occurrence_ablated_fit <- function() {
+delta_occurrence_ablated_fit <- function() {
   fit <- tinyAM::fit_tam
   nll <- tinyAM::nll_fun
-  occurrence <- list(quote(pld$log_p_zero[dat$pld$zero]), quote(pld$log_p_positive[positive]))
+  occurrence <- list(quote(delta$log_p_zero[dat$delta$zero]), quote(delta$log_p_positive[positive]))
   replaced <- integer(length(occurrence))
   drop_occurrence <- function(code) {
     index <- which(vapply(occurrence, identical, logical(1), y = code))
@@ -29,8 +29,8 @@ pld_occurrence_ablated_fit <- function() {
   fit
 }
 
-pld_spatial_fit <- function(simulation, plus_age, arm) {
-  family <- pld_study_family(arm)
+delta_spatial_fit <- function(simulation, plus_age, arm) {
+  family <- delta_study_family(arm)
   fit <- tinyAM::fit_tam(simulation$data, ages = seq_len(plus_age), silent = TRUE,
     N_settings = list(process = "off", init = "exp"),
     rec_settings = list(process = "rw", sd = 0.50),
@@ -52,19 +52,19 @@ pld_spatial_fit <- function(simulation, plus_age, arm) {
     data.frame(quantity = label, n = sum(use), available = length(truth),
       absolute = mean(abs(error)), bias = mean(error))
   }
-  old <- stats::aggregate(est ~ year, subset(numbers, age >= 14L & year %in% pld_older_window), sum)
+  old <- stats::aggregate(est ~ year, subset(numbers, age >= 14L & year %in% delta_older_window), sum)
   target <- stats::aggregate(N ~ year, subset(reference, age >= 14L), sum)
   young <- reference$age == min(reference$age)
   old_est <- old$est
   old_true <- target$N[match(old$year, target$year)]
-  mean20 <- subset(numbers, age == 20L & year %in% pld_older_window)
+  mean20 <- subset(numbers, age == 20L & year %in% delta_older_window)
   true20 <- subset(reference, age == 20L)
   f <- merge(subset(fishing, age %in% 5:10), reference, by = c("year", "age"))
   fishing_annual <- do.call(rbind, lapply(split(f, f$year), function(d) data.frame(
     year = d$year[1L], F_est = stats::weighted.mean(d$est, d$N),
     F_realized = stats::weighted.mean(d$F_realized, d$N),
     F_reference = stats::weighted.mean(d$F_reference, d$N))))
-  ssb$truth <- as.numeric(tapply(reference$ssb, reference$year, sum))[match(ssb$year, pld_years)]
+  ssb$truth <- as.numeric(tapply(reference$ssb, reference$year, sum))[match(ssb$year, delta_years)]
   recruitment$truth <- reference$N[young][match(recruitment$year, reference$year[young])]
   quantities <- rbind(
     data_metrics(old_est, old_true, "Age 14+ abundance"),
@@ -80,18 +80,18 @@ pld_spatial_fit <- function(simulation, plus_age, arm) {
   list(converged = isTRUE(checks$is_converged), numerical = checks$numerical,
     gradient = checks$max_gradient, optimizer = fit$opt$convergence, objective = fit$opt$objective,
     merged_observations = input, metrics = quantities, F = fishing_annual, ssb = ssb,
-    recruitment = recruitment, N = numbers, parameters = pld_study_parameters(fit))
+    recruitment = recruitment, N = numbers, parameters = delta_study_parameters(fit))
 }
-pld_study_family <- function(arm, y50 = NULL) {
+delta_study_family <- function(arm, y50 = NULL) {
   switch(arm,
     lognormal = tinyAM::lognormal(),
-    full = tinyAM::pld_lognormal(y50 = y50),
-    positive = tinyAM::pld_lognormal(y50 = y50),
-    gengamma = tinyAM::pld_gengamma(y50 = y50),
+    full = tinyAM::delta_lognormal(type = "poisson-link", y50 = y50),
+    positive = tinyAM::delta_lognormal(type = "poisson-link", y50 = y50),
+    gengamma = tinyAM::delta_gengamma(type = "poisson-link", y50 = y50),
     stop("Unknown study arm: ", arm))
 }
 
-pld_study_parameters <- function(fit) {
+delta_study_parameters <- function(fit) {
   fit$fixed_par[fit$fixed_par$par %in% c("y50_catch", "y50_index", "gengamma_Q"), ,
     drop = FALSE]
 }

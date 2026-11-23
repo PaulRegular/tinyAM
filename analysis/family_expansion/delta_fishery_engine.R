@@ -1,6 +1,6 @@
 # Pinned SimSurvey fishery_engine.R (GPL-3). This study simulates one fishery
 # and year at a time and draws monitoring independently from raw removals.
-pld_fast_fishery_engine <- function(engine) {
+delta_fast_fishery_engine <- function(engine) {
   source <- list(
     setup = quote(access <- lapply(controls, .fishery_access, cells = cells, year = year)),
     available = quote(eligible <- remaining > 0 & selected[[f]] > 0 & death_remaining[a_index] > 0),

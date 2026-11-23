@@ -1,8 +1,8 @@
 param(
   [Parameter(Mandatory)][string] $Rscript,
   [string] $SimSurveySource,
-  [ValidateSet('audit','spatial','controlled','comparison')]
-  [string] $Phase = 'comparison',
+  [ValidateSet('audit','spatial','variable','exact','report')]
+  [string] $Phase = 'spatial',
   [string] $Results
 )
 $ErrorActionPreference = 'Stop'
@@ -11,18 +11,11 @@ $rBin = Split-Path -Parent $rscriptPath
 $rtermPath = @((Join-Path $rBin 'Rterm.exe'), (Join-Path $rBin 'x64/Rterm.exe')) |
   Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (!$rtermPath) { throw 'Cannot find Rterm.exe beside the supplied Rscript installation.' }
-if ($Phase -in 'audit','spatial') {
+if ($Phase -in 'audit','spatial','variable','exact') {
   if (!$SimSurveySource) { throw 'Specify -SimSurveySource for the spatial simulation.' }
-  $env:TINYAM_PLD_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
+  $env:TINYAM_DELTA_SIMSURVEY = (Resolve-Path -LiteralPath $SimSurveySource).Path
 }
-if (!$Results) {
-  $folder = switch ($Phase) {
-    'comparison' { 'pld-family-comparison' }
-    'controlled' { 'pld-controlled' }
-    default { 'pld-whole-area' }
-  }
-  $Results = Join-Path 'analysis/family_expansion/results' $folder
-}
+if (!$Results) { $Results = 'analysis/family_expansion/results/default-z-fishing-share' }
 $directory = (New-Item -ItemType Directory -Path $Results -Force).FullName
 $archive = Join-Path $directory 'supervisor'
 New-Item -ItemType Directory -Force -Path $archive | Out-Null
@@ -30,7 +23,7 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $resources = Join-Path $archive "resources-$stamp.csv"
 $launch = @{
   FilePath = $rtermPath
-  ArgumentList = @('--vanilla', '--slave', '--file=analysis/family_expansion/simulate_pld.R',
+  ArgumentList = @('--vanilla', '--slave', '--file=analysis/family_expansion/simulate_delta.R',
     '--args', $Phase, ('"{0}"' -f $directory))
   WindowStyle = 'Hidden'
   WorkingDirectory = (Get-Location).Path

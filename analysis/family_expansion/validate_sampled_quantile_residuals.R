@@ -18,7 +18,7 @@ process_sd <- 0.45
 catch_sd <- 0.30
 index_sd <- 0.25
 y50 <- 45
-scenarios <- c("lognormal", "pld_lognormal")
+scenarios <- c("lognormal", "delta_lognormal")
 methods <- c("mle-eb", "mle-mvn")
 
 simulate_history <- function(history, family) {
@@ -35,7 +35,7 @@ simulate_history <- function(history, family) {
   catch <- catch * exp(rnorm(length(catch), sd = catch_sd))
   index <- as.numeric(abundance)
   index_noise <- rnorm(length(index), sd = index_sd)
-  if (family == "pld_lognormal") {
+  if (family == "delta_lognormal") {
     p_positive <- -expm1(-log(2) * index / y50)
     index <- ifelse(runif(length(index)) < p_positive,
       index / p_positive * exp(index_noise - index_sd^2 / 2), 0)
@@ -57,7 +57,7 @@ fit_history <- function(data, family) {
     M_settings = list(process = "off", mu_supplied = ~ I(0.25)),
     catch_settings = list(sd_form = ~0, sd_supplied = ~ I(0.30)),
     index_settings = list(q_form = ~0, sd_form = ~0, sd_supplied = ~ I(0.25),
-      family = if (family == "pld_lognormal") tinyAM::pld_lognormal(y50) else tinyAM::lognormal()),
+      family = if (family == "delta_lognormal") tinyAM::delta_lognormal(type = "poisson-link", y50 = y50) else tinyAM::lognormal()),
     start_par = list(log_r0 = log(recruitment), rec_beta = c("(Intercept)" = log(recruitment)),
       log_mu_f = c("(Intercept)" = log(fishing_mortality)), log_sd_n = log(process_sd)),
     silent = TRUE)
