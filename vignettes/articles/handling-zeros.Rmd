@@ -5,6 +5,7 @@ output: rmarkdown::html_document
 
 ```{r setup, include=FALSE}
 library(tinyAM)
+tinyAM:::.require_tweedie()
 
 guide_root <- Sys.getenv("TINYAM_GUIDE_ROOT")
 source_files <- if (nzchar(guide_root)) {

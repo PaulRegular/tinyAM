@@ -118,6 +118,10 @@ The \code{q_link} setting separately controls the catchability formula.
 
 \subsection{Tweedie observations}{
 
+Fitting a Tweedie model requires the suggested \code{tweedie} package (version
+3.2.0 or later) for quantile residuals and positive-observation medians.
+Install it with \code{install.packages("tweedie")}.
+
 A compound Poisson–Gamma model represents an observation as the sum of a
 Poisson number of positive Gamma contributions (Foster and Bravington, 2013).
 Zero contributions give an observed zero. The Tweedie family uses the overall arithmetic mean

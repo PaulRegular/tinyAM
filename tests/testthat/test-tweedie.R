@@ -50,7 +50,38 @@ tweedie_reference_case <- function() {
   list(args = args, truth = truth)
 }
 
+test_that("Tweedie preparation explains an unavailable or outdated optional package", {
+  require_namespace <- base::requireNamespace
+  namespace_version <- base::getNamespaceVersion
+  family <- tweedie(power = 1.5)
+  survey <- as.character(cod_obs$index$survey[1L])
+  settings <- list(
+    list(catch_settings = list(family = family)),
+    list(catch_settings = list(family = list(Fishery = family))),
+    list(index_settings = list(family = family)),
+    list(index_settings = list(family = stats::setNames(list(family), survey))))
+  args <- list(data = cod_obs, years = 1983:1985, ages = 2:5)
+  for (available in c(FALSE, TRUE)) {
+    testthat::with_mocked_bindings({
+      expect_identical(tweedie(power = 1.5), family)
+      default <- do.call(prepare_tam, args)
+      expect_true(all(default$obs_map$family == "lognormal"))
+      for (setting in settings) {
+        error <- tryCatch(do.call(prepare_tam, c(args, setting)), error = identity)
+        expect_s3_class(error, "error")
+        expect_match(conditionMessage(error), "3[.]2[.]0")
+        expect_match(conditionMessage(error), "install.packages\\('tweedie'\\)")
+      }
+    }, requireNamespace = function(package, ...) {
+      if (identical(package, "tweedie")) available else require_namespace(package, ...)
+    }, getNamespaceVersion = function(ns) {
+      if (identical(ns, "tweedie")) "3.1.0" else namespace_version(ns)
+    }, .package = "base")
+  }
+})
+
 test_that("Tweedie adds zero mass and the log-observation density", {
+  skip_if_not_installed("tweedie", minimum_version = "3.2.0")
   case <- tweedie_reference_case()
   args <- case$args
   args$index_settings$family$power <- tweedie(power = case$truth[["power"]])
@@ -90,6 +121,7 @@ test_that("Tweedie adds zero mass and the log-observation density", {
 })
 
 test_that("Tweedie uses sampled zeros for dispersion and excludes structural zeros", {
+  skip_if_not_installed("tweedie", minimum_version = "3.2.0")
   case <- tweedie_reference_case()
   args <- case$args
   args$catch_settings <- list(family = tweedie(1.5))
@@ -112,6 +144,7 @@ test_that("Tweedie uses sampled zeros for dispersion and excludes structural zer
 })
 
 test_that("Tweedie positive medians remain available for rare encounters", {
+  skip_if_not_installed("tweedie", minimum_version = "3.2.0")
   power <- 1.5
   log_mean <- log(1e-48)
   rate <- exp((2 - power) * log_mean) / (2 - power)
@@ -124,6 +157,7 @@ test_that("Tweedie positive medians remain available for rare encounters", {
 })
 
 test_that("mixed zero families recover parameters and retain forecast support", {
+  skip_if_not_installed("tweedie", minimum_version = "3.2.0")
   case <- tweedie_reference_case()
   fit <- do.call(fit_tam, c(case$args, list(silent = TRUE)))
   expect_true(fit$is_converged)

@@ -44,12 +44,11 @@ jobs:
         run: |
           pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
           source_paths <- c(file.path("R", list.files("R", "[.]R$")), "NAMESPACE")
-          versions <- c(tinyAM = as.character(packageVersion("tinyAM")),
+          base_versions <- c(tinyAM = as.character(packageVersion("tinyAM")),
             R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
-            mgcv = as.character(packageVersion("mgcv")),
-            tweedie = as.character(packageVersion("tweedie")))
+            mgcv = as.character(packageVersion("mgcv")))
           sources <- tools::md5sum(source_paths)
-          build_dashboard <- function(slug, inputs, truth = NULL) {
+          build_dashboard <- function(slug, inputs, truth = NULL, versions = base_versions) {
             path <- file.path("data-raw", "cache", "vignettes", paste0(slug, "-dashboard.rds"))
             if (!file.exists(path)) stop("The guide did not save its fitted models: ", slug)
             example <- readRDS(path)
@@ -67,7 +66,8 @@ jobs:
             stopifnot(file.exists(output))
           }
           build_dashboard("simulated-cod", sim_cod_obs, sim_cod_truth)
-          build_dashboard("northern-cod-zeros", cod_obs)
+          build_dashboard("northern-cod-zeros", cod_obs,
+            versions = c(base_versions, tweedie = as.character(packageVersion("tweedie"))))
           stopifnot(!"SimSurvey" %in% loadedNamespaces())
       - name: Build combined dashboard
         run: Rscript cheatsheet/examples.R dashboard

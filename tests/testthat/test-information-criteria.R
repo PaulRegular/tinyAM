@@ -74,6 +74,8 @@ test_that("comparison checks observations and units, allowing row reordering", {
 })
 
 test_that("delta and Tweedie criteria compare models on the same sampled zeros", {
+  has_tweedie <- requireNamespace("tweedie", quietly = TRUE) &&
+    package_version(getNamespaceVersion("tweedie")) >= "3.2.0"
   data <- cod_obs
   data$index <- data$index[data$index$age <= 5, ]
   data$index$obs[data$index$year == 1983 & data$index$age == 3] <- 0
@@ -82,13 +84,17 @@ test_that("delta and Tweedie criteria compare models on the same sampled zeros",
     index_settings = list(family = delta_lognormal(type = "poisson-link", y50 = 1e3)))
   logit <- ic_test_fit(data = data,
     index_settings = list(family = delta_gamma(y50 = 1e3)))
-  tw <- ic_test_fit(data = data,
-    index_settings = list(family = tweedie(power = 1.5)))
   expect_equal(attr(suppressWarnings(logLik(poisson)), "nobs"), sum(poisson$dat$is_observed))
   expect_error(AIC(baseline, poisson), "same included catch and survey observations")
   expect_error(cAIC(baseline, poisson), "same included catch and survey observations")
-  expect_true(all(is.finite(suppressWarnings(AIC(logit, poisson, tw))$AIC)))
-  expect_true(all(is.finite(suppressWarnings(cAIC(logit, poisson, tw))$cAIC)))
+  expect_true(all(is.finite(suppressWarnings(AIC(logit, poisson))$AIC)))
+  expect_true(all(is.finite(suppressWarnings(cAIC(logit, poisson))$cAIC)))
+  if (has_tweedie) {
+    tw <- ic_test_fit(data = data,
+      index_settings = list(family = tweedie(power = 1.5)))
+    expect_true(all(is.finite(suppressWarnings(AIC(logit, poisson, tw))$AIC)))
+    expect_true(all(is.finite(suppressWarnings(cAIC(logit, poisson, tw))$cAIC)))
+  }
   changed <- poisson
   changed$dat$obs_values[poisson$dat$delta$zero[1]] <- 1
   expect_error(AIC(poisson, changed), "same included catch and survey observations")
@@ -97,28 +103,41 @@ test_that("delta and Tweedie criteria compare models on the same sampled zeros",
   data$index$obs[data$index$obs == 0 & !is.na(data$index$obs)] <- NA_real_
   positive <- ic_test_fit(data = data)
   gamma <- ic_test_fit(data = data, index_settings = list(family = stats::Gamma(link = "log")))
-  tw_positive <- ic_test_fit(data = data,
-    index_settings = list(family = tweedie(power = 1.5)))
-  expect_true(all(is.finite(suppressWarnings(AIC(positive, gamma, tw_positive))$AIC)))
-  expect_true(all(is.finite(suppressWarnings(cAIC(positive, gamma, tw_positive))$cAIC)))
+  expect_true(all(is.finite(suppressWarnings(AIC(positive, gamma))$AIC)))
+  expect_true(all(is.finite(suppressWarnings(cAIC(positive, gamma))$cAIC)))
+  if (has_tweedie) {
+    tw_positive <- ic_test_fit(data = data,
+      index_settings = list(family = tweedie(power = 1.5)))
+    expect_true(all(is.finite(suppressWarnings(AIC(positive, gamma, tw_positive))$AIC)))
+    expect_true(all(is.finite(suppressWarnings(cAIC(positive, gamma, tw_positive))$cAIC)))
+  }
 })
 
 test_that("conditional fixed EDF counts estimated family parameters by series", {
+  has_tweedie <- requireNamespace("tweedie", quietly = TRUE) &&
+    package_version(getNamespaceVersion("tweedie")) >= "3.2.0"
   data <- cod_obs
   index <- subset(data$index, age <= 5)
   index$obs[index$year == 1983 & index$age == 3] <- 0
-  data$index <- rbind(transform(index, survey = "A"), transform(index, survey = "B"),
-    transform(index, survey = "C"))
+  estimated_families <- list(A = delta_lognormal(), B = delta_gengamma(type = "poisson-link"))
+  fixed_families <- list(A = delta_lognormal(y50 = 1e3),
+    B = delta_gengamma(type = "poisson-link", y50 = 1e3, Q = 0))
+  if (has_tweedie) {
+    estimated_families$C <- tweedie()
+    fixed_families$C <- tweedie(power = 1.5)
+  }
+  data$index <- do.call(rbind, lapply(names(estimated_families), function(series) {
+    d <- index
+    d$survey <- series
+    d
+  }))
   estimated <- ic_test_fit(data = data, index_settings = list(sd_form = ~0 + survey,
-    family = list(A = delta_lognormal(), B = delta_gengamma(type = "poisson-link"),
-      C = tweedie())))
+    family = estimated_families))
   fixed <- ic_test_fit(data = data, index_settings = list(sd_form = ~0 + survey,
-    family = list(A = delta_lognormal(y50 = 1e3),
-      B = delta_gengamma(type = "poisson-link", y50 = 1e3, Q = 0),
-      C = tweedie(power = 1.5))))
+    family = fixed_families))
   estimated_ic <- suppressWarnings(cAIC(estimated, details = TRUE))
   fixed_ic <- suppressWarnings(cAIC(fixed, details = TRUE))
-  expect_equal(estimated_ic$edf_fixed - fixed_ic$edf_fixed, 4)
+  expect_equal(estimated_ic$edf_fixed - fixed_ic$edf_fixed, 3 + as.integer(has_tweedie))
   observation <- tinyAM:::.fitted_objective(estimated, "observation")
   expect_equal(estimated_ic$logLik, -as.numeric(observation$env$f(estimated$parameter_values)))
   expect_equal(estimated_ic$cAIC, -2 * estimated_ic$logLik + 2 * estimated_ic$EDF)

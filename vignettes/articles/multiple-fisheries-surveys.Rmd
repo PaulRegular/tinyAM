@@ -18,7 +18,6 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = TRUE,
   cache.extra = list(package = as.character(packageVersion("tinyAM")),
     R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
     mgcv = as.character(packageVersion("mgcv")),
-    tweedie = as.character(packageVersion("tweedie")),
     sources = unname(tools::md5sum(source_files)),
     inputs = sim_cod_obs, truth = sim_cod_truth))
 ```
@@ -345,7 +344,6 @@ if (nzchar(dashboard_cache)) {
     sources = setNames(unname(tools::md5sum(file.path(guide_root, source_paths))), source_paths),
     versions = c(tinyAM = as.character(packageVersion("tinyAM")),
       R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
-      mgcv = as.character(packageVersion("mgcv")),
-      tweedie = as.character(packageVersion("tweedie")))), dashboard_cache)
+      mgcv = as.character(packageVersion("mgcv")))), dashboard_cache)
 }
 ```
