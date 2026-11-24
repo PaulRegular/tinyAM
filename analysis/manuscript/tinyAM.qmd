@@ -10,7 +10,17 @@ execute:
 
 # Introduction
 
-Fish populations supply the world’s largest harvest of wild food, supporting livelihoods and nourishing billions of people [@barron2022; @basurto2025]. This reliance, together with a history of overexploitation and stock collapses, has motivated decades of monitoring and applied population ecology to inform sustainable fishing practices [@bograd2003; @hilborn2020]. Detailed demographic data have proven useful for this task by providing information on the strength of cohorts as they age and the impact of fishing [@hjort1914; @maunder2013]. Fisheries agencies therefore routinely collect age-structured biological and fisheries data for use in stock assessment models [@noaa2012].
+Fish populations supply the world’s largest harvest of wild food, supporting livelihoods and nourishing billions of people [@barron2022]. This reliance, together with a history of overexploitation and stock collapses, has motivated decades of monitoring and applied population ecology to inform sustainable fishing practices [@hilborn2020]. Detailed demographic data have proven useful for this task by providing information on the strength of cohorts as they age and the impact of fishing [@hjort1914; @maunder2013]. Fisheries agencies therefore routinely collect age-structured biological and fisheries data for use in stock assessment models.
+
+At their core, age-structured stock assessment models share the demographic logic of Leslie matrix models [@leslie1945], a staple in population ecology, while explicitly accounting for fishing removals [@beverton1957]. They link demographic processes to observations to estimate population trends and project responses to alternative fishing scenarios [@maunder2013]. Early approaches treated catch-at-age observations as exact [@fry1949; @gulland1965], while subsequent statistical frameworks accommodate observation errors [@fournier1982] and, in state-space formulations, process variation [@gudmundsson1994; @schnute1994]. These approaches underpin software frameworks such as ADAPT for calibrated virtual population analysis [@gavaris1988], Stock Synthesis for integrated statistical catch-at-age [@methot2013], and SAM for state-space assessments [@nielsen2014].
+
+Applying and adapting these models requires users to navigate specialized data formats, model specifications, and diagnostic procedures [@punt2020]. For biologists and ecologists familiar with GLMs and GLMMs in R, learning these conventions may present a barrier to exploring alternative biological hypotheses. An interface built around familiar data structures and model formulas could make it easier to express assumptions about recruitment, mortality, selectivity, and catchability, and to examine their consequences.
+
+
+
+
+*Previous draft*
+
 
 Age-structured stock assessment models connect these observations through recruitment and the survival of cohorts over time. They share this demographic logic with age-structured population models used elsewhere in ecology [@leslie1945], while fisheries models explicitly account for removals through fishing [@beverton1957]. Combining catches, survey indices and biological observations allows analysts to estimate population trajectories and project their responses to specified fishing scenarios [@maunder2013]. Those inferences depend on assumptions about both population processes and observations. For example, fewer older fish in a survey may reflect changes in survival, the strength of earlier cohorts or the fraction of fish available to the survey. Explicitly representing population processes and observation error is therefore central to interpreting population time series [@devalpine2002].
 
