@@ -5,7 +5,8 @@
 
 * Add `"logit-link"` (default) and `"poisson-link"` types for
   `delta_lognormal()`, `delta_gamma()`, and `delta_gengamma()`. Add `tweedie()` with
-  an optional fixed power for catch and survey observations.
+  an optional fixed power for catch and survey observations. Tweedie models
+  require the suggested `tweedie` package for residuals and positive medians.
 
 * Replace the previous Poisson-link-only constructors with the `delta_*()` interface. Shared
   observation-family help describes prediction scales, dispersion, and zeros.

@@ -88,6 +88,10 @@
 #'
 #' ### Tweedie observations
 #'
+#' Fitting a Tweedie model requires the suggested `tweedie` package (version
+#' 3.2.0 or later) for quantile residuals and positive-observation medians.
+#' Install it with `install.packages("tweedie")`.
+#'
 #' A compound Poisson–Gamma model represents an observation as the sum of a
 #' Poisson number of positive Gamma contributions (Foster and Bravington, 2013).
 #' Zero contributions give an observed zero. The Tweedie family uses the overall arithmetic mean
@@ -260,6 +264,16 @@ tweedie <- function(power = NULL) {
   structure(list(name = "tweedie", power = power), class = "tam_observation_family")
 }
 
+.require_tweedie <- function() {
+  if (!requireNamespace("tweedie", quietly = TRUE) ||
+      package_version(getNamespaceVersion("tweedie")) < "3.2.0") {
+    cli::cli_abort(c(
+      "Tweedie observation models require the {.pkg tweedie} package (version 3.2.0 or later).",
+      "i" = "Install or update it with {.code install.packages('tweedie')}."
+    ))
+  }
+}
+
 .delta_family <- function(name, type, y50) {
   if (!is.character(type) || length(type) != 1L || is.na(type) ||
       !type %in% c("logit-link", "poisson-link")) {
@@ -301,7 +315,11 @@ tweedie <- function(power = NULL) {
     if (identical(x$name, "lognormal")) return(lognormal())
     if (identical(x$name, "gamma")) return(x)
     if (identical(x$name, "gengamma")) return(gengamma(Q = x$Q))
-    if (identical(x$name, "tweedie")) return(tweedie(power = x$power))
+    if (identical(x$name, "tweedie")) {
+      spec <- tweedie(power = x$power)
+      .require_tweedie()
+      return(spec)
+    }
     if (.is_delta_family(x$name)) {
       family <- .delta_family(x$name, x$delta_type, x$y50)
       if (identical(x$name, "delta_gengamma")) {

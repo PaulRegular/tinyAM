@@ -19,7 +19,6 @@ BugReports:
     https://github.com/PaulRegular/tinyAM/issues
 Imports:
     RTMB (>= 2.0),
-    tweedie (>= 3.2.0),
     MASS,
     Matrix,
     mgcv (>= 1.8-40),
@@ -41,8 +40,9 @@ Suggests:
     pkgload,
     jsonlite,
     testthat (>= 3.0.0),
+    tweedie (>= 3.2.0),
     withr
 Config/testthat/edition: 3
-Config/Needs/website: pkgdown, pkgload, rmarkdown, flexdashboard
+Config/Needs/website: pkgdown, pkgload, rmarkdown, flexdashboard, tweedie
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.2

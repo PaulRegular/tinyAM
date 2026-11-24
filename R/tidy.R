@@ -301,6 +301,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
 }
 
 .tweedie_log_cdf <- function(log_y, log_mean, sd, power, lower.tail) {
+  .require_tweedie()
   log_y <- log_y - log_mean
   phi <- .tweedie_unit_dispersion(log_mean, sd, power)
   out <- rep(NA_real_, length(log_y))
@@ -316,6 +317,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
 }
 
 .tweedie_log_positive_median <- function(log_mean, sd, power, log_positive) {
+  .require_tweedie()
   phi <- .tweedie_unit_dispersion(log_mean, sd, power)
   # The conditional median cuts the positive probability mass in half. The
   # upper-tail target remains identifiable when the lower tail rounds to one.
