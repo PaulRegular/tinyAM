@@ -28,17 +28,17 @@ Here we introduce a tiny assessment model, `tinyAM`, an R package designed aroun
 
 ### Cohort survival ($N$) {#sec-cohort-survival}
 
-The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked at the beginning of each year, $y$, by age, $a$, with instantaneous total mortality, $Z_{a,y}$, applied to predict the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group,
+The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked by age, $a$, at the beginning of each year, $y$, and instantaneous total mortality rate, $Z_{a,y}$, determines the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group. Specifically,
 
 $$
 \widetilde{N}_{a,y+1} =
 \begin{cases}
 N_{a-1,y}e^{-Z_{a-1,y}}, & a_R<a<A,\\[6pt]
-N_{A-1,y}e^{-Z_{A-1,y}}+N_{A,y}e^{-Z_{A,y}}, & a=A,
+N_{A-1,y}e^{-Z_{A-1,y}}+N_{A,y}e^{-Z_{A,y}}, & a=A
 \end{cases}
 $$ {#eq-cohort}
 
-for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality). The cohort equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Predicted abundance provides a baseline from which deviations in cohort survival can be modelled (@sec-process-variation).
+for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. This equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality). Predicted abundance provides a baseline from which deviations in cohort survival can be modelled (@sec-process-variation).
 
 ### Initial abundance {#sec-initial-abundance}
 
@@ -53,7 +53,50 @@ Alternatively, initial abundances can be estimated as unconstrained parameters, 
 
 ### Biomass and spawning stock biomass {#sec-biomass}
 
+Beginning-of-year biomass, $B_y$, is calculated as the sum of abundance at age multiplied by supplied stock weights at age, $W_{a,y}$,
+
+$$
+B_y = \sum_{a=a_R}^{A} N_{a,y}W_{a,y}.
+$$ {#eq-biomass}
+
+Similarly, spawning stock biomass, $S_y$, is calculated as the sum of mature biomass at age, accounting for mortality up to the time of spawning,
+
+$$
+S_y = \sum_{a=a_R}^{A} N_{a,y}W_{a,y}P_{a,y}e^{-\tau_{a,y}Z_{a,y}},
+$$ {#eq-ssb}
+
+where $P_{a,y}$ is the supplied proportion mature and $\tau_{a,y}$ is the fraction of the year elapsed at spawning. By default, $\tau_{a,y}=0$ and spawning stock biomass corresponds to mature biomass at the beginning of the year.
+
 ### Recruitment ($R$) {#sec-recruitment}
+
+Baseline recruitment, $\widetilde{R}_y$, can be modelled as a function of covariates,
+
+$$
+\log(\widetilde{R}_y) = \mathbf{X}_y^\top\boldsymbol{\beta}_R,
+$$ {#eq-recruitment-mean}
+
+where $\mathbf{X}_y$ is a vector of covariates (e.g., environmental conditions) and $\boldsymbol{\beta}_R$ is a vector of estimated coefficients. Alternatively, recruitment can be linked to spawning stock biomass through a stock–recruitment relationship,
+
+$$
+\log(\widetilde{R}_y) = \log g(S_{y-\ell}) +
+\mathbf{X}_y^\top\boldsymbol{\beta}_R,
+$$ {#eq-stock-recruitment}
+
+where $\ell$ is the lag between spawning and recruitment (by default, $\ell=a_R$) and $g$ is a Beverton–Holt or Ricker stock–recruitment function,
+
+$$
+g(S) =
+\begin{cases}
+\displaystyle\frac{\alpha S}{1+\beta S},
+& \text{Beverton–Holt},\\[8pt]
+\alpha S e^{-\beta S},
+& \text{Ricker},
+\end{cases}
+$$ {#eq-stock-recruitment-functions}
+
+with positive parameters $\alpha$ and $\beta$. When a stock–recruitment function is specified, its productivity parameter replaces the regression intercept.
+
+Recruitment in the first year, and in subsequent years for which parental spawning stock biomass precedes the modelled period, is estimated independently of the recruitment process, either as fixed parameters or as integrated latent states. Subsequent recruitment can be modelled deterministically or stochastically, with alternative formulations for process variation described in @sec-process-variation.
 
 ### Fishing mortality ($F$) {#sec-fishing-mortality}
 
