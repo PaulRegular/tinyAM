@@ -16,7 +16,7 @@ run_fleet_core_workflow <- function(output = "analysis/formula_expansion/results
   results <- withCallingHandlers(tryCatch({
     fit <- tinyAM::fit_tam(fleet_workflow_inputs(), years = 1983:2000, ages = 2:8,
       N_settings = list(process = "off"),
-      rec_settings = list(process = "off", mu_form = ~ factor(year)),
+      R_settings = list(process = "off", mu_form = ~ factor(year)),
       F_settings = list(process = "off", mu_form = ~ fleet + factor(year) + factor(age)),
       M_settings = list(process = "off", mu_supplied = ~ I(.3)), silent = TRUE)
     diagnostics <- tinyAM::check_tam(fit)
@@ -72,7 +72,7 @@ run_fleet_scoped_workflow <- function(output = "analysis/formula_expansion/resul
     transform(d$index, survey = "Sentinel", obs = .8 * obs))
   settings <- list(data = d, years = 1983:2000, ages = 2:8,
     N_settings = list(process = "off"),
-    rec_settings = list(process = "off", mu_form = ~ factor(year)),
+    R_settings = list(process = "off", mu_form = ~ factor(year)),
     M_settings = list(process = "off", mu_supplied = ~ I(.3)), silent = TRUE)
   warnings <- character(); results <- list(); stage <- "fit"
   withCallingHandlers(tryCatch({
@@ -117,7 +117,7 @@ fleet_smooth_example <- function(seed = 47281) {
       transform(stock, obs = 1.2*obs, type = "catch", fleet = "Gillnet")),
     maturity = transform(grid, obs = plogis(age-4)))
   settings <- list(years = 2000:2019, ages = 1:12,
-    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~1),
+    N_settings = list(process = "off"), R_settings = list(process = "iid", mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~0+fleet:factor(year)+
       for_fleet("Trawl",~0+s(age,k=5))+for_fleet("Gillnet",~0+s(age,k=5))),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
@@ -272,7 +272,7 @@ run_fleet_herring_trial <- function(database_dir,
     tinyAM::check_tam_data(obs)
     stage <- "fit"
     result$fit <- tinyAM::fit_tam(obs,years=1957:2019,ages=1:9,
-      N_settings=list(process="iid",init="exp"),rec_settings=list(process="iid",mu_form=~1),
+      N_settings=list(process="iid",init="exp"),R_settings=list(process="iid",mu_form=~1),
       F_settings=list(process="cor_rw",sd_form=~fleet,cor_form=~fleet,mean_ages=3:6),
       M_settings=list(process="off",mu_supplied=~M_assumption),
       catch_settings=list(sd_form=~fleet),index_settings=list(q_form=~0+q_key,sd_form=~0+sd_block),silent=TRUE)

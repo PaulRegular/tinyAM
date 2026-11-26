@@ -67,7 +67,7 @@ matched_settings <- function(sample, reference, terminal, family, mortality) {
     list(process = "off", mu_supplied = ~ M_realized))
   list(data = data, ages = seq_len(terminal), years = 1:30, silent = TRUE,
     N_settings = list(process = "off", init = "exp"),
-    rec_settings = list(process = "rw", sd = .50),
+    R_settings = list(process = "rw", sd = .50),
     F_settings = list(process = "ar1", mu_form = ~ 1, mean_ages = 5:10),
     M_settings = m, start_par = list(log_mu_f = setNames(log(.1), "(Intercept)")),
     catch_settings = obs("catch"), index_settings = c(obs("index"), list(q_form = ~ 0, q_link = "log")))

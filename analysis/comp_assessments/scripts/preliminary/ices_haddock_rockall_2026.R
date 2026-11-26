@@ -98,7 +98,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "exp", sd_form = ~1),
-    rec_settings = list(process = "rw", mu_form = NULL),
+    R_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),

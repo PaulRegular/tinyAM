@@ -9,7 +9,7 @@
   data$index$obs[data$index$year == 1993 & data$index$age == 4] <- NA_real_
   dat <- prepare_tam(data, years = 1991:1994, ages = 2:5,
     N_settings = list(process = "off"),
-    rec_settings = list(process = if (stochastic) "iid" else "off",
+    R_settings = list(process = if (stochastic) "iid" else "off",
       sd = if (stochastic) 0.3 else NULL, mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1, age_breaks = 3:6),
     catch_settings = list(cor_struct = "ar1"),

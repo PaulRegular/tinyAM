@@ -26,7 +26,7 @@ stopifnot(
   all(trans$obs$pop_covariates$M_assumption == 0.1),
   identical(trans$settings$N_settings$process, "iid"),
   identical(trans$settings$N_settings$init, "exp"),
-  identical(trans$settings$rec_settings$process, "rw"),
+  identical(trans$settings$R_settings$process, "rw"),
   identical(trans$settings$F_settings$process, "ar1"),
   identical(trans$settings$F_settings$mean_ages, 3:9),
   identical(trans$settings$M_settings$process, "off"),

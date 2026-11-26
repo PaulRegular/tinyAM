@@ -1472,7 +1472,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 #' \dontrun{
 #' fit <- fit_tam(cod_obs,
 #'   N_settings = list(process = "off"),
-#'   rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+#'   R_settings = list(process = "iid", mu_form = ~ bh(ssb))
 #' )
 #' tidy_recruitment(fit)$pairs
 #' }

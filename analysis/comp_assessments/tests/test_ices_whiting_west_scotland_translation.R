@@ -53,7 +53,7 @@ stopifnot(
   all(obs$pop_covariates$M_assumption > 0),
   identical(dat$N_settings$process, "iid"),
   identical(dat$N_settings$init, "exp"),
-  identical(dat$rec_settings$process, "rw"),
+  identical(dat$R_settings$process, "rw"),
   identical(dat$F_settings$process, "cor_rw"),
   identical(dat$F_settings$mean_ages, 1:3),
   identical(dat$M_settings$process, "off"),

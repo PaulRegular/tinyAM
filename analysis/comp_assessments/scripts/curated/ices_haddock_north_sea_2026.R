@@ -66,7 +66,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "latent", sd_form = ~ 0 + N_sd_key),
-    rec_settings = list(process = "rw", init = "latent"),
+    R_settings = list(process = "rw", init = "latent"),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:4),
     M_settings = list(process = "off", mu_supplied = ~ M_assumption),
     catch_settings = list(sd_form = ~ 0 + sd_key),

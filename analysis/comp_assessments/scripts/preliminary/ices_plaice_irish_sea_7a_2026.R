@@ -14,7 +14,7 @@ obs <- database_to_tam_obs(
 obs$index$q_key <- factor(obs$index$age, levels = 1:7)
 
 N_settings <- list(process = "rw", init = "exp")
-rec_settings <- list(process = "rw", mu_form = NULL)
+R_settings <- list(process = "rw", mu_form = NULL)
 F_settings <- list(process = "cor_rw", mu_form = NULL, mean_ages = 3:6)
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)
 catch_settings <- list(sd_form = ~1)
@@ -67,7 +67,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = N_settings,
-    rec_settings = rec_settings,
+    R_settings = R_settings,
     F_settings = F_settings,
     M_settings = M_settings,
     catch_settings = catch_settings,

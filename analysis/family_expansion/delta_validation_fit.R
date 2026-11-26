@@ -33,7 +33,7 @@ delta_spatial_fit <- function(simulation, plus_age, arm) {
   family <- delta_study_family(arm)
   fit <- tinyAM::fit_tam(simulation$data, ages = seq_len(plus_age), silent = TRUE,
     N_settings = list(process = "off", init = "exp"),
-    rec_settings = list(process = "rw", sd = 0.50),
+    R_settings = list(process = "rw", sd = 0.50),
     F_settings = list(process = "off", mu_form = ~ factor(year) + normal(age), mean_ages = 5:10),
     M_settings = list(process = "off", mu_supplied = ~ I(0.30)),
     catch_settings = list(sd_form = ~ 1, family = family),

@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* **Breaking change:** Use `R_settings` in place of `rec_settings` to configure
+  recruitment, matching the model's notation. Update model calls and refit
+  models saved with the old setting name.
+
 * Reject explicitly labelled age compositions in catch and survey inputs.
   `check_tam_data()` warns when repeated annual sums suggest age proportions.
 
@@ -147,7 +151,7 @@
   A focused Northern Shelf haddock comparison reproduces the pinned 2026 SAM
   likelihood and fit; see `analysis/sam_equivalence` for checks and limitations.
 
-* `rec_settings$init = "latent"` integrates unpenalized recruitment boundary
+* `R_settings$init = "latent"` integrates unpenalized recruitment boundary
   states without an initial density or SD. The default `"free"` preserves
   fixed boundary parameters, independently of the subsequent process and N initialization.
 
@@ -204,7 +208,7 @@
   remain available only in ordinary projections. Printed statistics and forecast
   conditioning assumptions are documented explicitly.
 
-* `rec_settings$process = "off"` supports deterministic recruitment formulas
+* `R_settings$process = "off"` supports deterministic recruitment formulas
   and BH/Ricker curves, retaining free recruitment boundary states and derived
   uncertainty without extra annual states or process parameters.
   Joint uncertainty simulation falls back to fixed-parameter draws when no

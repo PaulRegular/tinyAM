@@ -15,8 +15,8 @@ starts <- prepared$env$source_starts()
 reported_r <- subset(source_before$outputs, measure == "recruitment")
 reported_r <- as.numeric(reported_r$value[match(1963:2024, reported_r$year)])
 stopifnot(
-  identical(all.vars(settings$rec_settings$mu_form), character()),
-  identical(settings$rec_settings$process, "iid"),
+  identical(all.vars(settings$R_settings$mu_form), character()),
+  identical(settings$R_settings$process, "iid"),
   !any(grepl("sr_alpha|sr_beta", names(tinyAM::make_par(dat)))),
   isTRUE(all.equal(unname(exp(starts$log_r0)), reported_r[1L])),
   isTRUE(all.equal(unname(exp(starts$log_r)), reported_r[-1L])),

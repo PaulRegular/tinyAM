@@ -39,7 +39,7 @@ attr(obs, "translation") <- list(year_basis = "model_year", year_origin = "1 Apr
   notes = "Source numbers are already thousand fish and weights kg/fish. Published values retained, including the unresolved 2019 age-2 index conflict.")
 
 N_settings <- list(process = "off", init = "free")
-rec_settings <- list(process = "iid", mu_form = ~1)
+R_settings <- list(process = "iid", mu_form = ~1)
 F_settings <- list(process = "off", mu_form = ~F_age + factor(year), mean_ages = 2:5)
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)
 catch_settings <- list(sd_form = ~1)
@@ -74,7 +74,7 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit <- fit_default_first(function() tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings,
+    N_settings = N_settings, R_settings = R_settings,
     F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     silent = silent), retry_start = function() {

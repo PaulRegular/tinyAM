@@ -9,7 +9,7 @@ fit_tam(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+  R_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1,
         mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
@@ -68,11 +68,11 @@ directions cancel and are rejected. See \link{tinyAM-model}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
 \code{data$pop_covariates}. Its design must be constant across years. Recruitment
-SD is controlled separately by \code{rec_settings}; initial abundance has no
+SD is controlled separately by \code{R_settings}; initial abundance has no
 separate SD. Random-effect SD terms are not enabled.
 }}
 
-\item{rec_settings}{A list controlling recruitment separately from cohort survival:
+\item{R_settings}{A list controlling recruitment separately from cohort survival:
 \itemize{
 \item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
 or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment

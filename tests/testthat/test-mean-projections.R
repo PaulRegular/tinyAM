@@ -48,12 +48,29 @@ test_that("historical mean designs retain explicit contrast reference levels", {
 })
 
 test_that("recruitment starts do not transfer between different fitted polynomial bases", {
-  off<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,rec_settings=list(process="off",mu_form=~poly(year,2)))
+  off<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,R_settings=list(process="off",mu_form=~poly(year,2)))
   p<-make_par(off)
   fake<-structure(list(dat=off,parameter_values=unlist(p),obj=list(env=list(parList=function(par)p)),
     rep=list(recruitment=rep(100,length(off$years)))),class="tam_fit")
-  iid<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,rec_settings=list(process="iid",mu_form=~poly(year,2)))
+  iid<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,R_settings=list(process="iid",mu_form=~poly(year,2)))
   expect_message(start<-.start_parameters(fake,iid),"Recruitment mean starts.*basis changed")
   expect_null(start$rec_beta)
   expect_equal(start$log_r,setNames(rep(log(100),12),1984:1995))
+})
+
+test_that("recruitment warm starts read the formula from R_settings", {
+  d <- make_test_dat(years = 1983:1990, ages = 2:6,
+    R_settings = list(process = "iid", mu_form = ~ year))
+  p <- make_par(d)
+  p$rec_beta[] <- c(.1, .2)
+  source <- structure(list(dat = d, parameter_values = unlist(p),
+    obj = list(env = list(parList = function(par) p))), class = "tam_fit")
+  expect_identical(.start_parameters(source, d)$rec_beta, p$rec_beta)
+  changed <- make_test_dat(years = 1983:1990, ages = 2:6,
+    R_settings = list(process = "iid", mu_form = ~ 1 + year))
+  # Identical numerical designs isolate the stored-formula compatibility check.
+  expect_identical(changed$rec$matrix, d$rec$matrix)
+  expect_message(start <- .start_parameters(source, changed),
+    "Recruitment mean starts.*basis changed")
+  expect_null(start$rec_beta)
 })

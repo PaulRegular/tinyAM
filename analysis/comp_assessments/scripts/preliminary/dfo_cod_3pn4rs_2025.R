@@ -73,7 +73,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "off", init = "free"),
-    rec_settings = list(process = "ar1", mu_form = ~1),
+    R_settings = list(process = "ar1", mu_form = ~1),
     F_settings = list(
       process = "ar1",
       mu_form = ~0 + F_age_block + F_period

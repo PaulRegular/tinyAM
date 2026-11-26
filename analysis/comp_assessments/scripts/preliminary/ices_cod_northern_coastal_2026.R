@@ -134,7 +134,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "rw", init = "exp"),
-    rec_settings = list(process = "rw", mu_form = NULL),
+    R_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(
       process = "cor_rw",
       mu_form = NULL,

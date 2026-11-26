@@ -152,7 +152,7 @@ The earlier mixed benchmark and retired exploration caches remain historical;
 their provenance is recorded in `multi_fleet_validation.md` and Git history.
 
 Population mean/SD and recruitment covariates now belong in `pop_covariates`.
-Recruitment uses `rec_settings`; parent SSB follows supplied maturity timing,
+Recruitment uses `R_settings`; parent SSB follows supplied maturity timing,
 with zero timing in the original start-of-year experiments. These are current
 interfaces, not additional changes to the generating models.
 

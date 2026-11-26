@@ -62,7 +62,7 @@ test_that("all population formulas use keyed covariates and active ages", {
   x <- population_fixture()
   args <- list(
     data = x, years = 1983:1990, ages = 2:6,
-    N_settings = list(sd_form = ~group), rec_settings = list(process = "iid", mu_form = ~temp),
+    N_settings = list(sd_form = ~group), R_settings = list(process = "iid", mu_form = ~temp),
     F_settings = list(process = "iid", mu_form = ~group, sd_form = ~group),
     M_settings = list(mu_supplied = ~M_assumption)
   )
@@ -79,7 +79,7 @@ test_that("all population formulas use keyed covariates and active ages", {
     "M_settings\\$mu_supplied.*data\\$pop_covariates"
   )
   expect_error(make_test_dat(data = x, F_settings = list(process = "iid", mu_form = ~missing_variable)), "F_settings")
-  expect_error(make_test_dat(data = x, rec_settings = list(process = "iid", mu_form = ~missing_variable)), "rec_settings")
+  expect_error(make_test_dat(data = x, R_settings = list(process = "iid", mu_form = ~missing_variable)), "R_settings")
 })
 
 test_that("plus ages use explicit covariates and projections hold terminal rows", {

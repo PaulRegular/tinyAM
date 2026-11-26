@@ -90,7 +90,7 @@ testthat::test_that("redfish reconstructs only sampled ages and keeps biological
   testthat::expect_equal(stock$years, 1969:2024)
   testthat::expect_identical(stock$settings$N_settings$process, "off")
   testthat::expect_identical(stock$settings$F_settings$process, "off")
-  testthat::expect_identical(stock$settings$rec_settings$process, "ar1")
+  testthat::expect_identical(stock$settings$R_settings$process, "ar1")
   testthat::expect_true(all(stock$obs$maturity$spawn_time == 0.4))
   testthat::expect_true(all(is.na(stock$obs$catch$obs[stock$obs$catch$year == 2000])))
   proportions <- record$inputs[record$inputs$type == "catch" &
@@ -212,7 +212,7 @@ testthat::test_that("winter flounder uses one count representation and estimates
   testthat::expect_equal(stock$years, 1973:2016)
   testthat::expect_equal(stock$ages, 2:12)
   testthat::expect_null(stock$dat$M_settings$mu_supplied)
-  testthat::expect_equal(stock$dat$rec_settings$phi, plogis(-4))
+  testthat::expect_equal(stock$dat$R_settings$phi, plogis(-4))
   testthat::expect_length(unique(stock$obs$pop_covariates$M_group), 2L)
   testthat::expect_length(unique(stock$obs$pop_covariates$M_period), 9L)
   testthat::expect_true(all(stock$obs$index$samp_time == 0.71))

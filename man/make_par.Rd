@@ -32,7 +32,7 @@ represent latent quantities on the log scale. They are compact fitted
 latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
 surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
 calculated separately as deviations (\verb{eta_*}): recruitment uses successive
-log states by default, or expectations from \code{rec_settings}; abundance uses
+log states by default, or expectations from \code{R_settings}; abundance uses
 cohort predictions, and F and M use their log
 mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
 their deviations are \code{eta_log_f = log_f - log_mu_F} and
@@ -63,13 +63,13 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \strong{Recruitment & variability}
 \itemize{
 \item \code{log_r0} (first-year log recruitment, always present; fixed by default,
-integrated when \code{rec_settings$init = "latent"})
+integrated when \code{R_settings$init = "latent"})
 \item \code{log_r}: absolute random log recruitment in eligible process years
 when the recruitment process is enabled;
 by default these are \code{dat$years[-1]}, named by year.
 \item \code{log_r_init}: additional unpenalized boundary states when parent SSB lies
 before the modeled period, named by year.
-\item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}
+\item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{R_settings$sd}
 or recruitment is deterministic (\code{process = "off"}).
 \item \code{rec_beta}: fixed log-scale covariate coefficients when present.
 \item \code{log_sr_alpha}, \code{log_sr_beta}: positive curve parameters on the log scale.

@@ -1,14 +1,14 @@
 # Recruitment residuals act on absolute log recruitment, not additional states.
 .parse_recruitment <- function(dat) {
-  settings <- dat$rec_settings
+  settings <- dat$R_settings
   if (!is.character(settings$init) || length(settings$init) != 1L ||
       is.na(settings$init) || !settings$init %in% c("free", "latent")) {
-    cli::cli_abort("rec_settings$init must be 'free' or 'latent'.")
+    cli::cli_abort("R_settings$init must be 'free' or 'latent'.")
   }
   type <- settings$process
   if (!is.character(type) || length(type) != 1L || is.na(type) ||
     !type %in% c("off", "rw", "iid", "ar1")) {
-    cli::cli_abort("rec_settings$process must be 'off', 'rw', 'iid', or 'ar1'.")
+    cli::cli_abort("R_settings$process must be 'off', 'rw', 'iid', or 'ar1'.")
   }
   fixed <- function(value, name, upper = Inf, zero = FALSE) {
     if (is.null(value)) {
@@ -16,7 +16,7 @@
     }
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
       value < 0 || (!zero && value == 0) || value >= upper) {
-      cli::cli_abort("rec_settings${name} must be one finite {if (zero) 'non-negative' else 'positive'} number below {upper}.")
+      cli::cli_abort("R_settings${name} must be one finite {if (zero) 'non-negative' else 'positive'} number below {upper}.")
     }
     value
   }
@@ -24,7 +24,7 @@
     cli::cli_abort("Recruitment process = 'off' requires sd = NULL and phi = NULL; it has no residual process.")
   }
   if (type != "ar1" && !is.null(settings$phi)) {
-    cli::cli_abort("rec_settings$phi is only used with process = 'ar1'; set phi = NULL.")
+    cli::cli_abort("R_settings$phi is only used with process = 'ar1'; set phi = NULL.")
   }
   rec <- list(
     type = type, sd = fixed(settings$sd, "sd"),
@@ -33,11 +33,11 @@
   form <- settings$mu_form
   if (.contains_q_power(form)) cli::cli_abort("q_power() is only supported in index_settings$q_form.")
   if (is.null(form)) {
-    if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for deterministic or IID/AR1 recruitment. Use ~ 1 for a constant mean.")
+    if (type != "rw") cli::cli_abort("R_settings$mu_form is required for deterministic or IID/AR1 recruitment. Use ~ 1 for a constant mean.")
     form <- ~1
   }
   if (!inherits(form, "formula") || length(form) != 2L) {
-    cli::cli_abort("rec_settings$mu_form must be a one-sided formula.")
+    cli::cli_abort("R_settings$mu_form must be a one-sided formula.")
   }
   curves <- list()
   strip <- function(x) {
@@ -46,7 +46,7 @@
     }
     type <- .formula_call_name(x)
     if (type %in% c("iid", "rw", "ar1")) {
-      cli::cli_abort("Recruitment residual process terms belong in rec_settings$process, not mu_form. Use process = '{type}'.")
+      cli::cli_abort("Recruitment residual process terms belong in R_settings$process, not mu_form. Use process = '{type}'.")
     }
     if (type %in% c("bh", "ricker")) {
       x[[1L]] <- as.name(type)
@@ -92,12 +92,12 @@
     x
   }
   ordinary <- strip(form[[2L]])
-  if (length(curves) > 1L) cli::cli_abort("rec_settings$mu_form allows one stock-recruit curve.")
+  if (length(curves) > 1L) cli::cli_abort("R_settings$mu_form allows one stock-recruit curve.")
   curve <- if (length(curves)) curves[[1L]] else NULL
   if (!is.null(curve) && rec$type == "rw") cli::cli_abort("Stock-recruit curves currently support IID or AR1 residuals, not RW residuals.")
   fixed_form <- form
   fixed_form[[2L]] <- if (is.null(ordinary)) 1 else ordinary
-  data <- .population_data(dat, fixed_form, "rec_settings$mu_form")
+  data <- .population_data(dat, fixed_form, "R_settings$mu_form")
   data <- data[data$age == min(dat$ages), , drop = FALSE]
   data <- data[match(dat$years, data$year), , drop = FALSE]
   biology <- dat$obs$maturity[dat$obs$maturity$age == min(dat$ages), , drop = FALSE]
@@ -113,7 +113,7 @@
     active <- seq_along(dat$years) %in% eligible
     past <- seq_along(dat$years) %in% historical
     fixed_design <- .fixed_mean_design(fixed_form, data, past, active,
-      carry_year_factors = TRUE, label = "rec_settings$mu_form")
+      carry_year_factors = TRUE, label = "R_settings$mu_form")
     matrix <- matrix(0, length(dat$years), ncol(fixed_design$matrix),
       dimnames = list(NULL, colnames(fixed_design$matrix)))
     matrix[active, ] <- fixed_design$matrix
@@ -130,7 +130,7 @@
   terms <- attr(frame, "terms")
   xlevels <- stats::.getXlevels(terms, frame)
   if (nrow(matrix) != length(dat$years) || any(!is.finite(matrix))) {
-    cli::cli_abort("rec_settings$mu_form needs finite covariate values in every modeled recruitment year.")
+    cli::cli_abort("R_settings$mu_form needs finite covariate values in every modeled recruitment year.")
   }
   if (!is.null(curve)) matrix <- matrix[, colnames(matrix) != "(Intercept)", drop = FALSE]
   if (rec$type == "rw") {
@@ -164,7 +164,7 @@
   if ((ncol(design) && qr(design)$rank < ncol(design)) ||
     fixed_parameters > n ||
     (type != "off" && is.null(rec$sd) && fixed_parameters >= n)) {
-    cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_settings$mu_form.")
+    cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify R_settings$mu_form.")
   }
   held <- setdiff(variables, "year")
   if (any(dat$is_proj) && length(held)) cli::cli_inform("Recruitment projections hold terminal covariate values: {paste(held, collapse = ', ')}.")
@@ -181,7 +181,7 @@
 #'
 #' @description
 #' Recruitment is the number of fish entering the youngest modeled age.
-#' Use `rec_settings$process` for annual fluctuations and `rec_settings$mu_form`
+#' Use `R_settings$process` for annual fluctuations and `R_settings$mu_form`
 #' for environmental effects or a relationship with spawning biomass. The
 #' default `process = "rw", mu_form = NULL` retains the original random walk.
 #'
@@ -233,7 +233,7 @@
 #'
 #' First-year `log_r0` and additional recruitment years whose parent SSB precedes
 #' the modeled period (`log_r_init`) have no initial density. With
-#' `rec_settings$init = "free"` (default) they are fixed parameters; `"latent"`
+#' `R_settings$init = "free"` (default) they are fixed parameters; `"latent"`
 #' integrates them through the Laplace approximation, independently of the
 #' subsequent process, including `process = "off"`. There is no separate initial
 #' SD. Process simulations condition on these states; joint uncertainty draws
@@ -267,13 +267,13 @@
 #' @name recruitment_formulas
 #' @export
 bh <- function(ssb, lag = NULL) {
-  cli::cli_abort("bh() is a recruitment formula marker; use it in rec_settings$mu_form.")
+  cli::cli_abort("bh() is a recruitment formula marker; use it in R_settings$mu_form.")
 }
 
 #' @rdname recruitment_formulas
 #' @export
 ricker <- function(ssb, lag = NULL) {
-  cli::cli_abort("ricker() is a recruitment formula marker; use it in rec_settings$mu_form.")
+  cli::cli_abort("ricker() is a recruitment formula marker; use it in R_settings$mu_form.")
 }
 
 .rec_log_curve <- function(log_ssb, par, type) {

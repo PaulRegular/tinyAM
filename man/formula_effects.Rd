@@ -32,7 +32,7 @@ unrelated fixed coefficient for every value. Use these markers as additive
 terms in \code{index_settings$q_form}, \code{F_settings$mu_form}, or
 \code{M_settings$mu_form}, \code{catch_settings$sd_form}, or \code{index_settings$sd_form};
 ordinary formula terms supply the baseline.
-Recruitment uses a separate named residual process in \code{rec_settings};
+Recruitment uses a separate named residual process in \code{R_settings};
 see \link{recruitment_formulas} for its initial-state convention.
 }
 \details{

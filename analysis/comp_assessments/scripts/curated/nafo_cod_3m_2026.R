@@ -120,7 +120,7 @@ if (do_fit) {
   fit <- tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
     N_settings = list(process = "off", init = "free"),
-    rec_settings = list(process = "rw", mu_form = NULL),
+    R_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(
       process = "ar1", mu_form = ~ 0 + F_age_group,
       age_breaks = c(F_block_ages, 9), mean_ages = 3:5

@@ -163,7 +163,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \micro{For $t\ge2$, non-plus ages use the first survival equation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Recruitment}
-\micro{\texttt{rec\_settings}: \texttt{process = "off"} estimates a mean without process deviations; \texttt{mu\_form = \string~ factor(year)} gives annual recruitment. \texttt{"rw"} gives a random walk. With IID/AR1 residuals, \texttt{mu\_form = \string~ bh(ssb)} or \texttt{\string~ ricker(ssb)} adds a stock--recruit curve.}
+\micro{\texttt{R\_settings}: \texttt{process = "off"} estimates a mean without process deviations; \texttt{mu\_form = \string~ factor(year)} gives annual recruitment. \texttt{"rw"} gives a random walk. With IID/AR1 residuals, \texttt{mu\_form = \string~ bh(ssb)} or \texttt{\string~ ricker(ssb)} adds a stock--recruit curve.}
 \[
 \begin{aligned}
 \text{RW: }\log R_t-\log R_{t-1}&=\epsilon_t,\\

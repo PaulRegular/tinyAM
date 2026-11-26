@@ -115,7 +115,7 @@ background <- c(
 fit_model <- function(...) tinyAM::fit_tam(
   data = obs, years = years, ages = ages,
   N_settings = list(process = "off", init = "free"),
-  rec_settings = list(process = "iid", mu_form = ~1),
+  R_settings = list(process = "iid", mu_form = ~1),
   F_settings = list(process = "rw", mu_form = NULL, mean_ages = 1:2),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~0 + catch_sd_group),

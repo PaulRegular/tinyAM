@@ -234,7 +234,7 @@ Each stock script supplies a short Markdown table aligned with `prepare_tam()`:
 |---|------|------|------|
 | Years | Fitted historical years | Years used in this fit | Explain any restricted period |
 | Ages | Recruitment age and terminal age group | Model ages and plus group | Explain any age restriction or grouping |
-| N | Recruitment, survival, process variation, and initial abundance | `N_settings` and `rec_settings` | Explain omitted or changed population assumptions |
+| N | Recruitment, survival, process variation, and initial abundance | `N_settings` and `R_settings` | Explain omitted or changed population assumptions |
 | F | Fleets, selectivity, and changes through time | `F_settings` and catch aggregation | Explain the simplified fishery structure |
 | M | Fixed or estimated mortality, age groups, and time variation | M assumption and `M_settings` | Explain the baseline and any estimated process |
 | Catch | Removal streams and observation-error model | Catch observations and `catch_settings` | Explain reconstruction and error-model differences |
@@ -946,9 +946,9 @@ Compare the actual mathematical structure.
 
 For broad comparative analyses, a standardized tinyAM N process may intentionally differ from the source assessment. Record that explicitly.
 
-Recruitment is separate from older-cohort deviations: `rec_settings$process`
+Recruitment is separate from older-cohort deviations: `R_settings$process`
 defaults to `"rw"`, while `N_settings$process` controls survival variation.
-Set `rec_settings$mu_form = ~ 1` for a constant IID/AR1 baseline, or use
+Set `R_settings$mu_form = ~ 1` for a constant IID/AR1 baseline, or use
 `~ bh(ssb)` or `~ ricker(ssb)` with IID/AR1 residuals. Mean formulas may include
 fixed annual covariates when justified; process markers do not belong in them.
 Recruitment means abundance at the youngest modeled age. Parent SSB is

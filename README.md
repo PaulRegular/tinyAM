@@ -161,7 +161,7 @@ holding natural mortality at 0.3 per year:
 base <- fit_tam(
   dat, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw"),
+  R_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = ~ 1),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
@@ -182,14 +182,14 @@ Other possibilities include:
 
 | Component | Example options | Guidance |
 |---|---|---|
-| Recruitment | `rec_settings`: `"rw"`; `"iid"` with `mu_form = ~ bh(ssb)`; `"off"` with `~ factor(year)` | [Recruitment](https://paulregular.github.io/tinyAM/reference/recruitment_formulas.html): Beverton–Holt/Ricker curves support IID/AR1 residuals or deterministic recruitment, not RW residuals. |
+| Recruitment | `R_settings`: `"rw"`; `"iid"` with `mu_form = ~ bh(ssb)`; `"off"` with `~ factor(year)` | [Recruitment](https://paulregular.github.io/tinyAM/reference/recruitment_formulas.html): Beverton–Holt/Ricker curves support IID/AR1 residuals or deterministic recruitment, not RW residuals. |
 | Cohort survival | `N_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`; `mu_form = ~ temperature` | [Population model](https://paulregular.github.io/tinyAM/reference/tinyAM-model.html): apparent gains/losses cannot separate migration from mortality. |
 | Fishing mortality | `F_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`, `"cor_rw"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): deterministic F requires an explicit mean. Optional `age_breaks` share actual F and can leave younger ages unfished; `"cor_rw"` correlates annual changes across states. |
 | Natural mortality | `M_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): M can be supplied or estimated; age blocks share actual M. |
 | Mean F and catchability | `~ age_group`, `~ logistic(age)`, `~ mono(age)`; q also supports `iid()`, `rw()`, `ar1()` effects | [Curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html) and [formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): supported combinations have identifiability safeguards; `q_link = "logit"` bounds q between zero and one. |
 | Observation SD | `sd_form = ~ age_group` or `~ s(age, k = 5)` | [Formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html) and [smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html) model catch and index spread on the log-SD scale. |
 
-Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
+Recruitment boundary states are fixed by default; `R_settings$init = "latent"`
 integrates them without an initial density. For abundance-dependent catchability,
 use [`q_power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/q_power.html) in `q_form` with the log link.
 

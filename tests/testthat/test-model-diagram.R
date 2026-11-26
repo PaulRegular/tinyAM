@@ -28,7 +28,7 @@ test_that("model diagrams read completed settings without calculations or mutati
 test_that("model diagrams show deterministic means and stock-recruit feedback", {
   dat <- make_test_dat(years = 2000:2007, ages = 2:8,
     N_settings = list(process = "off", init = "latent"),
-    rec_settings = list(process = "off", mu_form = ~ bh(ssb)),
+    R_settings = list(process = "off", mu_form = ~ bh(ssb)),
     F_settings = list(process = "off", mu_form = ~ factor(year) + factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.3)))
   fit <- structure(list(dat = dat), class = "tam_fit")
@@ -43,7 +43,7 @@ test_that("model diagrams show deterministic means and stock-recruit feedback", 
   expect_match(html, "catch: year, age", fixed = TRUE)
   spec <- .model_structure_spec(dat)
   expect_identical(unname(spec$inputs["recruitment"]), "")
-  dat$rec_settings$mu_form <- ~ factor(year)
+  dat$R_settings$mu_form <- ~ factor(year)
   expect_identical(unname(.model_structure_spec(dat)$inputs["recruitment"]), "")
   dat$pop_data$temperature <- seq_len(nrow(dat$pop_data))
   dat$N_settings$mu_form <- ~ temperature

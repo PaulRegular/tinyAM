@@ -56,7 +56,7 @@ obs$maturity$spawn_time <- 0
 ## Model and comparison ----
 age_plus_group <- 11L
 N_settings <- list(process = "iid", init = "exp")
-rec_settings <- list(process = "rw", mu_form = NULL)
+R_settings <- list(process = "rw", mu_form = NULL)
 F_settings <- list(process = "rw", mu_form = NULL, mean_ages = 3:7)
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)
 catch_settings <- list(sd_form = ~0 + sd_block)
@@ -64,7 +64,7 @@ index_settings <- list(q_form = ~0 + q_key, sd_form = ~0 + sd_block)
 
 dat <- tinyAM::prepare_tam(
   data = obs, years = years, ages = ages,
-  N_settings = N_settings, rec_settings = rec_settings,
+  N_settings = N_settings, R_settings = R_settings,
   F_settings = F_settings, M_settings = M_settings,
   catch_settings = catch_settings, index_settings = index_settings
 )
@@ -172,7 +172,7 @@ if (do_fit) {
     arguments <- c(
       list(data = obs, years = years, ages = ages),
       list(
-        N_settings = N_settings, rec_settings = rec_settings,
+        N_settings = N_settings, R_settings = R_settings,
         F_settings = F_settings, M_settings = M_settings,
         catch_settings = catch_settings, index_settings = index_settings,
         silent = silent

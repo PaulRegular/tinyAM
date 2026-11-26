@@ -40,7 +40,7 @@ stopifnot(
   setequal(unique(obs$index$sd_age), c("ages0_5", "ages6_7")),
   dat$N_settings$process == "iid",
   dat$N_settings$init == "exp",
-  dat$rec_settings$process == "rw",
+  dat$R_settings$process == "rw",
   dat$F_settings$process == "cor_rw",
   identical(dat$F_settings$mean_ages, 3:5),
   dat$M_settings$process == "off",

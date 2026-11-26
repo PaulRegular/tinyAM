@@ -66,7 +66,7 @@ per year.
 scaa <- fit_tam(
   dat, years = 1983:2025, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "off", mu_form = ~ factor(year)),
+  R_settings = list(process = "off", mu_form = ~ factor(year)),
   F_settings = list(process = "off",
     mu_form = ~ factor(year) + factor(age), mean_ages = 5:14),
   M_settings = list(process = "off",
@@ -88,7 +88,7 @@ population processes while retaining the same observations and fixed M.
 ```{r sam, cache=TRUE, dependson="scaa", results='hide'}
 sam <- update(scaa,
   N_settings = list(process = "iid"),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "cor_rw", mu_form = NULL)
 )
 ```
@@ -98,7 +98,7 @@ correlated F and M. Ages within each M block share actual M.
 
 ```{r ncam, cache=TRUE, dependson="scaa", results='hide'}
 ncam <- update(scaa,
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "ar1", mu_form = ~ 1),
   M_settings = list(process = "ar1", age_breaks = c(2, 5, 8, 14))
 )

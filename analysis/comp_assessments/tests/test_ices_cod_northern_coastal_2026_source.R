@@ -93,7 +93,7 @@ tam_data <- tinyAM::prepare_tam(
   years = 1995:2025,
   ages = 3:10,
   N_settings = list(process = "rw", init = "exp"),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 4:8),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~1),
@@ -115,7 +115,7 @@ stopifnot(
   all(obs$maturity$spawn_time == 0.8),
   is.null(tam_data$plus_ages),
   tam_data$N_settings$process == "rw",
-  tam_data$rec_settings$process == "rw",
+  tam_data$R_settings$process == "rw",
   tam_data$F_settings$process == "cor_rw",
   all(is.finite(obs$pop_covariates$M_assumption))
 )

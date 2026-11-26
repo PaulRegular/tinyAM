@@ -60,7 +60,7 @@ comparison_definitions <- list(
 ## Model ----
 
 N_settings <- list(process = "off", init = "free")
-rec_settings <- list(process = "rw", mu_form = NULL)
+R_settings <- list(process = "rw", mu_form = NULL)
 F_settings <- list(process = "rw", mu_form = NULL, mean_ages = 6:9)
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~ M_assumption)
 catch_settings <- list(sd_form = ~0, sd_supplied = ~ I(0.01))
@@ -93,7 +93,7 @@ if (do_fit) {
   source("analysis/comp_assessments/R/source_start_parameters.R", local = TRUE)
   fit_model <- function(start_par = NULL) tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings,
+    N_settings = N_settings, R_settings = R_settings,
     F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     start_par = start_par, silent = silent
@@ -103,7 +103,7 @@ if (do_fit) {
     retry_start = function() {
       dat <- tinyAM::prepare_tam(
         data = obs, years = years, ages = ages,
-        N_settings = N_settings, rec_settings = rec_settings,
+        N_settings = N_settings, R_settings = R_settings,
         F_settings = F_settings, M_settings = M_settings,
         catch_settings = catch_settings, index_settings = index_settings
       )

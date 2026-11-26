@@ -19,7 +19,7 @@ test_that("whitening matches every process likelihood and stationary boundary", 
                                 curve = FALSE, mapped = FALSE, age_sd = FALSE) {
   d <- prepare_tam(cod_obs, years = 1983:1991, ages = 2:5,
     N_settings = list(process = process, sd_form = if (age_sd) ~I(age >= 4) else ~1),
-    rec_settings = list(process = rec, mu_form = if (curve) ~bh(ssb, lag = 2) else if (rec == "rw") NULL else ~1),
+    R_settings = list(process = rec, mu_form = if (curve) ~bh(ssb, lag = 2) else if (rec == "rw") NULL else ~1),
     F_settings = list(process = if (process == "rw") "cor_rw" else process,
       mu_form = if (process == "rw") NULL else ~1, sd_form = if (age_sd) ~I(age >= 4) else ~1),
     M_settings = list(process = process, first_dev_year = start, age_breaks = c(2, 4, 5),

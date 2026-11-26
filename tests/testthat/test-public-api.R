@@ -1,6 +1,6 @@
 test_that("prepare_tam and fit_tam expose the same data and model arguments", {
   settings <- c(
-    "data", "years", "ages", "N_settings", "rec_settings", "F_settings",
+    "data", "years", "ages", "N_settings", "R_settings", "F_settings",
     "M_settings", "catch_settings", "index_settings", "proj_settings"
   )
   expect_identical(names(formals(prepare_tam)), settings)
@@ -8,7 +8,10 @@ test_that("prepare_tam and fit_tam expose the same data and model arguments", {
   expect_false(any(c("obs", "...") %in% names(formals(fit_tam))))
   expect_identical(as.list(formals(fit_tam))[settings], as.list(formals(prepare_tam)))
 
-  dat <- prepare_tam(data = cod_obs, years = 2000:2005, ages = 2:6)
+  dat <- prepare_tam(data = cod_obs, years = 2000:2005, ages = 2:6,
+    R_settings = list(process = "iid", mu_form = ~ 1, sd = .2))
+  expect_identical(dat$R_settings$sd, .2)
+  expect_identical(dat$rec$type, "iid")
   expect_true("obs" %in% names(dat))
   expect_false("data" %in% names(dat))
   expect_true(all(vapply(dat$obs[c("catch", "index", "weight", "maturity")], function(x) "obs" %in% names(x), logical(1))))

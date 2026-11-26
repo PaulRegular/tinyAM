@@ -173,7 +173,7 @@ in their catch and survey observation families.
 ```{r fits, cache=TRUE, results="hide", warning=FALSE}
 ncam <- fit_tam(cod_obs, years = 1983:2025, ages = 2:20,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw"),
+  R_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = ~ 1, mean_ages = 5:14),
   M_settings = list(process = "ar1", mu_supplied = ~ I(0.3),
     age_breaks = c(2, 5, 8, 21), mean_ages = 5:14),

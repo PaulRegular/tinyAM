@@ -20,7 +20,7 @@ stopifnot(
   any(stock$obs$index$samp_time[stock$obs$index$survey == "NEFSC fall Albatross"] == 0.25),
   identical(stock$settings$N_settings$process, "iid"),
   identical(stock$settings$N_settings$init, "free"),
-  identical(stock$settings$rec_settings$process, "iid"),
+  identical(stock$settings$R_settings$process, "iid"),
   identical(stock$settings$F_settings$process, "ar1"),
   identical(stock$settings$M_settings$process, "off"),
   identical(all.vars(stock$settings$index_settings$q_form), "q_key"),

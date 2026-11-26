@@ -38,7 +38,7 @@ stopifnot(
   all(obs$maturity$spawn_time == 0),
   identical(translated$dat$N_settings$process, "iid"),
   identical(translated$dat$N_settings$init, "exp"),
-  identical(translated$dat$rec_settings$process, "rw"),
+  identical(translated$dat$R_settings$process, "rw"),
   identical(translated$dat$F_settings$process, "ar1"),
   identical(translated$dat$F_settings$mean_ages, 2:4),
   identical(translated$dat$M_settings$process, "off"),

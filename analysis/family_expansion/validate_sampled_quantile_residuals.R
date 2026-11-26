@@ -52,7 +52,7 @@ simulate_history <- function(history, family) {
 fit_history <- function(data, family) {
   tinyAM::fit_tam(data,
     N_settings = list(process = "iid", init = "exp"),
-    rec_settings = list(process = "off", mu_form = ~1),
+    R_settings = list(process = "off", mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1),
     M_settings = list(process = "off", mu_supplied = ~ I(0.25)),
     catch_settings = list(sd_form = ~0, sd_supplied = ~ I(0.30)),

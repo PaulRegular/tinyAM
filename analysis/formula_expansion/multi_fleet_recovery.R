@@ -30,13 +30,13 @@ fleet_recovery_configs <- function() {
   form <- ~0+fleet:factor(year)+for_fleet("Trawl",~0+logistic(age))+
     for_fleet("Gillnet",~0+double_logistic(age))
   settings <- list(years=years,ages=ages,N_settings=list(process="off"),
-    rec_settings=list(process="iid",mu_form=~1),
+    R_settings=list(process="iid",mu_form=~1),
     F_settings=list(process=config$process,mu_form=form,mean_ages=3:8),
     M_settings=list(process="off",mu_supplied=~I(.2),mean_ages=3:8),
     catch_settings=list(sd_form=~fleet),index_settings=list(q_form=~logistic(age)))
   if (config$family == "sam") {
     settings$N_settings <- list(process="iid",init="latent")
-    settings$rec_settings <- list(process="rw",init="latent")
+    settings$R_settings <- list(process="rw",init="latent")
     settings$F_settings <- list(process="cor_rw",mu_form=NULL,sd_form=~fleet,
       cor_form=if(config$correlation == "shared")~1 else ~fleet,
       age_breaks=list(Trawl=c(1:9,11),Gillnet=c(2:8,11)),mean_ages=3:8)

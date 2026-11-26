@@ -37,7 +37,7 @@ gamma_workflow_inputs <- function() {
 gamma_workflow_settings <- function(data = gamma_workflow_inputs()) {
   list(data = data,
     N_settings = list(process = "off", init = "exp"),
-    rec_settings = list(process = "off", mu_form = ~1),
+    R_settings = list(process = "off", mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1, age_breaks = 3:7),
     M_settings = list(process = "off", mu_supplied = ~I(.3)),
     catch_settings = list(family = stats::Gamma(link = "log")),

@@ -44,7 +44,7 @@ stopifnot(
   all(prepared$obs$pop_covariates$M_assumption == 0.1),
   identical(prepared$N_settings$process, "iid"),
   identical(prepared$N_settings$init, "exp"),
-  identical(prepared$rec_settings$process, "rw"),
+  identical(prepared$R_settings$process, "rw"),
   identical(prepared$F_settings$process, "rw"),
   identical(prepared$F_settings$mean_ages, 3:7),
   identical(prepared$M_settings$process, "off"),
