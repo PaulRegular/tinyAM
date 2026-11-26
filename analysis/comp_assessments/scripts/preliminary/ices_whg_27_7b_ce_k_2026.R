@@ -13,7 +13,7 @@ obs$index$q_group <- factor(ifelse(obs$index$age == 0, "age0", "ages1_2"))
 obs$index$sd_group <- obs$index$q_group
 
 N_settings <- list(process = "iid", init = "free")
-rec_settings <- list(process = "rw", mu_form = NULL)
+R_settings <- list(process = "rw", mu_form = NULL)
 F_settings <- list(process = "cor_rw", mu_form = NULL,
   age_breaks = c(0:6, 8), mean_ages = 2:5)
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)
@@ -50,13 +50,13 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit_model <- function(start_par = NULL) tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings,
+    N_settings = N_settings, R_settings = R_settings,
     F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     start_par = start_par, silent = silent)
   fit <- fit_default_first(fit_model, retry_start = function() {
     dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages,
-      N_settings = N_settings, rec_settings = rec_settings,
+      N_settings = N_settings, R_settings = R_settings,
       F_settings = F_settings, M_settings = M_settings,
       catch_settings = catch_settings, index_settings = index_settings)
     # Source F is shared at ages 6–7; use the block-start ages, not a pooled rate.

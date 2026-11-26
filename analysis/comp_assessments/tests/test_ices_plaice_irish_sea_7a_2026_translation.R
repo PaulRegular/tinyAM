@@ -21,7 +21,7 @@ stopifnot(
   length(unique(translated$obs$index$q_key)) == 7L,
   identical(translated$settings$N_settings$process, "rw"),
   identical(translated$settings$N_settings$init, "exp"),
-  identical(translated$settings$rec_settings$process, "rw"),
+  identical(translated$settings$R_settings$process, "rw"),
   identical(translated$settings$F_settings$process, "cor_rw"),
   identical(translated$settings$M_settings$process, "off"),
   identical(paste(deparse(translated$settings$index_settings$q_form), collapse = ""), "~0 + q_key"),

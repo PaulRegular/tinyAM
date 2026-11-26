@@ -136,7 +136,7 @@ oe_assessment_inputs <- function(snapshots) {
   list(
     ages = 1:14,
     N_settings = list(process = "off", init = "exp"),
-    rec_settings = list(process = "rw"),
+    R_settings = list(process = "rw"),
     F_settings = list(process = "off", mu_form = ~ factor(year) + age_band, mean_ages = 5:10),
     M_settings = list(process = "off", mu_supplied = ~ M_realized, mean_ages = 5:10),
     catch_settings = catch_settings,

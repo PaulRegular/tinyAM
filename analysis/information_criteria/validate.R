@@ -57,7 +57,7 @@ assessment_truth <- function(scenario) {
     weight = transform(grid, obs = .4 * age, unit = "kg"),
     maturity = transform(grid, obs = plogis(age - 3)))
   settings <- list(N_settings = list(process = if (scenario == "cohort") "iid" else "off"),
-    rec_settings = list(process = "iid", mu_form = if (scenario == "BH") ~bh(ssb) else ~1),
+    R_settings = list(process = "iid", mu_form = if (scenario == "BH") ~bh(ssb) else ~1),
     F_settings = list(process = "iid", mu_form = ~1), index_settings = list(q_form = ~1))
   dat <- do.call(prepare_tam, c(list(data = data), settings))
   p <- make_par(dat)

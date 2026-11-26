@@ -2,7 +2,7 @@ test_that("deterministic recruitment follows its formula with free boundaries", 
   obs <- cod_obs
   obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age==2,sin(obs$pop_covariates$year),NA)
   d <- make_test_dat(data=obs,years=1983:1995,ages=2:8,
-    rec_settings=list(process="off",mu_form=~temp),proj_settings=list(n_proj=2))
+    R_settings=list(process="off",mu_form=~temp),proj_settings=list(n_proj=2))
   p <- make_par(d);p$log_r0<-log(100);p$rec_beta[]<-c(2,.2)
   expect_false(any(c("log_r","log_sd_r","logit_phi_r") %in% names(p)))
   o <- RTMB::MakeADFun(function(p)nll_fun(p,d),p,silent=TRUE)
@@ -20,7 +20,7 @@ test_that("deterministic stock-recruit models use the same chronological parents
   for(curve in c("bh","ricker")) for(lag in c(0,2,4)) {
     obs<-cod_obs;obs$maturity$obs[obs$maturity$age==2]<-0
     d<-make_test_dat(data=obs,years=1983:1998,ages=2:8,
-      rec_settings=list(process="off",mu_form=as.formula(paste0("~",curve,"(ssb,lag=",lag,")"))))
+      R_settings=list(process="off",mu_form=as.formula(paste0("~",curve,"(ssb,lag=",lag,")"))))
     p<-make_par(d)
     p$log_r0<-1
     if(!is.null(p$log_r_init))p$log_r_init[]<-seq_along(p$log_r_init)/10
@@ -41,15 +41,15 @@ test_that("deterministic stock-recruit models use the same chronological parents
 })
 
 test_that("deterministic recruitment rejects unused settings and supports saturated fixed means", {
-  expect_error(make_test_dat(rec_settings=list(process="off")),"mu_form is required")
+  expect_error(make_test_dat(R_settings=list(process="off")),"mu_form is required")
   for(nm in c("sd","phi")) {
     settings<-list(process="off",mu_form=~1);settings[[nm]]<-.2
-    expect_error(make_test_dat(rec_settings=settings),"no residual process")
+    expect_error(make_test_dat(R_settings=settings),"no residual process")
   }
-  d<-make_test_dat(years=1983:1988,ages=2:6,rec_settings=list(process="off",mu_form=~factor(year)))
+  d<-make_test_dat(years=1983:1988,ages=2:6,R_settings=list(process="off",mu_form=~factor(year)))
   expect_equal(ncol(d$rec$matrix),5)
-  expect_error(make_test_dat(rec_settings=list(process="off",mu_form=~year+I(year*2))),"redundant")
-  expect_error(make_test_dat(rec_settings=list(process="off",mu_form=~bh(ssb,lag=100))),"historical")
+  expect_error(make_test_dat(R_settings=list(process="off",mu_form=~year+I(year*2))),"redundant")
+  expect_error(make_test_dat(R_settings=list(process="off",mu_form=~bh(ssb,lag=100))),"historical")
 })
 
 test_that("deterministic fits retain uncertainty, updates and evaluation workflows", {
@@ -57,7 +57,7 @@ test_that("deterministic fits retain uncertainty, updates and evaluation workflo
   data<-list(catch=transform(g,obs=100,unit="thousand fish"),
     index=transform(g,obs=100,survey="S",samp_time=.3,unit="thousand fish"),
     weight=transform(g,obs=age,unit="kg"),maturity=transform(g,obs=as.numeric(age>=3)))
-  settings<-list(N_settings=list(process="off"),rec_settings=list(process="off",mu_form=~1),
+  settings<-list(N_settings=list(process="off"),R_settings=list(process="off",mu_form=~1),
     F_settings=list(process="off",mu_form=~1),index_settings=list(q_form=~1))
   d<-do.call(prepare_tam,c(list(data=data),settings));p<-make_par(d)
   p$log_r0<-log(800);p$rec_beta[]<-log(1000);p$log_mu_f[]<-log(.4)
@@ -74,8 +74,8 @@ test_that("deterministic fits retain uncertainty, updates and evaluation workflo
   expect_equal(cAIC(f,details=TRUE)$edf_rec,0)
   shorter<-suppressMessages(update(f,years=2000:2023,start_par=f,silent=TRUE))
   expect_true(shorter$is_converged)
-  expect_equal(update(f,rec_settings=list(process="iid"),evaluate=FALSE)$rec_settings$process,"iid")
-  stochastic<-prepare_tam(data,N_settings=list(process="off"),rec_settings=list(process="iid",mu_form=~1),
+  expect_equal(update(f,R_settings=list(process="iid"),evaluate=FALSE)$R_settings$process,"iid")
+  stochastic<-prepare_tam(data,N_settings=list(process="off"),R_settings=list(process="iid",mu_form=~1),
     F_settings=list(process="off",mu_form=~1),index_settings=list(q_form=~1))
   start<-.merge_start_par(make_par(stochastic),.start_parameters(f,stochastic))
   expect_equal(unname(start$log_r),unname(log(f$rep$recruitment[-1])))

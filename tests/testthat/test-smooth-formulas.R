@@ -303,7 +303,7 @@ test_that("scoped F and q smooths report complete functions and signed null-spac
     transform(obs$catch,fleet="Gillnet",obs=.4*obs))
   obs$index <- rbind(transform(obs$index,survey="RV"),transform(obs$index,survey="Sentinel",obs=.8*obs))
   d <- make_test_dat(data=obs,years=2000:2007,ages=2:10,N_settings=list(process="off"),
-    rec_settings=list(process="off",mu_form=~1),
+    R_settings=list(process="off",mu_form=~1),
     F_settings=list(process="off",mu_form=~0+for_fleet("Trawl",~s(age,k=5))+
       for_fleet("Gillnet",~t2(age,year,k=c(4,4)))),
     index_settings=list(q_form=~0+for_survey("RV",~s(age,k=4,bs="cr"))+

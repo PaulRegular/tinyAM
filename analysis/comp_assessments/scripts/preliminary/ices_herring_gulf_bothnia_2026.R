@@ -29,7 +29,7 @@ obs$maturity$spawn_time <- 0
 
 settings <- list(
   N_settings = list(process = "iid", init = "exp"),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "ar1", mu_form = ~logistic(age), mean_ages = 3:7),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~1),
@@ -97,7 +97,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = settings$N_settings,
-    rec_settings = settings$rec_settings,
+    R_settings = settings$R_settings,
     F_settings = settings$F_settings,
     M_settings = settings$M_settings,
     catch_settings = settings$catch_settings,

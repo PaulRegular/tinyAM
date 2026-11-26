@@ -1,6 +1,6 @@
 # Settings are merged by entry name; formulas and vectors remain whole values.
 .settings_names <- c(
-  "N_settings", "rec_settings", "F_settings", "M_settings",
+  "N_settings", "R_settings", "F_settings", "M_settings",
   "catch_settings", "index_settings", "proj_settings"
 )
 
@@ -37,7 +37,7 @@
   if (name == "proj_settings" && is.null(base$catch) && is.null(base$F_mult)) base$F_mult <- 1
   required <- switch(name,
     N_settings = c("process", "init"),
-    rec_settings = c("process", "init"),
+    R_settings = c("process", "init"),
     F_settings = "process",
     M_settings = "process",
     catch_settings = c("sd_form"),

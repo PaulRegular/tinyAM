@@ -10,7 +10,7 @@ stopifnot(identical(s, before), is.null(x$fit), tinyAM::check_tam_data(obs),
   all(obs$catch$unit == "thousand fish"), all(obs$index$age == 1),
   all(obs$maturity$spawn_time == 0),
   dat$N_settings$process == "off", dat$N_settings$init == "free",
-  dat$rec_settings$process == "iid", dat$F_settings$process == "rw",
+  dat$R_settings$process == "iid", dat$F_settings$process == "rw",
   dat$M_settings$process == "off", ncol(dat$q_modmat) == 4L,
   ncol(dat$sd_index_modmat) == 4L, ncol(dat$sd_catch_modmat) == 2L,
   is.finite(tinyAM::nll_fun(tinyAM::make_par(dat), dat)))

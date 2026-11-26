@@ -16,7 +16,7 @@ stopifnot(
   setequal(unique(model$obs$index$samp_time[model$obs$index$survey == "FR GFS"]), 0.875),
   identical(model$settings$N_settings$process, "rw"),
   identical(model$settings$N_settings$init, "exp"),
-  identical(model$settings$rec_settings$process, "rw"),
+  identical(model$settings$R_settings$process, "rw"),
   identical(model$settings$F_settings$process, "cor_rw"),
   identical(model$settings$F_settings$mean_ages, 3:6),
   identical(model$settings$M_settings$process, "off"),

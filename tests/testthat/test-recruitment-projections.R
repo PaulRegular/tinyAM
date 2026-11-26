@@ -2,7 +2,7 @@ test_that("annual fixed recruitment carries its terminal effect into projections
   for (form in list(~factor(year), ~0 + as.factor(year), ~0 + base::factor(x = year),
                    ~factor(year, levels = 1992:1983))) {
     args <- list(data = cod_obs, years = 1983:1990, ages = 2:6,
-      N_settings = list(process = "off"), rec_settings = list(process = "off", mu_form = form),
+      N_settings = list(process = "off"), R_settings = list(process = "off", mu_form = form),
       F_settings = list(process = "off", mu_form = ~factor(year) + factor(age)))
     historical <- do.call(prepare_tam, args)
     expect_message(projected <- do.call(prepare_tam, c(args, list(proj_settings = list(n_proj = 2)))),
@@ -35,7 +35,7 @@ test_that("deterministic numeric time trends keep their projection basis", {
                    ~I(year - 1983) + factor(year, levels = 1983:1992,
                      labels = rep(c("early", "late"), each = 5)))) {
     args <- list(data = cod_obs, years = 1983:1990, ages = 2:6,
-      rec_settings = list(process = "off", mu_form = form))
+      R_settings = list(process = "off", mu_form = form))
     historical <- do.call(prepare_tam, args)
     projected <- do.call(prepare_tam, c(args, list(proj_settings = list(n_proj = 2))))
     expect_equal(projected$rec$matrix[!projected$is_proj, ], historical$rec$matrix, ignore_attr = TRUE)
@@ -44,6 +44,6 @@ test_that("deterministic numeric time trends keep their projection basis", {
     expect_equal(projected$rec$matrix[projected$is_proj, ], expected, ignore_attr = TRUE)
   }
   expect_error(prepare_tam(cod_obs, years = 1983:1990, ages = 2:6,
-    rec_settings = list(process = "off", mu_form = ~factor(year) + year),
+    R_settings = list(process = "off", mu_form = ~factor(year) + year),
     proj_settings = list(n_proj = 1)), "redundant")
 })

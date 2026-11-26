@@ -20,7 +20,7 @@ stopifnot(
   all(translation$obs$index$samp_time == 0.8),
   identical(as.integer(sort(unique(translation$obs$index$year))), setdiff(1992:2023, c(2012, 2019, 2020))),
   identical(translation$settings$N_settings$init, "exp"),
-  identical(translation$settings$rec_settings$process, "iid"),
+  identical(translation$settings$R_settings$process, "iid"),
   identical(translation$settings$F_settings$process, "rw"),
   is.null(translation$fit_call$start_par),
   identical(translation$comparison_definitions$ssb$status, "non_equivalent"),

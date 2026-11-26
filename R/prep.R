@@ -353,9 +353,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment
-#'   SD is controlled separately by `rec_settings`; initial abundance has no
+#'   SD is controlled separately by `R_settings`; initial abundance has no
 #'   separate SD. Random-effect SD terms are not enabled.
-#' @param rec_settings A list controlling recruitment separately from cohort survival:
+#' @param R_settings A list controlling recruitment separately from cohort survival:
 #' - `process`: `"off"` for recruitment exactly following its mean formula,
 #'   or `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
 #'   residuals. Boundary recruitment states are controlled by `init`.
@@ -569,7 +569,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   likelihood observations.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `mu_m` (or `log_mu_supplied_m`)
-#' - process settings: `N_settings`, `rec_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
+#' - process settings: `N_settings`, `R_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
 #' - projection settings: `proj_settings`
 #' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
 #'
@@ -598,7 +598,7 @@ prepare_tam <- function(
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-    rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+    R_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
     F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1, mean_ages = NULL),
     M_settings = list(
       process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,

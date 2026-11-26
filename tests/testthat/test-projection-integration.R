@@ -3,7 +3,7 @@ test_that("catch projections align stock-recruit parents and spawning-time biolo
   data$maturity$spawn_time <- data$maturity$age / 100
   d <- prepare_tam(data, years = 2000:2006, ages = 2:6,
     N_settings = list(process = "off"),
-    rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 2)),
+    R_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 2)),
     proj_settings = list(n_proj = 3, catch = c(100, 80, 60)))
   p <- make_par(d)
   p$log_r0 <- log(1e5)

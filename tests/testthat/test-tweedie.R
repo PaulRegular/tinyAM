@@ -40,7 +40,7 @@ tweedie_reference_case <- function() {
     maturity = transform(grid, obs = as.numeric(age >= 4)))
   args <- list(data = data, years = years, ages = ages,
     N_settings = list(process = "off", init = "exp"),
-    rec_settings = list(process = "off", mu_form = ~1),
+    R_settings = list(process = "off", mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1, age_breaks = 3:7),
     M_settings = list(process = "off", mu_supplied = ~I(.3)),
     catch_settings = list(family = tweedie(1.52), sd_form = ~0, sd_supplied = ~I(.4)),

@@ -165,7 +165,7 @@ if (do_fit) {
   fit <- tinyAM::fit_tam(
     data = obs, years = years, ages = ages, silent = silent,
     N_settings = list(process = "off", init = "free"),
-    rec_settings = list(process = "iid", mu_form = ~1),
+    R_settings = list(process = "iid", mu_form = ~1),
     F_settings = list(process = "ar1", mu_form = ~0 + age_factor, mean_ages = 3:8),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),

@@ -16,7 +16,7 @@ model_data <- tinyAM::prepare_tam(
   years = env$years,
   ages = env$ages,
   N_settings = list(process = "iid", init = "exp", sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 3:7),
   M_settings = list(
     process = "off", mu_form = NULL,

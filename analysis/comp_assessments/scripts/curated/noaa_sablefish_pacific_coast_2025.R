@@ -235,7 +235,7 @@ if (do_fit) {
   fit <- tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
     N_settings = list(process = "iid", init = "exp"),
-    rec_settings = list(process = "iid", mu_form = ~1),
+    R_settings = list(process = "iid", mu_form = ~1),
     F_settings = list(process = "off", mean_ages = 3:15, age_breaks = F_breaks,
       mu_form = ~0 + ar1(year, by = fleet) +
         fixed_gear_young + fixed_gear_rise + fixed_gear_decline + fixed_gear_shift +

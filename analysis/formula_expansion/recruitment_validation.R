@@ -26,7 +26,7 @@ rec_inputs <- function(years = 2000:2049) {
 
 rec_fit_settings <- function(spec) {
   list(
-    N_settings = list(process = "off", init = "exp"), rec_settings = spec,
+    N_settings = list(process = "off", init = "exp"), R_settings = spec,
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
     catch_settings = list(sd_form = ~ 1),

@@ -35,7 +35,7 @@ stopifnot(
   length(unique(obs$index$sd_block[obs$index$survey == q4])) == 3L,
   identical(translated$settings$N_settings$process, "iid"),
   identical(translated$settings$N_settings$init, "exp"),
-  identical(translated$settings$rec_settings$process, "rw"),
+  identical(translated$settings$R_settings$process, "rw"),
   identical(translated$settings$F_settings$process, "ar1"),
   identical(translated$settings$F_settings$mean_ages, 3:5),
   identical(translated$settings$M_settings$process, "off"),

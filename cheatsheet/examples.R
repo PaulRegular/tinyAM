@@ -123,7 +123,7 @@ dat <- make_tam_data(
 scaa <- fit_tam(
   dat, years = 1983:2025, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "off", mu_form = ~ factor(year)),
+  R_settings = list(process = "off", mu_form = ~ factor(year)),
   F_settings = list(process = "off",
     mu_form = ~ factor(year) + factor(age), mean_ages = 5:14),
   M_settings = list(process = "off",
@@ -139,7 +139,7 @@ scaa <- fit_tam(
 # ---- sam ----
 sam <- update(scaa,
   N_settings = list(process = "iid"),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "cor_rw", mu_form = NULL)
 )
 # ---- end ----
@@ -148,7 +148,7 @@ sam <- update(scaa,
   ncam <- cached("fit_ncam", fit_key, function() {
 # ---- ncam ----
 ncam <- update(scaa,
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "ar1", mu_form = ~ 1),
   M_settings = list(process = "ar1", age_breaks = c(2, 5, 8, 14))
 )

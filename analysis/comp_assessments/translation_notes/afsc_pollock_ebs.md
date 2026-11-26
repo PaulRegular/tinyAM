@@ -27,7 +27,7 @@ index_settings = list(
   q_form = ~0 + survey + logistic(age, by = survey),
   sd_form = ~0 + survey
 )
-# rec_settings is omitted: tinyAM's default recruitment random walk applies.
+# R_settings is omitted: tinyAM's default recruitment random walk applies.
 ```
 
 **Population process and scale.** Older cohorts follow deterministic survival

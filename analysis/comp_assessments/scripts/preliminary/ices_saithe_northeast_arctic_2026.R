@@ -85,7 +85,7 @@ fit_model <- function(...) tinyAM::fit_tam(
   years = years,
   ages = ages,
   N_settings = list(process = "iid", init = "free"),
-  rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 3)),
+  R_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 3)),
   F_settings = list(process = "cor_rw", mean_ages = 4:7),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~M_assumption
@@ -112,7 +112,7 @@ if (do_fit) {
         years = years,
         ages = ages,
         N_settings = list(process = "iid", init = "free"),
-        rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 3)),
+        R_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 3)),
         F_settings = list(process = "cor_rw", mean_ages = 4:7),
         M_settings = list(
           process = "off", mu_form = NULL, mu_supplied = ~M_assumption

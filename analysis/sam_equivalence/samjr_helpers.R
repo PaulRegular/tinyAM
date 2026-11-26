@@ -83,7 +83,7 @@ samjr_inputs <- function(native) {
   if (any(catch$extra != 0)) catch_form <- update(catch_form, ~. + extra)
   settings <- list(N_settings = list(process = "iid", init = "latent",
       sd_form = if (length(unique(n_keys[-1L])) == 1L) ~1 else ~0 + N_sd_key),
-    rec_settings = list(process = "rw", init = "latent"),
+    R_settings = list(process = "rw", init = "latent"),
     F_settings = c(list(process = if (cf$corFlag == 0) "rw" else "cor_rw",
       mu_form = NULL, sd_form = if (length(unique(f_keys[active])) == 1L) ~1 else ~0 + F_sd_key,
       mean_ages = seq(cf$fbarRange[1], cf$fbarRange[2])),

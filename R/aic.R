@@ -109,7 +109,7 @@ NULL
     dat[[paste0(x, "_settings")]]$process %in% c("rw", "cor_rw")
   }, logical(1))
   if (any(intrinsic) || identical(dat$N_settings$init, "latent") ||
-      identical(dat$rec_settings$init, "latent")) {
+      identical(dat$R_settings$init, "latent")) {
     cli::cli_warn(c("Information criterion uses an improper process distribution.",
       "i" = "Unpenalized process levels or latent initial abundances make marginal normalization arbitrary; cAIC is exploratory. Comparisons across different unpenalized structures are uncertain."
     ))

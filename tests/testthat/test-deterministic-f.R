@@ -22,7 +22,7 @@ test_that('deterministic F uses its mean without unused process parameters', {
 test_that('deterministic F catch targets and recruitment initialization use the same surface', {
  d<-prepare_tam(cod_obs,years=1983:1990,ages=2:6,
   F_settings=list(process='off',mu_form=~factor(age)),
-  rec_settings=list(process='iid',mu_form=~bh(ssb)),
+  R_settings=list(process='iid',mu_form=~bh(ssb)),
   proj_settings=list(n_proj=2,catch=c(0,100)))
  p<-make_par(d);p$log_r0<-log(1e5);p$log_r[]<-log(1e5)
  p<-.initialize_rec_curve(p,d)

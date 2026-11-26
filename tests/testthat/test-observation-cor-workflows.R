@@ -6,7 +6,7 @@ observation_cor_fixture <- function(cor_struct = "ar1") {
   data$catch$obs[data$catch$year == 1983 & data$catch$age == 3] <- NA
   d <- prepare_tam(data, years = 1983:1987, ages = 2:5,
     N_settings = list(process = "off"),
-    rec_settings = list(process = "off", mu_form = ~1),
+    R_settings = list(process = "off", mu_form = ~1),
     F_settings = list(process = "off", mu_form = ~1),
     catch_settings = list(cor_struct = cor_struct),
     index_settings = list(cor_struct = cor_struct, q_form = ~1))

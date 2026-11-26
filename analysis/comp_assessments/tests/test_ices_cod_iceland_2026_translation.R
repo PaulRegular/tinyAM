@@ -33,7 +33,7 @@ prepared <- tinyAM::prepare_tam(
   years = env$years,
   ages = env$ages,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw", mu_form = NULL),
+  R_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "rw", mu_form = NULL, mean_ages = 5:10),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~1),

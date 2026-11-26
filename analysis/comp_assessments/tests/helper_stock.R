@@ -32,7 +32,7 @@ if (!exists(".assessment_script", mode = "function")) {
   out$warm_call <- if (length(calls) > 1L) calls[[1L]] else NULL
   settings <- as.list(call)[intersect(
     names(call),
-    c("N_settings", "rec_settings", "F_settings", "M_settings", "catch_settings", "index_settings")
+    c("N_settings", "R_settings", "F_settings", "M_settings", "catch_settings", "index_settings")
   )]
   out$settings <- lapply(settings, eval, envir = e)
   out

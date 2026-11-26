@@ -32,7 +32,7 @@ q_age <- ifelse(grepl("fall", obs$index$survey, ignore.case = TRUE),
 obs$index$q_group <- interaction(obs$index$survey, q_age, drop = TRUE)
 
 N_settings <- list(process = "off", init = "exp")
-rec_settings <- list(process = "ar1", mu_form = ~1)
+R_settings <- list(process = "ar1", mu_form = ~1)
 F_settings <- list(process = "off", mu_form = ~F_age + factor(year))
 M_settings <- list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)
 catch_settings <- list(sd_form = ~1)
@@ -69,13 +69,13 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit_model <- function(start_par = NULL) tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings,
+    N_settings = N_settings, R_settings = R_settings,
     F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     start_par = start_par, silent = silent)
   fit <- fit_default_first(fit_model, retry_start = function() {
     dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages,
-      N_settings = N_settings, rec_settings = rec_settings,
+      N_settings = N_settings, R_settings = R_settings,
       F_settings = F_settings, M_settings = M_settings,
       catch_settings = catch_settings, index_settings = index_settings)
     source_start_parameters(source, dat)

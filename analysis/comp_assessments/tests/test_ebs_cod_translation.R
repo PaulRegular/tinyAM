@@ -7,8 +7,8 @@ stopifnot(identical(x,original),is.null(s$fit),identical(s$years,2000:2023),
   identical(s$ages,1:12),!"start_par" %in% names(s$fit_call),
   all(s$obs$index$samp_time==.5),all(s$obs$maturity$spawn_time==0),
   all(s$obs$pop_covariates$M_assumption==.3866),
-  is.null(s$settings$rec_settings$sd),
-  identical(s$settings$rec_settings$process,"iid"),all(is.finite(s$obs$weight$obs)),
+  is.null(s$settings$R_settings$sd),
+  identical(s$settings$R_settings$process,"iid"),all(is.finite(s$obs$weight$obs)),
   all(s$obs$weight$obs>0),all(s$obs$maturity$obs>=0 & s$obs$maturity$obs<=.5),
   all(abs(rowSums(s$key)-1)<1e-12))
 raw <- x$inputs

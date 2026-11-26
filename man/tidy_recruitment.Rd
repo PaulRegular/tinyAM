@@ -39,7 +39,7 @@ supplied. Pair/curve \code{parent_unit} identifies the SSB scale separately.
 \dontrun{
 fit <- fit_tam(cod_obs,
   N_settings = list(process = "off"),
-  rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+  R_settings = list(process = "iid", mu_form = ~ bh(ssb))
 )
 tidy_recruitment(fit)$pairs
 }

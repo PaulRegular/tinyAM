@@ -117,10 +117,10 @@ test_that("catch projections reject spawning-time zero-lag circularity", {
   data$maturity$obs[data$maturity$age == 2] <- 0
   data$maturity$spawn_time <- .25
   expect_error(prepare_tam(data, years = 2000:2008, ages = 2:6,
-    rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)),
+    R_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)),
     proj_settings = list(n_proj = 1, catch = 1)), "zero-lag.*circular")
   data$maturity$spawn_time <- 0
   expect_no_error(prepare_tam(data, years = 2000:2008, ages = 2:6,
-    rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)),
+    R_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)),
     proj_settings = list(n_proj = 1, catch = 1)))
 })

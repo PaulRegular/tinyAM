@@ -62,7 +62,7 @@ stopifnot(
   all(translated$obs$pop_covariates$M_assumption == 0.1),
   identical(translated$settings$N_settings$process, "iid"),
   identical(translated$settings$N_settings$init, "exp"),
-  identical(translated$settings$rec_settings$process, "rw"),
+  identical(translated$settings$R_settings$process, "rw"),
   identical(translated$settings$F_settings$process, "ar1"),
   identical(translated$settings$M_settings$process, "off"),
   is.null(translated$warm_call),

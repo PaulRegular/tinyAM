@@ -107,7 +107,7 @@ if (do_fit) {
   fit_model <- function(start_par = NULL) tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
     N_settings = list(process = "iid", init = "latent", sd_form = ~1),
-    rec_settings = list(process = "rw", mu_form = NULL),
+    R_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(process = "cor_rw", mu_form = NULL,
       sd_form = ~I(age == 1), mean_ages = 2:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
@@ -120,7 +120,7 @@ if (do_fit) {
     dat <- tinyAM::prepare_tam(
       data = obs, years = years, ages = ages,
       N_settings = list(process = "iid", init = "latent", sd_form = ~1),
-      rec_settings = list(process = "rw", mu_form = NULL),
+      R_settings = list(process = "rw", mu_form = NULL),
       F_settings = list(process = "cor_rw", mu_form = NULL,
         sd_form = ~I(age == 1), mean_ages = 2:5),
       M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),

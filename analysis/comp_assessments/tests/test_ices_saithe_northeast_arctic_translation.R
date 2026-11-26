@@ -60,7 +60,7 @@ stopifnot(
   all(translated$obs$pop_covariates$M_assumption == 0.2),
   identical(dat$N_settings$process, "iid"),
   identical(dat$N_settings$init, "free"),
-  identical(dat$rec_settings$process, "iid"),
+  identical(dat$R_settings$process, "iid"),
   identical(dat$F_settings$process, "cor_rw"),
   identical(dat$F_settings$mean_ages, 4:7),
   identical(dat$M_settings$process, "off"),

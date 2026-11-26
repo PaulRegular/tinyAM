@@ -42,7 +42,7 @@ stopifnot(
   identical(sort(unique(obs$maturity$spawn_time)), 0),
   dat$N_settings$init == "exp",
   dat$N_settings$process == "iid",
-  dat$rec_settings$process == "rw",
+  dat$R_settings$process == "rw",
   dat$F_settings$process == "cor_rw",
   identical(dat$F_settings$mean_ages, 2:5),
   dat$M_settings$process == "off",

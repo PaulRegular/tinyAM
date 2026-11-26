@@ -171,6 +171,7 @@
       component_formula <- function(dat) {
         if (is_sd) return(dat[[paste0(sub("^sd_", "", component), "_settings")]]$sd_form)
         if (component == "q") return(dat$index_settings$q_form)
+        if (component == "rec") return(dat$R_settings$mu_form)
         dat[[paste0(component, "_settings")]]$mu_form
       }
       previous <- component_formula(source$dat)
@@ -313,7 +314,7 @@ fit_tam <- function(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+  R_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1, mean_ages = NULL),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
@@ -340,7 +341,7 @@ fit_tam <- function(
   list2env(refit_args[.settings_names], envir = environment())
   dat <- prepare_tam(
     data = data, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings, F_settings = F_settings, M_settings = M_settings,
+    N_settings = N_settings, R_settings = R_settings, F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     proj_settings = proj_settings
   )
@@ -377,7 +378,7 @@ fit_tam <- function(
   }
 
   ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
-  if (dat$rec_settings$init == "latent") {
+  if (dat$R_settings$init == "latent") {
     ran <- c(ran, intersect(c("log_r0", "log_r_init"), names(par)))
   }
   if (dat$N_settings$init == "latent") {

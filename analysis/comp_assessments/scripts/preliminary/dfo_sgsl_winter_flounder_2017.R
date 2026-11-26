@@ -14,7 +14,7 @@ obs$index$q_period <- factor(ifelse(obs$index$year <= 1984, "1973_1984", "1985_2
 obs$catch$catch_log_sd <- ifelse(obs$catch$year == 1984, 2, 0.1)
 
 N_settings <- list(process = "off", init = "exp")
-rec_settings <- list(process = "ar1", mu_form = ~1, phi = stats::plogis(-4))
+R_settings <- list(process = "ar1", mu_form = ~1, phi = stats::plogis(-4))
 F_settings <- list(process = "off", mu_form = ~logistic(age) + factor(year), mean_ages = 5:12)
 M_settings <- list(process = "off", mu_form = ~0 + M_group:M_period, mu_supplied = NULL)
 catch_settings <- list(sd_form = ~0, sd_supplied = ~catch_log_sd)
@@ -50,7 +50,7 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit <- fit_default_first(function() tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = N_settings, rec_settings = rec_settings,
+    N_settings = N_settings, R_settings = R_settings,
     F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     silent = silent), retry_start = function() {

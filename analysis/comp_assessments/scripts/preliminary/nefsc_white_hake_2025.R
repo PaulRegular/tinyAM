@@ -79,7 +79,7 @@ background <- c(
 source("analysis/comp_assessments/R/fit_default_first.R", local = TRUE)
 model_settings <- list(
   N_settings = list(process = "iid", init = "exp"),
-  rec_settings = list(process = "iid", mu_form = ~ 1),
+  R_settings = list(process = "iid", mu_form = ~ 1),
   F_settings = list(
     process = "ar1", mu_form = ~ 0 + factor(age), mean_ages = 6:9
   ),

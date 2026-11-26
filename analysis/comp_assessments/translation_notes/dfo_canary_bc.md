@@ -63,7 +63,7 @@ The exact fitted structure in the accompanying `dfo_canary_bc_2022.R` is:
 
 ```r
 N_settings = list(process = "off", init = "exp")
-rec_settings = list(process = "iid", mu_form = ~ 1, sd = 0.9)
+R_settings = list(process = "iid", mu_form = ~ 1, sd = 0.9)
 F_settings = list(process = "ar1", mu_form = ~ logistic(age))
 M_settings = list(
   process = "off",

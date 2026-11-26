@@ -13,7 +13,7 @@
 #' returning to a mean. These choices make different assumptions, even when
 #' they produce similar fitted curves. N, F and M can also have their process
 #' switched `"off"`. Recruitment defaults to a temporal random walk;
-#' `rec_settings$mu_form` can describe stock-recruit relationships and covariates.
+#' `R_settings$mu_form` can describe stock-recruit relationships and covariates.
 #'
 #' Neighbouring ages can experience similar annual changes in fishing mortality.
 #' `F_settings$process = "cor_rw"` models those changes together; `"rw"`
@@ -84,7 +84,7 @@
 #' abundances (`log_n0`) are separate unpenalized fixed parameters. With
 #' `"latent"`, the same older-age states are integrated without an initial
 #' density. Recruitment boundary states, including r0, are fixed by default;
-#' `rec_settings$init = "latent"` integrates them without an initial density.
+#' `R_settings$init = "latent"` integrates them without an initial density.
 #' For `"mono"`,
 #' \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for `"capped"`,
 #' \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
@@ -383,7 +383,7 @@
 #'
 #' [fit_tam()] integrates `log_r`, active `log_n`, `log_f`, active `log_m`,
 #' and `log_n0` for `init = "latent"` using RTMB's Laplace approximation.
-#' `rec_settings$init = "latent"` also integrates `log_r0` and any `log_r_init`
+#' `R_settings$init = "latent"` also integrates `log_r0` and any `log_r_init`
 #' boundary states. Their EDF is counted with other initial effects, separately
 #' from subsequent recruitment innovations. Powers remain fixed effects.
 #' All remaining estimated parameters, including free `log_n0`, are fixed

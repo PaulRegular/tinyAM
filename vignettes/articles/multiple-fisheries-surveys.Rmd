@@ -189,7 +189,7 @@ while retaining age-specific weights and maturity for biomass and SSB.
 multifleet <- fit_tam(
   fleet_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw"),
+  R_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = fishing,
                     sd_form = ~ 1, mean_ages = 5:10),
   M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
@@ -239,7 +239,7 @@ indices.
 aggregate_fit <- fit_tam(
   aggregate_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw"),
+  R_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = ~ logistic(age), mean_ages = 5:10),
   M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
   index_settings = list(q_form = catchability, sd_form = ~ 0 + survey)

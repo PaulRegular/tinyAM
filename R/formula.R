@@ -6,7 +6,7 @@
 #' terms in `index_settings$q_form`, `F_settings$mu_form`, or
 #' `M_settings$mu_form`, `catch_settings$sd_form`, or `index_settings$sd_form`;
 #' ordinary formula terms supply the baseline.
-#' Recruitment uses a separate named residual process in `rec_settings`;
+#' Recruitment uses a separate named residual process in `R_settings`;
 #' see [recruitment_formulas] for its initial-state convention.
 #'
 #' @details
@@ -199,7 +199,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
   if (.contains_scope(formula)) return(.scoped_q_design(formula,data,fixed_design,scope))
   if (any(c("bh", "ricker") %in% all.names(formula))) {
-    cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
+    cli::cli_abort("bh() and ricker() are restricted to R_settings$mu_form.")
   }
   special <- c("iid", "rw", "ar1", "logistic", "normal", "double_logistic", "q_power", "|", "s", "t2", "te", "ti")
   contains <- function(x) {

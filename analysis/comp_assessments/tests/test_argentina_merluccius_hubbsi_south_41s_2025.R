@@ -50,7 +50,7 @@ stopifnot(
   all(stock$obs$pop_covariates$M_assumption == 0.3),
   identical(stock$comparison_outputs$measure, "SSB"),
   identical(stock$settings$N_settings$init, "exp"),
-  identical(stock$settings$rec_settings$process, "iid"),
+  identical(stock$settings$R_settings$process, "iid"),
   identical(stock$settings$F_settings$process, "rw"),
   identical(stock$settings$M_settings$process, "off"),
   identical(deparse(stock$settings$M_settings$mu_supplied), "~M_assumption"),

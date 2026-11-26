@@ -1,6 +1,6 @@
 osa_fixture <- function() {
   d<-prepare_tam(cod_obs,years=1983:1987,ages=2:4,
-    N_settings=list(process="off"),rec_settings=list(process="iid",mu_form=~1),
+    N_settings=list(process="off"),R_settings=list(process="iid",mu_form=~1),
     F_settings=list(process="iid",mu_form=~1),index_settings=list(q_form=~1))
   p<-make_par(d);p$log_r0<-log(100);p$rec_beta[]<-log(100)
   p$log_r[]<-log(100);p$log_mu_f[]<-log(.2);p$log_f[]<-log(.2)

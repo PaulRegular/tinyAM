@@ -126,7 +126,7 @@ plot_model <- function(..., model_list = NULL) {
   correlation <- if (inherits(dat$F_settings$cor_form, "formula"))
     list(dat$F_settings$cor_form) else dat$F_settings$cor_form
   inputs <- c(
-    recruitment = predictors(list(dat$rec_settings$mu_form), "pop_covariates",
+    recruitment = predictors(list(dat$R_settings$mu_form), "pop_covariates",
       dat$pop_data, exclude = "ssb"),
     population = predictors(list(dat$N_settings$mu_form,
       if (dat$N_settings$process != "off") dat$N_settings$sd_form),
@@ -143,9 +143,9 @@ plot_model <- function(..., model_list = NULL) {
     survey = predictors(list(dat$index_settings$q_form, dat$index_settings$sd_form,
       dat$index_settings$sd_supplied), "index", dat$obs$index, exclude = "N"))
   formula_labels <- c(initial = paste0("N0: ", dat$N_settings$init,
-      "; R0: ", dat$rec_settings$init),
-    recruitment = if (is.null(dat$rec_settings$mu_form)) "Mean: previous year" else
-      paste("Mean", form(dat$rec_settings$mu_form)),
+      "; R0: ", dat$R_settings$init),
+    recruitment = if (is.null(dat$R_settings$mu_form)) "Mean: previous year" else
+      paste("Mean", form(dat$R_settings$mu_form)),
     population = if (is.null(dat$N_settings$mu_form)) "Mean: survivors" else
       paste("Mean", form(dat$N_settings$mu_form)),
     fishing = if (is.null(dat$F_settings$mu_form)) "Mean: previous year" else
@@ -159,11 +159,11 @@ plot_model <- function(..., model_list = NULL) {
   cards <- list(
     initial = card("Initial states", c(
       paste("Older-age initialization:", dat$N_settings$init),
-      paste("Recruitment boundary:", dat$rec_settings$init),
+      paste("Recruitment boundary:", dat$R_settings$init),
       paste("Initial year:", min(dat$years)),
       "Initial parameters are separate from annual process deviations."), "recruitment_formulas"),
-    recruitment = card("Recruitment", c(process(dat$rec_settings$process),
-      paste("Mean:", form(dat$rec_settings$mu_form)),
+    recruitment = card("Recruitment", c(process(dat$R_settings$process),
+      paste("Mean:", form(dat$R_settings$mu_form)),
       if (!is.null(curve)) paste("Parent-SSB relationship:", curve$type, "; lag", curve$lag),
       "Covariates: pop_covariates."), "recruitment_formulas"),
     population = card("Abundance and cohort survival", c(process(dat$N_settings$process),
@@ -211,7 +211,7 @@ plot_model <- function(..., model_list = NULL) {
   list(cards = cards, feedback = !is.null(curve),
     feedback_label = if (!is.null(curve)) paste0("Parent SSB: ", curve$type,
       ", lag ", curve$lag) else "", inputs = inputs, formula_labels = formula_labels,
-    statuses = c(recruitment = dat$rec_settings$process,
+    statuses = c(recruitment = dat$R_settings$process,
       population = dat$N_settings$process, fishing = dat$F_settings$process,
       natural = dat$M_settings$process),
     fleets = fleets, surveys = surveys)

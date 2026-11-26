@@ -36,7 +36,7 @@ obs$catch$sd_block <- factor(ifelse(obs$catch$age == 1, "catch_age1", "catch_age
 
 ## Model and comparison ----
 N_settings <- list(process = "iid", init = "exp")
-rec_settings <- list(process = "rw", mu_form = NULL)
+R_settings <- list(process = "rw", mu_form = NULL)
 F_settings <- list(process = "ar1", mu_form = ~1, mean_ages = 3:5)
 M_settings <- list(
   process = "off", mu_form = NULL,
@@ -50,7 +50,7 @@ dat <- tinyAM::prepare_tam(
   years = years,
   ages = ages,
   N_settings = N_settings,
-  rec_settings = rec_settings,
+  R_settings = R_settings,
   F_settings = F_settings,
   M_settings = M_settings,
   catch_settings = catch_settings,
@@ -121,7 +121,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = N_settings,
-    rec_settings = rec_settings,
+    R_settings = R_settings,
     F_settings = F_settings,
     M_settings = M_settings,
     catch_settings = catch_settings,

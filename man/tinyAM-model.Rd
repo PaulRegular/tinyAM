@@ -16,7 +16,7 @@ years and ages, and \code{"rw"} allows departures to accumulate over time withou
 returning to a mean. These choices make different assumptions, even when
 they produce similar fitted curves. N, F and M can also have their process
 switched \code{"off"}. Recruitment defaults to a temporal random walk;
-\code{rec_settings$mu_form} can describe stock-recruit relationships and covariates.
+\code{R_settings$mu_form} can describe stock-recruit relationships and covariates.
 
 Neighbouring ages can experience similar annual changes in fishing mortality.
 \code{F_settings$process = "cor_rw"} models those changes together; \code{"rw"}
@@ -88,7 +88,7 @@ With \code{init = "exp"}, \eqn{\log N_{1,a}=b_a}. With \code{"free"}, these log
 abundances (\code{log_n0}) are separate unpenalized fixed parameters. With
 \code{"latent"}, the same older-age states are integrated without an initial
 density. Recruitment boundary states, including r0, are fixed by default;
-\code{rec_settings$init = "latent"} integrates them without an initial density.
+\code{R_settings$init = "latent"} integrates them without an initial density.
 For \code{"mono"},
 \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for \code{"capped"},
 \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
@@ -394,7 +394,7 @@ their residual transformations have unit triangular Jacobians.
 
 \code{\link[=fit_tam]{fit_tam()}} integrates \code{log_r}, active \code{log_n}, \code{log_f}, active \code{log_m},
 and \code{log_n0} for \code{init = "latent"} using RTMB's Laplace approximation.
-\code{rec_settings$init = "latent"} also integrates \code{log_r0} and any \code{log_r_init}
+\code{R_settings$init = "latent"} also integrates \code{log_r0} and any \code{log_r_init}
 boundary states. Their EDF is counted with other initial effects, separately
 from subsequent recruitment innovations. Powers remain fixed effects.
 All remaining estimated parameters, including free \code{log_n0}, are fixed

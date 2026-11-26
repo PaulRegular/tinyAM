@@ -28,7 +28,7 @@ stopifnot(
   !2022L %in% obs$index$year[obs$index$survey == "NIMIK"],
   identical(translated$settings$N_settings$process, "iid"),
   identical(translated$settings$N_settings$init, "exp"),
-  identical(translated$settings$rec_settings$process, "rw"),
+  identical(translated$settings$R_settings$process, "rw"),
   identical(translated$settings$F_settings$process, "cor_rw"),
   identical(translated$settings$M_settings$process, "off"),
   identical(deparse(translated$settings$catch_settings$sd_form), "~1"),

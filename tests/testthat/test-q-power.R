@@ -68,7 +68,7 @@ test_that("unsupported q_power specifications fail explicitly", {
   }
   expect_error(make_test_dat(index_settings = list(q_form = ~q_power(N), q_link = "logit")), "q_link")
   expect_error(make_test_dat(catch_settings = list(sd_form = ~q_power(N))), "only supported")
-  expect_error(make_test_dat(rec_settings = list(mu_form = ~q_power(N))), "only supported")
+  expect_error(make_test_dat(R_settings = list(mu_form = ~q_power(N))), "only supported")
   expect_error(make_test_dat(F_settings = list(mu_form = ~q_power(N))), "only supported")
   z <- power_data(); z$index$power_group[z$index$obs > 0] <- NA
   expect_error(make_test_dat(data = z,
@@ -77,7 +77,7 @@ test_that("unsupported q_power specifications fail explicitly", {
 
 test_that("q_power fits report effective q with uncertainty and align starts", {
   f <- update(default_fit, index_settings = list(q_form = ~q_block + q_power(N)),
-    rec_settings = list(init = "latent"), start_par = default_fit, silent = TRUE)
+    R_settings = list(init = "latent"), start_par = default_fit, silent = TRUE)
   z <- f$obs_pred$index
   expect_true(all(c("q", "q_base", "q_power", "q_base_lwr", "q_base_se_scale") %in% names(z)))
   expect_equal(z$pred, z$q * f$rep$N[cbind(as.character(z$year), as.character(z$age))] *

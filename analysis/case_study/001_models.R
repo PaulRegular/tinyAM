@@ -11,7 +11,7 @@ scaa <- fit_tam(
     process = "off",
     init = "exp"
   ),
-  rec_settings = list(
+  R_settings = list(
     process = "off",
     mu_form = ~ factor(year)
   ),
@@ -40,7 +40,7 @@ sam <- update(
   N_settings = list(
     process = "iid"
   ),
-  rec_settings = list(
+  R_settings = list(
     process = "rw",
     mu_form = NULL
   ),
@@ -54,7 +54,7 @@ sam
 
 ncam <- update(
   scaa,
-  rec_settings = list(
+  R_settings = list(
     process = "rw",
     mu_form = NULL
   ),

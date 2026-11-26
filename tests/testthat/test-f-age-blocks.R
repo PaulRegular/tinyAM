@@ -95,7 +95,7 @@ test_that("unique block densities agree with independent multivariate calculatio
 test_that("blocked fits retain unique states in downstream workflows", {
   obs <- cod_obs; obs$catch$obs[obs$catch$age == 2] <- 0
   f <- fit_tam(obs, years = 1983:2024, ages = 2:14,
-    N_settings = list(process = "iid", init = "exp"), rec_settings = list(init = "free"),
+    N_settings = list(process = "iid", init = "exp"), R_settings = list(init = "free"),
     F_settings = list(process = "cor_rw", age_breaks = c(3:12, 15)),
     M_settings = list(process = "off", mu_supplied = ~I(.3)), silent = TRUE)
   expect_true(all(f$pop$F$est[f$pop$F$age == 2] == 0))

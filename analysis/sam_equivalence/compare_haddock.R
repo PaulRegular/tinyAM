@@ -57,13 +57,13 @@ tryCatch(withCallingHandlers({
     transform(grid, obs = as.vector(catch_weights), type = "catch", unit = "kg"))
   maturity <- transform(grid, obs = as.vector(src$propMat), spawn_time = 0)
   # The youngest age has no older-cohort survival residual. Avoid a design
-  # column for its separate recruitment SD, which rec_settings already estimates.
+  # column for its separate recruitment SD, which R_settings already estimates.
   survival_keys <- cf$keyVarLogN; survival_keys[1L] <- survival_keys[2L]
   pop <- transform(grid, M = as.vector(src$natMor), N_sd_key = key(survival_keys[age + 1L]))
   obs <- list(catch = catch, index = index, weight = weight, maturity = maturity, pop_covariates = pop)
   check_tam_data(obs)
   settings <- list(N_settings = list(process = "iid", init = "latent", sd_form = ~0 + N_sd_key),
-    rec_settings = list(process = "rw", init = "latent"),
+    R_settings = list(process = "rw", init = "latent"),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:6),
     M_settings = list(process = "off", mu_supplied = ~M),
     catch_settings = list(sd_form = ~0 + sd_key),

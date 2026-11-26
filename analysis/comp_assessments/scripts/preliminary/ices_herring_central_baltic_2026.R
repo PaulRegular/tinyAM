@@ -26,7 +26,7 @@ obs$index$q_key <- factor(obs$index$age)
 
 settings <- list(
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "ar1", mu_form = ~ bh(ssb), sd = 0.5),
+  R_settings = list(process = "ar1", mu_form = ~ bh(ssb), sd = 0.5),
   F_settings = list(process = "ar1", mu_form = ~ logistic(age), mean_ages = 3:6),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~1),
@@ -88,7 +88,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = settings$N_settings,
-    rec_settings = settings$rec_settings,
+    R_settings = settings$R_settings,
     F_settings = settings$F_settings,
     M_settings = settings$M_settings,
     catch_settings = settings$catch_settings,

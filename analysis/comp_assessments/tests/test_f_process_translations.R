@@ -27,7 +27,7 @@ for (id in c(
     index <- dat$obs$index
     powered <- index[index$q_power_group %in% names(par$log_q_power), ]
     stopifnot(
-      dat$N_settings$init == "latent", dat$rec_settings$init == "latent",
+      dat$N_settings$init == "latent", dat$R_settings$init == "latent",
       identical(as.integer(dat$F_settings$mean_ages), 2:4),
       length(dat$observed) == 1153L,
       length(par$log_q) == 17L,

@@ -21,7 +21,7 @@ Formula markers; direct calls raise an error.
 }
 \description{
 Recruitment is the number of fish entering the youngest modeled age.
-Use \code{rec_settings$process} for annual fluctuations and \code{rec_settings$mu_form}
+Use \code{R_settings$process} for annual fluctuations and \code{R_settings$mu_form}
 for environmental effects or a relationship with spawning biomass. The
 default \verb{process = "rw", mu_form = NULL} retains the original random walk.
 }
@@ -73,7 +73,7 @@ evaluated at the projected year; other covariates retain their terminal values.
 
 First-year \code{log_r0} and additional recruitment years whose parent SSB precedes
 the modeled period (\code{log_r_init}) have no initial density. With
-\code{rec_settings$init = "free"} (default) they are fixed parameters; \code{"latent"}
+\code{R_settings$init = "free"} (default) they are fixed parameters; \code{"latent"}
 integrates them through the Laplace approximation, independently of the
 subsequent process, including \code{process = "off"}. There is no separate initial
 SD. Process simulations condition on these states; joint uncertainty draws

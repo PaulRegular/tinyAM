@@ -80,7 +80,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "exp"),
-    rec_settings = list(process = "iid", mu_form = ~ bh(ssb)),
+    R_settings = list(process = "iid", mu_form = ~ bh(ssb)),
     F_settings = list(
       process = "cor_rw", mu_form = NULL,
       mean_ages = 5:10
