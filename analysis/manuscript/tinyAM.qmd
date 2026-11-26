@@ -1,12 +1,16 @@
 ---
 title: "`tinyAM`: An accessible R framework for exploring the assumptions behind age-structured stock assessment models"
-format: docx
+format:
+  docx:
+    reference-doc: manuscript-template.docx
 bibliography: references.bib
+number-sections: true
+number-depth: 3
 execute:
   enabled: false
 ---
 
-# Abstract
+# Abstract {.unnumbered}
 
 # Introduction
 
@@ -16,34 +20,87 @@ At their core, age-structured stock assessment models share the demographic logi
 
 As stock assessment models and their estimation methods have become more sophisticated, the task of specifying and evaluating alternative model configurations has become increasingly demanding [@punt2020]. For biologists and ecologists familiar with generalized linear and mixed-effects models in R, learning the conventions of specialized assessment software may present a barrier to exploring alternative hypotheses about population, fishing, and observation processes. An interface built around familiar data structures and model formulas could lower this barrier [@jardim2015].
 
-Here we introduce a tiny assessment model, `tinyAM`, an R package designed around such an interface. The package uses tidy tables [@wickham2014] for model inputs and outputs, interactive plots for data exploration and model diagnostics [@regular2020], and formulas to specify assumptions about recruitment, cohort survival, fishing and natural mortality, survey catchability, and observation error. Like the `a4a` framework [@jardim2015], `tinyAM` draws on familiar R modelling conventions, with an emphasis on state-space formulations fit using RTMB [@kristensen2026]. Rather than match the full range of capabilities of existing assessment platforms, `tinyAM` prioritizes a compact interface intended to make model assumptions easier to express, modify, and evaluate. We demonstrate the approach by comparing models with fixed and time-varying natural mortality for Northern cod, checking numerical agreement with matched SAM specifications, and translating a collection of assessments from across the North Atlantic and North Pacific.
-
+Here we introduce a tiny assessment model, `tinyAM`, an R package designed around such an interface. The package uses tidy tables [@wickham2014] for model inputs and outputs, interactive plots for data exploration and model diagnostics [@regular2020], and formulas to specify assumptions about recruitment, cohort survival, fishing and natural mortality, survey catchability, and observation error. Like the `a4a` framework [@jardim2015], `tinyAM` draws on familiar R modelling conventions, with an emphasis on state-space formulations fit using `RTMB` [@kristensen2026]. Rather than match the full range of capabilities of existing assessment platforms, `tinyAM` prioritizes a compact interface intended to make model assumptions easier to express, modify, and evaluate. We demonstrate the approach by comparing models with fixed and time-varying natural mortality for Northern cod, checking numerical agreement with matched SAM specifications, and translating a collection of assessments from across the North Atlantic and North Pacific.
 
 # The `tinyAM` package
 
-## Age-structured stock assessment models
+## Population model {#sec-population-model}
 
-## Package structure and use
+### Cohort survival ($N$) {#sec-cohort-survival}
 
-### Installation
+The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked at the beginning of each year, $y$, by age, $a$, with instantaneous total mortality, $Z_{a,y}$, applied to predict the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group,
 
-# Case studies
+$$
+\widetilde{N}_{a,y+1} =
+\begin{cases}
+N_{a-1,y}e^{-Z_{a-1,y}}, & a_R<a<A,\\[6pt]
+N_{A-1,y}e^{-Z_{A-1,y}}+N_{A,y}e^{-Z_{A,y}}, & a=A,
+\end{cases}
+$$ {#eq-cohort}
 
-## Northern cod
+for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality). The cohort equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Predicted abundance provides a baseline from which deviations in cohort survival can be modelled (@sec-process-variation).
 
-## Numerical agreement under matching assumptions
+### Initial abundance {#sec-initial-abundance}
 
-## Approximating assessments across the north Pacific and Atlantic
+Initial abundance at older ages can be specified assuming exponential decay from recruitment in the first year,
 
-# Final remarks
+$$
+N_{a,y_0} = N_{a-1,y_0}e^{-Z_{a-1,y_0}},
+\qquad a = a_R+1,\ldots,A.
+$$ {#eq-initial-exp}
 
-# Author contributions
+Alternatively, initial abundances can be estimated as unconstrained parameters, integrated as latent states, or constrained to decline monotonically with age or not exceed initial recruitment.
 
-# Acknodledgements
+### Biomass and spawning stock biomass {#sec-biomass}
 
-# Funding information
+### Recruitment ($R$) {#sec-recruitment}
 
-# Data availability statement
+### Fishing mortality ($F$) {#sec-fishing-mortality}
+
+### Natural mortality ($M$) {#sec-natural-mortality}
+
+### Process variation {#sec-process-variation}
+
+## Observation model {#sec-observation-model}
+
+### Fishery observations {#sec-fishery-observations}
+
+### Survey observations {#sec-survey-observations}
+
+### Observation error {#sec-observation-error}
+
+## Package structure and use {#sec-package-use}
+
+### Data inputs {#sec-data-inputs}
+
+### Model specification {#sec-model-specification}
+
+### Model fitting {#sec-model-fitting}
+
+### Diagnostics and model comparison {#sec-model-diagnostics}
+
+
+<!-- ## Package structure and use -->
+
+<!-- ### Installation -->
+
+<!-- # Case studies -->
+
+<!-- ## Northern cod -->
+
+<!-- ## Numerical agreement under matching assumptions -->
+
+<!-- ## Approximating assessments across the north Pacific and Atlantic -->
+
+<!-- # Final remarks -->
+
+<!-- # Author contributions -->
+
+<!-- # Acknodledgements -->
+
+<!-- # Funding information -->
+
+<!-- # Data availability statement -->
 
 # References
 
