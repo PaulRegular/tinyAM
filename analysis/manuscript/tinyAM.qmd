@@ -28,7 +28,7 @@ Here we introduce a tiny assessment model, `tinyAM`, an R package designed aroun
 
 ### Cohort survival ($N$) {#sec-cohort-survival}
 
-The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked by age, $a$, at the beginning of each year, $y$, and the rate of total mortality, $Z_{a,y}$, determines the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group. Specifically,
+The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked by age, $a$, at the beginning of each year, $y$, and the instantaneous rate of total mortality, $Z_{a,y}$, determines the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group. Specifically,
 
 $$
 \widetilde{N}_{a,y+1} =
@@ -49,7 +49,7 @@ $$
 \eta_{N,a,y},
 $$ {#eq-cohort-covariates}
 
-for $a = a_R+1,\ldots,A$ and $y = y_0+1,\ldots,Y$, where $\widetilde{N}_{a,y}$ is the abundance predicted by @eq-cohort. Throughout model equations, $\mathbf{X}$ denotes a vector of predictor values, $\boldsymbol{\beta}$ a vector of estimated regression coefficients, and $\eta$ a process deviation on the log scale, with subscripts identifying the associated model component and applicable dimensions. Covariate effects and process deviations are optional, with alternative specifications for the latter described in @sec-process-variation.
+for $a = a_R+1,\ldots,A$ and $y = y_0+1,\ldots,Y$, where $\widetilde{N}_{a,y}$ is the abundance predicted by @eq-cohort. Throughout the model equations, $\mathbf{X}$ denotes a vector of predictor values, $\boldsymbol{\beta}$ a vector of estimated regression coefficients, and $\eta$ a process deviation on the log scale (@sec-process-variation), with subscripts identifying the associated model component and applicable dimensions. Covariate effects and process deviations are optional where supported.
 
 ### Initial abundance {#sec-initial-abundance}
 
@@ -80,7 +80,7 @@ where $P_{a,y}$ is the supplied proportion mature and $\tau_{a,y}$ is the fracti
 
 ### Recruitment ($R$) {#sec-recruitment}
 
-Recruitment, $R_y$, is modelled on the log scale,
+Recruitment, $R_y = N_{a_R,y}$, is modelled on the log scale,
 
 $$
 \log(R_y) =
@@ -88,7 +88,9 @@ $$
 \eta_{R,y},
 $$ {#eq-recruitment}
 
-and can be linked to spawning stock biomass by adding $\log[g(S_{y'})]$ to the right-hand side of @eq-recruitment, where $y'=y-\ell$ accounts for the lag between spawning and recruitment (by default, $\ell=a_R$). Supported stock–recruitment functions include Beverton–Holt and Ricker,
+where $\mathbf{X}_{R,y}$ and $\boldsymbol{\beta}_R$ define regression effects and $\eta_{R,y}$ is a process deviation (@sec-process-variation).
+
+Recruitment can also be linked to spawning stock biomass by adding $\log[g(S_{y'})]$ to the right-hand side of @eq-recruitment, where $y'=y-\ell$ accounts for the lag between spawning and recruitment (by default, $\ell=a_R$). Supported stock–recruitment functions include Beverton–Holt and Ricker,
 
 $$
 g(S_{y'}) =
@@ -115,53 +117,25 @@ h_{F,a,y,f} +
 \eta_{F,a,y,f},
 $$ {#eq-fishing-mortality}
 
-where $h_{F,a,y,f}$ represents optional structured effects, such as selectivity curves and penalized smooths. For a single fleet, or when catch data are aggregated across fleets, the fleet subscript is omitted. Otherwise, total fishing mortality is $F_{a,y} = \sum_f F_{a,y,f}$.
+where $\mathbf{X}_{F,a,y,f}$ and $\boldsymbol{\beta}_F$ define regression effects and $\eta_{F,a,y,f}$ is a process deviation (@sec-process-variation). Throughout the model equations, $h$ denotes optional structured predictor effects, including Gaussian random effects, parametric selectivity curves, monotonic effects, and penalized smooths (@sec-structured-effects).
 
-Additive age and year factor effects in the linear predictor of @eq-fishing-mortality provide a means of specifying separable fishing mortality, with process deviations allowing departures from separability. Fishing mortality can also be shared across groups of ages or fixed at zero for unfished ages.
-
-Age effects can alternatively be structured using parametric selectivity curves, which contribute $\log[s_f(a)]$ to $h_{F,a,y,f}$. Supported curves include
-
-$$
-s_f(a) =
-\begin{cases}
-\displaystyle
-\frac{1}{1+e^{-k_f(a-a_{50,f})}},
-& \text{Logistic},\\[12pt]
-\displaystyle
-\frac{1}{1+e^{-(a-a_{50,f}^{\uparrow})/w_f^{\uparrow}}}
-\frac{1}{1+e^{(a-a_{50,f}^{\downarrow})/w_f^{\downarrow}}},
-& \text{Double logistic},\\[12pt]
-\displaystyle
-e^{-\frac{1}{2}\left(\frac{a-a_{\mathrm{peak},f}}{w_f}\right)^2},
-& \text{Normal}.
-\end{cases}
-$$ {#eq-selectivity-curves}
-
-The curve parameters define locations ($a_{50}$ and $a_{\mathrm{peak}}$), slopes ($k$), and widths ($w$), with slopes and widths constrained to be positive. A more flexible monotonic age effect can be specified using cumulative non-negative increments on the log scale,
-
-$$
-h_{F,a,y,f}^{\mathrm{mono}} =
-\sum_{j=a_f+1}^{a}d_{j,f},
-\qquad d_{j,f}\geq 0,
-$$ {#eq-monotonic-selectivity}
-
-where $a_f$ is the youngest fished age. This formulation allows selectivity to increase or plateau with age without imposing a parametric curve.
-
-As in the `a4a` framework [@jardim2015], penalized smooths can also be used to describe fishing mortality. Following the implementation in `sdmTMB` [@anderson2025], `tinyAM` uses `mgcv` [@wood2017] to construct spline bases and represent penalized coefficients as Gaussian random effects. The penalized contribution to $h_{F,a,y,f}$ takes the general form
-
-$$
-h_{F,a,y,f}^{\mathrm{smooth}} =
-\sum_j \mathbf{b}_{j,a,y,f}^\top\mathbf{u}_j,
-\qquad
-\mathbf{u}_j \sim
-\mathcal{N}(\mathbf{0},\sigma_{u,j}^2\mathbf{I}),
-$$ {#eq-penalized-smooths}
-
-where $\mathbf{b}_{j,a,y,f}$ is a vector of basis functions and $\mathbf{u}_j$ is a vector of penalized coefficients. Unpenalized basis components are included in the linear predictor. Both univariate and tensor-product smooths are supported, allowing nonlinear age effects and age–year interactions, with smoothness estimated during model fitting.
+For a single fleet or when catches are aggregated across fleets, the fleet subscript is omitted; otherwise, total fishing mortality is $F_{a,y} = \sum_f F_{a,y,f}$. Fishing mortality can also be shared across blocks of ages, requiring predictor components and process deviations to be constant within each block, or fixed at zero for unfished ages.
 
 ### Natural mortality ($M$) {#sec-natural-mortality}
 
-### Process variation {#sec-process-variation}
+Instantaneous rates of natural mortality can be modelled as
+
+$$
+\log(M_{a,y}) =
+\log(M^{\mathrm{sup}}_{a,y}) +
+\mathbf{X}_{M,a,y}^\top\boldsymbol{\beta}_M +
+h_{M,a,y} +
+\eta_{M,a,y},
+$$ {#eq-natural-mortality}
+
+where $M^{\mathrm{sup}}_{a,y}$ is an optionally supplied rate of natural mortality, $\mathbf{X}_{M,a,y}$ and $\boldsymbol{\beta}_M$ define regression effects, $h_{M,a,y}$ represents Gaussian random effects (@sec-structured-effects), and $\eta_{M,a,y}$ is a process deviation (@sec-process-variation). When mortality rates are supplied, the regression intercept is omitted.
+
+As with fishing mortality, ages may be grouped into blocks sharing the same mortality state when process deviations are enabled, requiring supplied rates and predictor components to be constant within each block. Natural mortality deviations can also be restricted to selected ages and years, beginning by default in the second year to reduce potential confounding with initial abundance. Outside these ranges, process deviations are set to zero.
 
 ## Observation model {#sec-observation-model}
 
@@ -170,6 +144,75 @@ where $\mathbf{b}_{j,a,y,f}$ is a vector of basis functions and $\mathbf{u}_j$ i
 ### Survey observations {#sec-survey-observations}
 
 ### Observation error {#sec-observation-error}
+
+## Statistical components {#sec-statistical-components}
+
+### Process variation {#sec-process-variation}
+
+### Structured effects {#sec-structured-effects}
+
+Structured predictor effects, $h$, provide additional flexibility beyond ordinary regression effects. These include Gaussian random effects, parametric curves, monotonic effects, and penalized smooths, described below using general notation applicable to the relevant model components.
+
+#### Gaussian random effects
+
+Gaussian random effects can be included in predictors for fishing mortality, natural mortality, survey catchability, and observation-error scales,
+
+$$
+h_i^{\mathrm{Gaussian}} = z_i u_{g_i,k_i},
+$$ {#eq-gaussian-effects}
+
+where $i$ indexes a predictor row, $k_i$ identifies the effect level, and $g_i$ identifies an optional grouping factor. The multiplier $z_i$ is one unless a covariate is supplied to model random slopes. Within each group, effects follow a one-dimensional IID, RW or AR1 process (@sec-process-variation), with the first RW effect fixed at zero. Group-specific trajectories are independent but share process parameters. Specifying the variance of a Gaussian effect allows prior information to be incorporated. For example, adding a Gaussian effect with a specified variance to the logarithm of a supplied natural mortality rate induces a lognormal prior on natural mortality.
+
+#### Parametric curves
+
+Fishing mortality and survey catchability can be structured using parametric selectivity curves. For a numeric predictor, $x$ (e.g., age), supported curves include
+
+$$
+\begin{aligned}
+h^{\mathrm{curve}}(x) &= \log[s(x)],\\[8pt]
+s(x) &=
+\begin{cases}
+\displaystyle
+\frac{1}{1+e^{-k(x-x_{50})}},
+& \text{Logistic},\\[12pt]
+\displaystyle
+\frac{1}{1+e^{-(x-x_{50}^{\uparrow})/w^{\uparrow}}}
+\frac{1}{1+e^{(x-x_{50}^{\downarrow})/w^{\downarrow}}},
+& \text{Double logistic},\\[12pt]
+\displaystyle
+e^{-\frac{1}{2}\left(\frac{x-x_{\mathrm{peak}}}{w}\right)^2},
+& \text{Normal}.
+\end{cases}
+\end{aligned}
+$$ {#eq-selectivity-curves}
+
+The curve parameters define locations ($x_{50}$ and $x_{\mathrm{peak}}$), slopes ($k$), and widths ($w$), with slopes and widths constrained to be positive. Curve parameters may differ among groups, such as fleets or surveys. Curves act as multiplicative effects on fishing mortality or catchability, contributing to their log-scale predictors. The double-logistic curve is not rescaled to have a maximum of one.
+
+#### Monotonic effects
+
+A monotonic relationship for fishing mortality or catchability can be specified using cumulative non-negative increments,
+
+$$
+h_i^{\mathrm{mono}} =
+\sum_{j=1}^{k_i-1}d_j,
+\qquad d_j\geq 0,
+$$ {#eq-monotonic-selectivity}
+
+where $i$ indexes a predictor row, $k_i$ is the position of its predictor value among ordered levels, and $d_j$ is an estimated increment on the predictor scale. This formulation allows relationships to increase or plateau without imposing a parametric curve.
+
+#### Penalized smooths
+
+As in the `a4a` framework [@jardim2015], penalized smooths can be used to describe fishing mortality. Smooths can also be included in predictors for survey catchability and observation-error scales. Following the implementation in `sdmTMB` [@anderson2025], `tinyAM` uses `mgcv` [@wood2017] to construct spline bases and represent penalized coefficients as Gaussian random effects. The penalized contribution takes the general form
+
+$$
+h_i^{\mathrm{smooth}} =
+\sum_j \mathbf{b}_{j,i}^\top\mathbf{u}_j,
+\qquad
+\mathbf{u}_j \sim
+\mathcal{N}(\mathbf{0},\sigma_{u,j}^2\mathbf{I}),
+$$ {#eq-penalized-smooths}
+
+where $\mathbf{b}_{j,i}$ is a vector of basis function values and $\mathbf{u}_j$ is a vector of penalized coefficients. Unpenalized basis components are included in the linear predictor. Both univariate and tensor-product smooths are supported, with smoothness estimated during model fitting.
 
 ## Package structure and use {#sec-package-use}
 
@@ -222,96 +265,3 @@ where $\mathbf{b}_{j,a,y,f}$ is a vector of basis functions and $\mathbf{u}_j$ i
 
 
 
-
-
-
-Drafting outline for an Application in *Methods in Ecology and Evolution*. Aim for roughly 3,300–3,600 words in total, leaving room within the 4,000-word limit for captions, statements and references.
-
-## Abstract
-
-1. Biologists use age-structured assessments to ask why fish populations change. A change in the ages observed in catches or surveys can have several explanations, including changes in natural mortality, recruitment or the fraction of the stock sampled.
-2. Introduce tinyAM, an open-source R package for expressing biological assumptions as model settings and formulas, checking fits and evaluating alternative explanations with the same data. In Northern cod, ask whether allowing natural mortality to vary over time improves predictions of the ages seen in surveys and changes the inferred biomass trajectory.
-3. Insert the result from the fixed versus time-varying mortality comparison, including forecast coverage and the size and uncertainty of any biomass difference. Summarize numerical agreement under matched SAM specifications and the range of agreement across curated assessments.
-4. Explain what the worked example enables biologists and ecologists to do with their own data. State what the comparison can tell them about the importance of an assumption and what would require independent evidence about the underlying mechanism.
-
-## Data and code for peer review
-
-[Insert review archive and instructions for reproducing the example, numerical checks and figures. Pin tinyAM, SAIO and external fixtures. Confirm which source inputs can be redistributed and provide retrieval instructions for the others.]
-
-**Keywords** Age structure, fisheries, model diagnostics, population dynamics, state-space models, stock assessment.
-
-## Introduction
-
-- Begin with the biologist’s question. When older fish become scarce in a survey, could survival have changed? Explain why age-structured models are useful for exploring such questions and why the answer can depend on assumptions about fishing, recruitment and survey catchability.
-- Acknowledge the closest precedents. a4a uses R formulas to specify age-structured assessments [@jardim2015]. WHAM spans statistical catch-at-age and state-space models and supports comparisons among them [@stock2021]. SAM and Stock Synthesis are established assessment frameworks [@nielsen2014; @methot2013].
-- State tinyAM’s design goal. A biologist or ecologist with basic R skills can express an assumption in a short model call, see where it enters the model and inspect how it affects the fit, forecasts and stock estimates. The worked example demonstrates that sequence. The SAM checks and curated translations establish its numerical fidelity and scope in specific cases.
-
-## Materials and methods
-
-### Model and software
-
-Explain the data keys and the roles of catch-at-age, survey indices, weights and maturity. Give the core population transitions and the link to predicted catches and survey observations. Explain in biological terms where a user can choose a fixed relationship or add process variation. Keep the full likelihood, plus-group conventions, variance structures and formula reference in the supplement.
-
-Explain how `fit_tam()` compiles settings and formulas into an RTMB likelihood, uses automatic differentiation and integrates random effects by the Laplace approximation [@kristensen2026]. Describe how the same outputs feed diagnostics, uncertainty summaries, retrospective fits and hindcasts.
-
-### Northern cod worked example
-
-**Biological question.** Does allowing natural mortality to vary over time improve predictions of Northern cod survey observations at age and change the inferred history of spawning-stock biomass (SSB)? The [2025 Northern cod assessment](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-026-eng.pdf) motivates the question through its analysis of natural mortality and prey availability. The worked example uses the packaged catch and survey observations to evaluate the more specific assumption about variation in mortality.
-
-**Specify two alternatives.** Start with the NCAM-like fit in [the case-study script](https://github.com/PaulRegular/tinyAM/blob/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/case_study/001_models.R), which uses 1983–2025 and ages 2–14+. Compare fixed natural mortality of 0.3 per year with deviations around `log(0.3)` that are correlated across years and age blocks. Retain the same data, recruitment, cohort survival, fishing mortality and observation specifications. Show the mortality settings and how they enter cohort survival. Use the existing SCAA-, SAM- and NCAM-like fits in the supplement to show how several components can vary together.
-
-```r
-m_varying <- ncam
-m_constant <- update(ncam, M_settings = list(process = "off"))
-```
-
-**Evaluate the hypothesis.** Use `plot_model()` to verify the change in specification and `check_tam()` to assess numerical fit and uncertainty. Inspect age-by-year survey residuals for runs of over- or underprediction. Compare one-year-ahead survey log-RMSE and MASE on identical forecast origins and survey–age observations. Both hindcasts condition on observed aggregate catch. Report the full fold coverage and failures before interpreting score differences.
-
-**Interpret the consequences.** Compare estimated mortality and SSB with uncertainty, and use retrospective peels to assess how terminal estimates change as observations are removed. Examine whether the mortality process is weakly estimated or near a correlation boundary. Interpret any predictive improvement relative to the chosen constant mortality baseline. Discuss what external information on survival, fishing mortality or availability would help distinguish explanations.
-
-### Numerical agreement under matching assumptions
-
-Use the existing [SAM equivalence analyses](https://github.com/PaulRegular/tinyAM/tree/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/sam_equivalence). Define what was matched and the tolerances for likelihoods, derivatives and fitted summaries. Distinguish matched-parameter evaluations, source-start fits and tests of convergence from default starts.
-
-### Breadth across curated assessments
-
-Use the existing [comparative assessment workflow](https://github.com/PaulRegular/tinyAM/tree/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/comp_assessments). Document stock selection, source availability, translation rules and numerical eligibility. Align years, units and definitions before comparison. Report the median absolute percentage difference in levels and Pearson correlation of the annual trajectories. State how zero reference values, missing metrics and approximate definitions are handled.
-
-## Results
-
-### Does time-varying natural mortality change the Northern cod inference?
-
-Begin with the numerical checks and uncertainty in the mortality process. Then show whether the fixed model leaves a pattern in survey observations at age, whether the variable model improves predictions on the same held-out observations, and how much the SSB trajectory changes. Report how many folds contributed to each comparison and how sensitive recent SSB estimates are to peeling. Insert results after running the paired comparison. A small, mixed or inconclusive difference is a result in its own right.
-
-### Reproduce selected SAM configurations
-
-Summarize the pinned checks in a short paragraph. Use Northern Shelf haddock as the example from an official assessment. Put maximum differences, tolerances, initialization details and unsupported configurations in a supplement table.
-
-### Translate assessments across stocks
-
-Report the denominators in sequence: cases considered, input blockers, cases fitted, fits passing numerical checks and cases with comparable official outputs. Use the heatmap to show variation in agreement. Select one clear agreement and one important discrepancy to interpret in the text. Cite the associated translation notes and supplement trajectories.
-
-## Discussion
-
-- Answer the Northern cod question at the level the evidence supports. Distinguish a better fit to observations, better held-out predictions and a change in the stock interpretation. Explain how fishing mortality, other changes in apparent survival and changes in survey availability can affect the same age patterns. Discuss what additional observations could help distinguish these mechanisms.
-- Explain how the case can guide a biologist investigating their own stock. Show how the same workflow makes the biological choice visible in the settings, equations and diagnostics. Keep accessibility for new users as a design goal and describe the skills and data preparation the example requires.
-- Use the matched SAM results to describe implementation fidelity. Use the heatmap to discuss where translations agree with published estimates and where differences in data, model structure, numerical fit or reporting definitions limit agreement. Link the runnable guides and dashboards.
-
-## Figures and supporting information
-
-1. **Figure 1. From a biological question to a model change.** Adapt `plot_model()` into a compact static diagram. Highlight where natural mortality enters survival and connect the two mortality settings to the observations and diagnostic outputs. Include the short R update so the reader can locate the change in the code.
-2. **Figure 2. What changes when natural mortality can vary.** Show the two mortality assumptions and estimated SSB trajectories with uncertainty. Include one informative survey diagnostic or a compact display of held-out forecast scores and coverage. Put the full retrospective and residual plots in the supplement.
-3. **Figure 3. Agreement with official assessments across stocks.** Adapt `analysis/comp_assessments/scripts/stats_plots.R`. Preserve separate panels for differences in magnitude and trajectory correlation. Distinguish unavailable, approximate and matched comparisons, and show the overall screening counts alongside the heatmap.
-4. **Supporting information.** Include the full Northern cod settings, diagnostic and retrospective outputs, the broader SCAA-, SAM- and NCAM-like comparison, and reproduction instructions. Include stock-by-stock tinyAM and official trajectories from `trend_plots.R`, comparison coverage and definitions, translation dispositions and SAM equivalence details.
-
-## Submission notes
-
-Add a separate title page, contributions, disclosures and the Application Code Checklist. Record the exact software and data revisions and the scripts and outputs needed to regenerate the main figures. Use a separate run for fits and figure generation, then render the manuscript from the saved outputs. Review the journal’s AI disclosure requirements when preparing the submission.
-
-
-<!--
-Draft from this file and render with: quarto render tinyAM.qmd --to docx
-Merge Word comments and tracked edits back into this source before rendering again.
-The bibliography contains starting references. Useful paper models also include
-TropFishR (10.1111/2041-210X.12791) and tinyVAST (10.1111/geb.70035).
--->
