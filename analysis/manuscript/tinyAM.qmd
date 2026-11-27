@@ -28,7 +28,7 @@ Here we introduce a tiny assessment model, `tinyAM`, an R package designed aroun
 
 ### Cohort survival ($N$) {#sec-cohort-survival}
 
-The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked by age, $a$, at the beginning of each year, $y$, and instantaneous total mortality rate, $Z_{a,y}$, determines the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group. Specifically,
+The standard cohort-survival equation lies at the core of `tinyAM`. Population abundance, $N$, is tracked by age, $a$, at the beginning of each year, $y$, and the rate of total mortality, $Z_{a,y}$, determines the number of fish surviving to the following year. Survivors advance to the next age or accumulate in the terminal age group, $A$, commonly referred to as the plus group. Specifically,
 
 $$
 \widetilde{N}_{a,y+1} =
@@ -38,18 +38,18 @@ N_{A-1,y}e^{-Z_{A-1,y}}+N_{A,y}e^{-Z_{A,y}}, & a=A
 \end{cases}
 $$ {#eq-cohort}
 
-for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. This equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality).
+for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. This equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Total mortality is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality): $Z_{a,y}=F_{a,y}+M_{a,y}$.
 
-The cohort prediction can be extended to account for optional covariate effects and stochastic deviations in abundance,
+To account for apparent gains or losses in cohort abundance not explained by fishing or natural mortality, the cohort prediction can be extended to include covariate effects and stochastic deviations,
 
 $$
 \log(N_{a,y}) =
 \log(\widetilde{N}_{a,y}) +
-\mathbf{X}_{a,y}^\top\boldsymbol{\beta}_N +
+\mathbf{X}_{N,a,y}^\top\boldsymbol{\beta}_N +
 \eta_{N,a,y},
 $$ {#eq-cohort-covariates}
 
-where $\widetilde{N}_{a,y}$ is the abundance predicted by @eq-cohort, $\mathbf{X}_{a,y}$ is a vector of covariates, $\boldsymbol{\beta}_N$ is a vector of estimated coefficients, and $\eta_{N,a,y}$ is a process deviation on the log scale (see @sec-process-variation for specification options). Covariate effects and process deviations represent apparent gains or losses in cohort abundance beyond those accounted for by fishing and natural mortality.
+for $a = a_R+1,\ldots,A$ and $y = y_0+1,\ldots,Y$, where $\widetilde{N}_{a,y}$ is the abundance predicted by @eq-cohort. Throughout model equations, $\mathbf{X}$ denotes a vector of predictor values, $\boldsymbol{\beta}$ a vector of estimated regression coefficients, and $\eta$ a process deviation on the log scale, with subscripts identifying the associated model component and applicable dimensions. Covariate effects and process deviations are optional, with alternative specifications for the latter described in @sec-process-variation.
 
 ### Initial abundance {#sec-initial-abundance}
 
@@ -80,15 +80,15 @@ where $P_{a,y}$ is the supplied proportion mature and $\tau_{a,y}$ is the fracti
 
 ### Recruitment ($R$) {#sec-recruitment}
 
-Recruitment, $R_y$, can be modelled as a function of covariates and stochastic deviations,
+Recruitment, $R_y$, is modelled on the log scale,
 
 $$
-\log(R_y) = \mathbf{X}_y^\top\boldsymbol{\beta}_R + \eta_{R,y},
+\log(R_y) =
+\mathbf{X}_{R,y}^\top\boldsymbol{\beta}_R +
+\eta_{R,y},
 $$ {#eq-recruitment}
 
-where $\mathbf{X}_y$ is a vector of covariates, $\boldsymbol{\beta}_R$ is a vector of estimated coefficients, and $\eta_{R,y}$ is a process deviation on the log scale (see @sec-process-variation for specification options).
-
-Recruitment can also be linked to spawning stock biomass by adding $\log[g(S_{y'})]$ to the right-hand side of @eq-recruitment, where $y'=y-\ell$ accounts for the lag between spawning and recruitment (by default, $\ell=a_R$). Supported stock–recruitment functions include Beverton–Holt and Ricker,
+and can be linked to spawning stock biomass by adding $\log[g(S_{y'})]$ to the right-hand side of @eq-recruitment, where $y'=y-\ell$ accounts for the lag between spawning and recruitment (by default, $\ell=a_R$). Supported stock–recruitment functions include Beverton–Holt and Ricker,
 
 $$
 g(S_{y'}) =
@@ -100,11 +100,64 @@ g(S_{y'}) =
 \end{cases}
 $$ {#eq-stock-recruitment-functions}
 
-When a stock–recruitment function is specified, the regression intercept is omitted because $\alpha$ governs baseline productivity.
+with positive parameters $\alpha$ and $\beta$. When a stock–recruitment function is specified, the regression intercept is omitted because $\alpha$ governs baseline productivity.
 
 Initial recruitment states (the first year and any subsequent years requiring spawning stock biomass from before the modelled period) are estimated without a recruitment process penalty, either as fixed parameters or as integrated latent states.
 
 ### Fishing mortality ($F$) {#sec-fishing-mortality}
+
+For ages subject to fishing, fleet-specific instantaneous fishing mortality rates, $F_{a,y,f}$, are modelled as
+
+$$
+\log(F_{a,y,f}) =
+\mathbf{X}_{F,a,y,f}^\top\boldsymbol{\beta}_F +
+h_{F,a,y,f} +
+\eta_{F,a,y,f},
+$$ {#eq-fishing-mortality}
+
+where $h_{F,a,y,f}$ represents optional structured effects, such as selectivity curves and penalized smooths. For a single fleet, or when catch data are aggregated across fleets, the fleet subscript is omitted. Otherwise, total fishing mortality is $F_{a,y} = \sum_f F_{a,y,f}$.
+
+Additive age and year factor effects in the linear predictor of @eq-fishing-mortality provide a means of specifying separable fishing mortality, with process deviations allowing departures from separability. Fishing mortality can also be shared across groups of ages or fixed at zero for unfished ages.
+
+Age effects can alternatively be structured using parametric selectivity curves, which contribute $\log[s_f(a)]$ to $h_{F,a,y,f}$. Supported curves include
+
+$$
+s_f(a) =
+\begin{cases}
+\displaystyle
+\frac{1}{1+e^{-k_f(a-a_{50,f})}},
+& \text{Logistic},\\[12pt]
+\displaystyle
+\frac{1}{1+e^{-(a-a_{50,f}^{\uparrow})/w_f^{\uparrow}}}
+\frac{1}{1+e^{(a-a_{50,f}^{\downarrow})/w_f^{\downarrow}}},
+& \text{Double logistic},\\[12pt]
+\displaystyle
+e^{-\frac{1}{2}\left(\frac{a-a_{\mathrm{peak},f}}{w_f}\right)^2},
+& \text{Normal}.
+\end{cases}
+$$ {#eq-selectivity-curves}
+
+The curve parameters define locations ($a_{50}$ and $a_{\mathrm{peak}}$), slopes ($k$), and widths ($w$), with slopes and widths constrained to be positive. A more flexible monotonic age effect can be specified using cumulative non-negative increments on the log scale,
+
+$$
+h_{F,a,y,f}^{\mathrm{mono}} =
+\sum_{j=a_f+1}^{a}d_{j,f},
+\qquad d_{j,f}\geq 0,
+$$ {#eq-monotonic-selectivity}
+
+where $a_f$ is the youngest fished age. This formulation allows selectivity to increase or plateau with age without imposing a parametric curve.
+
+As in the `a4a` framework [@jardim2015], penalized smooths can also be used to describe fishing mortality. Following the implementation in `sdmTMB` [@anderson2025], `tinyAM` uses `mgcv` [@wood2017] to construct spline bases and represent penalized coefficients as Gaussian random effects. The penalized contribution to $h_{F,a,y,f}$ takes the general form
+
+$$
+h_{F,a,y,f}^{\mathrm{smooth}} =
+\sum_j \mathbf{b}_{j,a,y,f}^\top\mathbf{u}_j,
+\qquad
+\mathbf{u}_j \sim
+\mathcal{N}(\mathbf{0},\sigma_{u,j}^2\mathbf{I}),
+$$ {#eq-penalized-smooths}
+
+where $\mathbf{b}_{j,a,y,f}$ is a vector of basis functions and $\mathbf{u}_j$ is a vector of penalized coefficients. Unpenalized basis components are included in the linear predictor. Both univariate and tensor-product smooths are supported, allowing nonlinear age effects and age–year interactions, with smoothness estimated during model fitting.
 
 ### Natural mortality ($M$) {#sec-natural-mortality}
 
