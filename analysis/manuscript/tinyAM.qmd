@@ -38,7 +38,18 @@ N_{A-1,y}e^{-Z_{A-1,y}}+N_{A,y}e^{-Z_{A,y}}, & a=A
 \end{cases}
 $$ {#eq-cohort}
 
-for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. This equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality). Predicted abundance provides a baseline from which deviations in cohort survival can be modelled (@sec-process-variation).
+for $y = y_0,\ldots,Y-1$, where $y_0$ and $Y$ are the first and final years in the model, respectively, $a_R$ is the age at recruitment (the youngest age in the model), and $\widetilde{N}_{a,y+1}$ is the predicted abundance. This equation describes transitions within the age–year matrix, with abundance along two margins specified separately: recruitment in each year ($R_y = N_{a_R,y}$ for $y = y_0,\ldots,Y$; @sec-recruitment) and initial abundance at older ages ($N_{a,y_0}$ for $a = a_R+1,\ldots,A$; @sec-initial-abundance). Total mortality, $Z_{a,y} = F_{a,y} + M_{a,y}$, is the sum of fishing mortality (@sec-fishing-mortality) and natural mortality (@sec-natural-mortality).
+
+The cohort prediction can be extended to account for optional covariate effects and stochastic deviations in abundance,
+
+$$
+\log(N_{a,y}) =
+\log(\widetilde{N}_{a,y}) +
+\mathbf{X}_{a,y}^\top\boldsymbol{\beta}_N +
+\eta_{N,a,y},
+$$ {#eq-cohort-covariates}
+
+where $\widetilde{N}_{a,y}$ is the abundance predicted by @eq-cohort, $\mathbf{X}_{a,y}$ is a vector of covariates, $\boldsymbol{\beta}_N$ is a vector of estimated coefficients, and $\eta_{N,a,y}$ is a process deviation on the log scale (see @sec-process-variation for specification options). Covariate effects and process deviations represent apparent gains or losses in cohort abundance beyond those accounted for by fishing and natural mortality.
 
 ### Initial abundance {#sec-initial-abundance}
 
@@ -69,34 +80,29 @@ where $P_{a,y}$ is the supplied proportion mature and $\tau_{a,y}$ is the fracti
 
 ### Recruitment ($R$) {#sec-recruitment}
 
-Baseline recruitment, $\widetilde{R}_y$, can be modelled as a function of covariates,
+Recruitment, $R_y$, can be modelled as a function of covariates and stochastic deviations,
 
 $$
-\log(\widetilde{R}_y) = \mathbf{X}_y^\top\boldsymbol{\beta}_R,
-$$ {#eq-recruitment-mean}
+\log(R_y) = \mathbf{X}_y^\top\boldsymbol{\beta}_R + \eta_{R,y},
+$$ {#eq-recruitment}
 
-where $\mathbf{X}_y$ is a vector of covariates (e.g., environmental conditions) and $\boldsymbol{\beta}_R$ is a vector of estimated coefficients. Alternatively, recruitment can be linked to spawning stock biomass through a stock–recruitment relationship,
+where $\mathbf{X}_y$ is a vector of covariates, $\boldsymbol{\beta}_R$ is a vector of estimated coefficients, and $\eta_{R,y}$ is a process deviation on the log scale (see @sec-process-variation for specification options).
 
-$$
-\log(\widetilde{R}_y) = \log g(S_{y-\ell}) +
-\mathbf{X}_y^\top\boldsymbol{\beta}_R,
-$$ {#eq-stock-recruitment}
-
-where $\ell$ is the lag between spawning and recruitment (by default, $\ell=a_R$) and $g$ is a Beverton–Holt or Ricker stock–recruitment function,
+Recruitment can also be linked to spawning stock biomass by adding $\log[g(S_{y'})]$ to the right-hand side of @eq-recruitment, where $y'=y-\ell$ accounts for the lag between spawning and recruitment (by default, $\ell=a_R$). Supported stock–recruitment functions include Beverton–Holt and Ricker,
 
 $$
-g(S) =
+g(S_{y'}) =
 \begin{cases}
-\displaystyle\frac{\alpha S}{1+\beta S},
+\displaystyle\frac{\alpha S_{y'}}{1+\beta S_{y'}},
 & \text{Beverton–Holt},\\[8pt]
-\alpha S e^{-\beta S},
+\alpha S_{y'} e^{-\beta S_{y'}},
 & \text{Ricker},
 \end{cases}
 $$ {#eq-stock-recruitment-functions}
 
-with positive parameters $\alpha$ and $\beta$. When a stock–recruitment function is specified, its productivity parameter replaces the regression intercept.
+When a stock–recruitment function is specified, the regression intercept is omitted because $\alpha$ governs baseline productivity.
 
-Recruitment in the first year, and in subsequent years for which parental spawning stock biomass precedes the modelled period, is estimated independently of the recruitment process, either as fixed parameters or as integrated latent states. Subsequent recruitment can be modelled deterministically or stochastically, with alternative formulations for process variation described in @sec-process-variation.
+Initial recruitment states (the first year and any subsequent years requiring spawning stock biomass from before the modelled period) are estimated without a recruitment process penalty, either as fixed parameters or as integrated latent states.
 
 ### Fishing mortality ($F$) {#sec-fishing-mortality}
 
